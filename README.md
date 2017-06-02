@@ -16,3 +16,13 @@ The tractor has the following hardware:
   - [Point Grey Blackfly 13S2C-CS](https://www.ptgrey.com/blackfly-13-mp-color-usb3-vision-sony-icx445)
   - [Fujifilm DF6HA-1B](http://www.fujifilmusa.com/products/optical_devices/machine-vision/1-2-15/df6ha-1b/)
 - Arduino Mega
+
+## Software
+
+### ROS libraries
+TODO
+
+### Arduino Libraries
+[ROS](http://wiki.ros.org/rosserial_arduino/Tutorials/Arduino%20IDE%20Setup)
+
+[Sabertooth](https://www.dimensionengineering.com/info/arduino)
