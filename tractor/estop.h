@@ -7,7 +7,7 @@
 
 class Estop{
 public:
-	static void setup();
+	static void setup(ros::NodeHandle *nh);
 	
 private:
   static ros::Publisher *eStop;
