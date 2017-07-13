@@ -30,3 +30,11 @@
 *.exe
 *.out
 *.app
+
+# Platformio
+.pioenvs/
+lib/
+.Rhistory
+.clang_complete
+.gcc-flags.json
+.travis.yml
