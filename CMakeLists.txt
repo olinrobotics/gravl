@@ -20,6 +20,7 @@ find_package(catkin REQUIRED COMPONENTS
 set ( OpenCV_DIR "/usr/local/include/opencv2/")
 # find_package(OpenCV 3.2 REQUIRED)
 
+
 ## System dependencies are found with CMake's conventions
 # find_package(Boost REQUIRED COMPONENTS system)
 
