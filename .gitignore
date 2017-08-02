@@ -38,5 +38,4 @@
 
 *.clang_complete
 *.json
-*.hash
-*dblite
+/src/tractor/.poienvs
