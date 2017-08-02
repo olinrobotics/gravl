@@ -13,12 +13,15 @@
 #include "estop.h"
 #include "lights.h"
 #include "MotionControl.h"
+#include "button.h"
 
 // ROS variables
 ros::NodeHandle nh;
 Estop *e;
 MotionControl *m;
 Lights l;
+button *b;
+button *c;
 
 Encoder left(11,12);
 Encoder right(9,10);
@@ -28,9 +31,12 @@ unsigned char mode = 4;
 void setup() {
   nh.getHardware()->setBaud(ROSSERIAL_BAUD);
   nh.initNode(); // Initialize ROS nodehandle
-  e->setup(&nh);
-  e->onStop(stop);
-  e->offStop(restart);
+  //e->setup(&nh);
+  //e->onStop(stop);
+  //e->offStop(restart);
+  //b = new button(&nh, "/Button", 24, 100, CHANGE);
+  //c = new button(&nh, "/Button2", 25, 100, CHANGE);
+
   m->setup(&nh);
   l.setup();
   pinMode(13, OUTPUT);

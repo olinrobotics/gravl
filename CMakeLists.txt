@@ -15,6 +15,7 @@ find_package(catkin REQUIRED COMPONENTS
   cv_bridge
   image_transport
   dynamic_reconfigure
+  ackermann_msgs
 )
 set ( OpenCV_DIR "/usr/local/include/opencv2/")
 find_package(OpenCV 3.2 REQUIRED)
@@ -142,6 +143,7 @@ include_directories(
 # add_executable(${PROJECT_NAME}_node src/tractor_node.cpp)
 
 add_executable( Camera src/Camera.cpp )
+add_executable( Teleop src/Teleop.cpp )
 
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the
@@ -159,6 +161,7 @@ add_executable( Camera src/Camera.cpp )
 # )
 
 target_link_libraries( Camera ${OpenCV_LIBS} ${catkin_LIBRARIES} -lopencv_highgui -lopencv_core )
+target_link_libraries( Teleop ${catkin_LIBRARIES} )
 
 #############
 ## Install ##

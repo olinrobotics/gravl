@@ -9,3 +9,6 @@
 #include <image_transport/image_transport.h>
 #include <cv_bridge/cv_bridge.h>
 #include <sensor_msgs/image_encodings.h>
+
+void FLIRCallback(const sensor_msgs::ImageConstPtr&  msg);
+void dynamicCallback(tractor::tractor_cfgConfig &config, uint32_t level);

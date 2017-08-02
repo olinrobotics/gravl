@@ -34,3 +34,9 @@
 .piolibdeps
 .clang_complete
 .gcc-flags.json
+*.ini
+
+*.clang_complete
+*.json
+*.hash
+*dblite
