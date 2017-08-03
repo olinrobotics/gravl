@@ -145,6 +145,7 @@ include_directories(
 
 add_executable( Camera src/Camera.cpp )
 add_executable( Teleop src/Teleop.cpp )
+add_executable( State src/State.cpp )
 
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the
@@ -163,6 +164,7 @@ add_executable( Teleop src/Teleop.cpp )
 
 target_link_libraries( Camera ${OpenCV_LIBS} ${catkin_LIBRARIES} -lopencv_highgui -lopencv_core )
 target_link_libraries( Teleop ${catkin_LIBRARIES} )
+target_link_libraries( State ${catkin_LIBRARIES} )
 
 #############
 ## Install ##

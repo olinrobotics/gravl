@@ -14,10 +14,14 @@ private:
   ros::Subscriber joystick;
   ros::Publisher drive;
   ros::Publisher softestop;
+  ros::Publisher autonomous;
   std_msgs::Bool stop_msg;
+  std_msgs::Bool autonomous_msg;
   ackermann_msgs::AckermannDrive drive_msg;
 
   void joyCB(const sensor_msgs::Joy::ConstPtr &joy);
+  void stop_pub(bool stop);
+  void auto_pub(bool aut);
 
 };
 
