@@ -10,7 +10,6 @@ public:
 
 private:
   ros::Subscriber<std_msgs::Bool, OAKSoftSwitch> *signalIn;
-  std_msgs::Bool servo_signal;
   const int pin;
   void softCB(const std_msgs::Bool &sig);
 };
