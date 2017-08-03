@@ -10,12 +10,13 @@
 #include <Arduino.h>
 #include "ros.h"
 #include "ackermann_msgs/AckermannDrive.h"
+#include "estop.h"
+#include "soft_switch.h"
 
 // Define pins, serial location
 #define RUNNING_LED_PIN 3
 #define RC_SERIAL Serial1
 #define address 0x80
-#define ESTOP_DEBOUNCE_TIME 1
 #define ROBOCLAW_UPDATE_RATE 500
 
 // Limit ranges of motors & controls (tuned)
@@ -53,7 +54,7 @@ void setup() {
 
   //Open Serial and roboclaw serial ports
   rc.begin(38400);
-  
+
   // Set pin modes
   pinMode(RUNNING_LED_PIN, OUTPUT);
   pinMode(13, OUTPUT);
@@ -77,10 +78,10 @@ void loop() {
     updateRoboClaw(velMsg, steerMsg);
   }
 
-  
-  nh.spinOnce(); 
+
+  nh.spinOnce();
   delay(1);
-  
+
   //TODO: process estop interruption
 
 }
@@ -109,7 +110,7 @@ int steerConvert(float ack_steer){
   else if (ack_steer < STEER_LOW){
     ack_steer = STEER_LOW;
   }
-  
+
   return ack_steer;
 }
 
@@ -125,7 +126,6 @@ int velConvert(float ack_vel){
 
   // Convert from range of input signal to range of output signal
   ack_vel = ack_vel * ((VEL_HIGH - VEL_LOW)/VEL_CONTROL_RANGE);
-  
+
   return ack_vel;
 }
-
