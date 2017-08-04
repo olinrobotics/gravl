@@ -27,10 +27,17 @@
 #define STEER_LOW 100
 #define STEER_CONTROL_RANGE 90
 
+// Fidelity of actuators (subdivision of motion)
+#define VEL_FIDELITY 5
+#define STEER_FIDELITY 3
+
 // Def/init vars
-unsigned int velMsg = 0;
-signed int steerMsg = 0;
+unsigned int velMsg = VEL_HIGH;
+signed int steerMsg = (STEER_HIGH + STEER_LOW)/2;
 unsigned long prevMillis = millis();
+int prevSteerMsg;
+int prevVelMsg;
+// Estop *e;
 
 // Define roboclaw on 1st Teensie serial port
 RoboClaw rc(&Serial1,10000);
@@ -41,7 +48,7 @@ RoboClaw rc(&Serial1,10000);
 void ackermannCB(const ackermann_msgs::AckermannDrive &drive){
   steerMsg = steerConvert(drive.steering_angle);
   velMsg = velConvert(drive.speed);
-}
+} //ackermannCB()
 
 // ROS variables
 ros::NodeHandle nh;
@@ -62,11 +69,18 @@ void setup() {
   // Set up ROS stuff
   nh.initNode(); // Initialize ROS nodehandle
   nh.subscribe(sub);
+  // e = new Estop(&nh,5,1);
 
   // Turn on running led
   //digitalWrite(13, HIGH);
 
-}
+  // Set actuators to default positions
+  rc.SpeedAccelDeccelPositionM1(address,0,300,0,velMsg,0);
+  prevVelMsg = velMsg;
+  rc.SpeedAccelDeccelPositionM2(address,0,500,0,steerMsg,0);
+  prevSteerMsg = steerMsg;
+
+} //setup()
 
 /* FUNCTION: loop function
  *  runs constantly
@@ -84,25 +98,46 @@ void loop() {
 
   //TODO: process estop interruption
 
-}
+} //loop()
 
 /* FUNCTION: RoboClaw command function
  *  Sends current velocity and steering vals to RoboClaw; called at ROBOCLAW_UPDATE_RATE
  */
 void updateRoboClaw(int velMsg, int steerMsg) {
 
-  rc.SpeedAccelDeccelPositionM1(address,0,300,0,velMsg,0);
-  rc.SpeedAccelDeccelPositionM2(address,0,500,0,steerMsg,0);
+  //Calculate step sizes based on fidelity
+  int steerStep = (STEER_HIGH - STEER_LOW)/STEER_FIDELITY;
+  int velStep = (VEL_HIGH - VEL_LOW)/VEL_FIDELITY;
+
+  stepActuator(&velMsg, &prevVelMsg, velStep);
+  stepActuator(&steerMsg, &prevSteerMsg, steerStep);
+  
+  prevVelMsg = velMsg;
+  prevSteerMsg = steerMsg;
+  
+  rc.SpeedAccelDeccelPositionM1(address,0,1000,0,velMsg,0);
+  rc.SpeedAccelDeccelPositionM2(address,0,1000,0,steerMsg,0);
   prevMillis = millis();
-}
+
+  /*char i[32];
+  snprintf(i, sizeof(i), "velstep = %d, steerstep = %d", velStep, steerStep);
+  nh.loginfo(i);
+  */
+  
+  
+  char i[32];
+  snprintf(i, sizeof(i), "Velocity = %d, Steering = %d", velMsg, steerMsg);
+  nh.loginfo(i);
+} //updateRoboClaw()
 
 /* FUNCTION: Steering conversion function
  *  Converts ackermann steering angle to motor encoder value for RoboClaw
  */
 int steerConvert(float ack_steer){
+  
   // Convert from range of input signal to range of output signal, then shift signal
-  ack_steer = ack_steer * ((STEER_HIGH - STEER_LOW)/STEER_CONTROL_RANGE) + (STEER_HIGH - STEER_LOW)/2;
-
+  ack_steer = ack_steer * ((STEER_HIGH-STEER_LOW)/STEER_CONTROL_RANGE) + (STEER_HIGH + STEER_LOW)/2;
+  
   // Safety limits for signal (possibly not necessary, Roboclaw may do this?)
   if (ack_steer > STEER_HIGH){
     ack_steer = STEER_HIGH;
@@ -112,20 +147,48 @@ int steerConvert(float ack_steer){
   }
 
   return ack_steer;
-}
+} //steerConvert
 
 /* FUNCTION: Velocity conversion function
  *  Converts ackermann velocity to motor encoder value for RoboClaw
  */
 int velConvert(float ack_vel){
-
+  
   // Reverse-removal Filter
   if (ack_vel < 0) {
     ack_vel = 0;
   }
 
   // Convert from range of input signal to range of output signal
-  ack_vel = ack_vel * ((VEL_HIGH - VEL_LOW)/VEL_CONTROL_RANGE);
-
+  ack_vel = VEL_HIGH - ack_vel * ((VEL_HIGH - VEL_LOW)/VEL_CONTROL_RANGE);
+  
   return ack_vel;
-}
+} //velConvert()
+
+/* FUNCTION: Command stepping function
+ *  Meters commands sent to motors to ensure quick response and low latency
+ */
+
+void stepActuator(int *msg, int *prevMsg, int step) {
+
+  // Checks if stepping is necessary
+  if (abs(*prevMsg - *msg) > step) {
+
+    nh.loginfo("Stepped!");
+    // If signal increasing
+    if (*msg > *prevMsg) {
+      *msg = *prevMsg + step;
+    }
+
+    // If signal decreasing
+    else if (*msg < *prevMsg) {
+      *msg = *prevMsg - step;
+    }
+
+    // Exception case
+    else {
+      *msg = *prevMsg;
+    }
+  } 
+} //stepActuator()
+
