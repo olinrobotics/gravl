@@ -71,6 +71,7 @@ void setup() {
   rc.begin(38400);
   
   // Set up ROS stuff
+  nh.getHardware()->setBaud(115200);
   nh.initNode(); // Initialize ROS nodehandle
   nh.subscribe(sub);
   e = new Estop(&nh,ESTOP_PIN,1);
@@ -146,6 +147,8 @@ int steerConvert(float ack_steer){
   else if (ack_steer < STEER_LOW){
     ack_steer = STEER_LOW;
   }
+
+  ack_steer = STEER_HIGH - (ack_steer - STEER_LOW);
   
   return ack_steer;
 } //steerConvert
@@ -162,7 +165,7 @@ int velConvert(float ack_vel){
 
   // Convert from range of input signal to range of output signal
   ack_vel = VEL_HIGH - ack_vel * ((VEL_HIGH - VEL_LOW)/VEL_CONTROL_RANGE);
-  
+
   return ack_vel;
 } //velConvert()
 
