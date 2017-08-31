@@ -92,15 +92,13 @@ void loop() {
 
   // Sends commands to RoboClaw every ROBOCLAW_UPDATE_RATE milliseconds
   if (millis() - prevMillis > ROBOCLAW_UPDATE_RATE) {
-    if(!e->isStopped())
+    if (!e->isStopped()) {
       updateRoboClaw(velMsg, steerMsg);
+    }
   }
 
   nh.spinOnce();
-  char i[32];
-  snprintf(i, sizeof(i), "ping");
-  nh.loginfo(i);
-  pause(1000);
+  delay(1);
 
 } //loop()
 
@@ -123,9 +121,9 @@ void updateRoboClaw(int velMsg, int steerMsg) {
   rc.SpeedAccelDeccelPositionM2(address,0,1000,0,steerMsg,0);
   prevMillis = millis();
 
-  char i[32];
+  /*char i[32];
   snprintf(i, sizeof(i), "steerMsg = %d, velMsg = %d", steerMsg, velMsg);
-  nh.loginfo(i);
+  nh.loginfo(i);*/
   
   
   
@@ -144,6 +142,7 @@ int steerConvert(float ack_steer){
   if (ack_steer > STEER_HIGH){
     ack_steer = STEER_HIGH;
   }
+  
   else if (ack_steer < STEER_LOW){
     ack_steer = STEER_LOW;
   }
@@ -198,6 +197,7 @@ void eStop() {
   char i[32];
   snprintf(i, sizeof(i), "ERR: Stopping!");
   nh.loginfo(i);
+  
   digitalWrite(ESTOP_PIN, HIGH);
   delay(1000);
   digitalWrite(ESTOP_PIN, LOW);
