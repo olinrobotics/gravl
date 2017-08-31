@@ -13,6 +13,7 @@ public:
 	static void globalStop(void* instance);
 	void onStop(void (*func)());
 	void offStop(void (*func)());
+  bool isStopped();
 
 private:
   ros::Publisher *hardEStop;

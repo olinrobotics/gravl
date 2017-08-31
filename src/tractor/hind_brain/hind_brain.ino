@@ -1,9 +1,14 @@
 /**********************************************************************
  * KUBO Hindbrain Code (Teensie 3.5)
+ * @file hind_brain.ino
  * @author: Connor Novak
  * @email: connor.novak@students.olin.edu
- * @version: 1.0
- * @description: Basic control of velocity actuator and steering actuator through ackermann steering messages over /drive
+ * @version: 1.2
+ * 
+ * Basic OAK_compatible control of velocity actuator and 
+ * steering actuator through ackermann steering messages 
+ * over //teledrive, autonomous activation through boolean 
+ * message over /auto
  **********************************************************************/
 
 #include "RoboClaw.h"
@@ -14,17 +19,18 @@
 #include "soft_switch.h"
 
 // Define pins, serial location
-#define RUNNING_LED_PIN 3
+#define AUTO_LED_PIN 3
+#define ESTOP_PIN 2
 #define RC_SERIAL Serial1
 #define address 0x80
 #define ROBOCLAW_UPDATE_RATE 500
 
 // Limit ranges of motors & controls (tuned)
-#define VEL_HIGH 360
-#define VEL_LOW 20
+#define VEL_HIGH 2048
+#define VEL_LOW 190
 #define VEL_CONTROL_RANGE 2
-#define STEER_HIGH 1900
-#define STEER_LOW 100
+#define STEER_HIGH 1200
+#define STEER_LOW 600
 #define STEER_CONTROL_RANGE 90
 
 // Fidelity of actuators (subdivision of motion)
@@ -37,22 +43,24 @@ signed int steerMsg = (STEER_HIGH + STEER_LOW)/2;
 unsigned long prevMillis = millis();
 int prevSteerMsg;
 int prevVelMsg;
-// Estop *e;
+Estop *e;
+OAKSoftSwitch *l;
 
 // Define roboclaw on 1st Teensie serial port
 RoboClaw rc(&Serial1,10000);
 
-/* FUNCTION: /drive callback function
- *  Called upon a receipt of data from /drive
+/* FUNCTION: //teledrive callback function
+ *  Called upon a receipt of data from //teledrive
  */
 void ackermannCB(const ackermann_msgs::AckermannDrive &drive){
   steerMsg = steerConvert(drive.steering_angle);
   velMsg = velConvert(drive.speed);
+  
 } //ackermannCB()
 
 // ROS variables
 ros::NodeHandle nh;
-ros::Subscriber<ackermann_msgs::AckermannDrive> sub("drive", &ackermannCB );
+ros::Subscriber<ackermann_msgs::AckermannDrive> sub("teledrive", &ackermannCB );
 
 /* FUNCTION: setup function
  *  runs once on startup
@@ -61,25 +69,20 @@ void setup() {
 
   //Open Serial and roboclaw serial ports
   rc.begin(38400);
-
-  // Set pin modes
-  pinMode(RUNNING_LED_PIN, OUTPUT);
-  pinMode(13, OUTPUT);
-
+  
   // Set up ROS stuff
   nh.initNode(); // Initialize ROS nodehandle
   nh.subscribe(sub);
-  // e = new Estop(&nh,5,1);
-
-  // Turn on running led
-  //digitalWrite(13, HIGH);
+  e = new Estop(&nh,ESTOP_PIN,1);
+  l = new OAKSoftSwitch(&nh,"/auto",AUTO_LED_PIN);
 
   // Set actuators to default positions
   rc.SpeedAccelDeccelPositionM1(address,0,300,0,velMsg,0);
   prevVelMsg = velMsg;
-  rc.SpeedAccelDeccelPositionM2(address,0,500,0,steerMsg,0);
+  rc.SpeedAccelDeccelPositionM2(address,0,500,0,-steerMsg,0);
   prevSteerMsg = steerMsg;
 
+  e->onStop(eStop);
 } //setup()
 
 /* FUNCTION: loop function
@@ -89,14 +92,15 @@ void loop() {
 
   // Sends commands to RoboClaw every ROBOCLAW_UPDATE_RATE milliseconds
   if (millis() - prevMillis > ROBOCLAW_UPDATE_RATE) {
-    updateRoboClaw(velMsg, steerMsg);
+    if(!e->isStopped())
+      updateRoboClaw(velMsg, steerMsg);
   }
 
-
   nh.spinOnce();
-  delay(1);
-
-  //TODO: process estop interruption
+  char i[32];
+  snprintf(i, sizeof(i), "ping");
+  nh.loginfo(i);
+  pause(1000);
 
 } //loop()
 
@@ -115,19 +119,17 @@ void updateRoboClaw(int velMsg, int steerMsg) {
   prevVelMsg = velMsg;
   prevSteerMsg = steerMsg;
   
-  rc.SpeedAccelDeccelPositionM1(address,0,1000,0,velMsg,0);
+  rc.SpeedAccelDeccelPositionM1(address,100000,1000,0,velMsg,0);
   rc.SpeedAccelDeccelPositionM2(address,0,1000,0,steerMsg,0);
   prevMillis = millis();
 
-  /*char i[32];
-  snprintf(i, sizeof(i), "velstep = %d, steerstep = %d", velStep, steerStep);
-  nh.loginfo(i);
-  */
-  
-  
   char i[32];
-  snprintf(i, sizeof(i), "Velocity = %d, Steering = %d", velMsg, steerMsg);
+  snprintf(i, sizeof(i), "steerMsg = %d, velMsg = %d", steerMsg, velMsg);
   nh.loginfo(i);
+  
+  
+  
+
 } //updateRoboClaw()
 
 /* FUNCTION: Steering conversion function
@@ -145,7 +147,7 @@ int steerConvert(float ack_steer){
   else if (ack_steer < STEER_LOW){
     ack_steer = STEER_LOW;
   }
-
+  
   return ack_steer;
 } //steerConvert
 
@@ -191,4 +193,13 @@ void stepActuator(int *msg, int *prevMsg, int step) {
     }
   } 
 } //stepActuator()
+
+void eStop() {
+  char i[32];
+  snprintf(i, sizeof(i), "ERR: Stopping!");
+  nh.loginfo(i);
+  digitalWrite(ESTOP_PIN, HIGH);
+  delay(1000);
+  digitalWrite(ESTOP_PIN, LOW);
+}
 
