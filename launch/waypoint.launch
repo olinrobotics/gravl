@@ -2,8 +2,9 @@
   <!--arg to check if serial node is already running-->
   <arg name="serial_not_started" default="true"/>
 
-  <node pkg="joy" type="joy_node" name="joystick"/>
-  <node pkg="tractor" type="Teleop" name="joystick_teleop"/>
+  <node pkg="swiftnav_ros" type="swiftnav_ros_node" name="swiftnav_ros_node" output="screen">
+    <param name="port" value="/dev/ttyUSB0" />
+  </node>
 
   <!--this is mainly for including in other launch files-->
   <!--start serial node if one is not running-->

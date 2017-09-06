@@ -1,0 +1,14 @@
+<launch>
+  <!--Start up teleop-->
+  <include file="$(find tractor)/launch/teleop.launch" ns="teleop">
+    <param name="serial_not_started" value="true"/>
+  </include>
+
+  <!--Start up waypoint following-->
+  <include file="$(find tractor)/launch/waypoint.launch" ns="waypoint">
+    <param name="serial_not_started" value="true"/>
+  </include>
+
+  <!--Start up state machine-->
+  <node pkg="tractor" type="State" name="state"/>
+</launch>

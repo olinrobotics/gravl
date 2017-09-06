@@ -1,7 +1,7 @@
 #include "Teleop.h"
 
 Teleop::Teleop(){
-  joystick = n.subscribe("joy", 10, &Teleop::joyCB, this);
+  joystick = n.subscribe("/joy", 10, &Teleop::joyCB, this);
   drive = n.advertise<ackermann_msgs::AckermannDrive>("teledrive", 1000);
   softestop = n.advertise<std_msgs::Bool>("softestop", 1000);
   autonomous = n.advertise<std_msgs::Bool>("auto", 1000);
