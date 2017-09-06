@@ -1,3 +1,12 @@
+/******************************************************************************
+ * @file        soft_switch.h
+ * Software  header for OAK soft_switch (Olin Autonomous Kore)
+ * @author      Carl Moser
+ * @email       carl.moser@students.olin.edu
+ * @version     1.0
+ * @date        24/07/17
+ ******************************************************************************/
+
 #ifndef OAK_SOFT_SWITCH_H
 #define OAK_SOFT_SWITCH_H
 
