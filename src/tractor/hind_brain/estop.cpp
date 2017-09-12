@@ -14,7 +14,7 @@
  ******************************************************************************/
 
 /*
- * Setup function for the class
+ * Constructor for the class
  *
  * Initializes a publisher and subsciber
  * attaches the estop pin
@@ -36,6 +36,15 @@ Estop::Estop(ros::NodeHandle *nh, const int pin, const unsigned int debounceTime
  */
 void Estop::globalStop(void *instance){
   static_cast<Estop*>(instance)->onChange();
+}
+
+/*
+ * Function that checks if the system is estopped
+ *
+ * @return True if stopped
+ */
+bool Estop::isStopped(){
+  return softStopped|stopped.data;
 }
 
 /*
@@ -82,10 +91,6 @@ void Estop::softStopCB(const std_msgs::Bool &message){
     if(!stopped.data)
       (*startfunc)();
   }
-}
-
-bool Estop::isStopped(){
-  return softStopped && stopped.data;
 }
 
 void Estop::onStop(void (*func)()){

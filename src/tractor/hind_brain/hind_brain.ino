@@ -1,5 +1,5 @@
 /**********************************************************************
- * KUBO Hindbrain Code (Teensie 3.5)
+ * KUBO Hindbrain Code (Teensy 3.5)
  * @file hind_brain.ino
  * @author: Connor Novak
  * @email: connor.novak@students.olin.edu
@@ -46,10 +46,11 @@ int prevVelMsg;
 Estop *e;
 OAKSoftSwitch *l;
 
-// Define roboclaw on 1st Teensie serial port
-RoboClaw rc(&Serial1,10000);
+// Define roboclaw on 1st Teensy serial port
+RoboClaw rc(&Serial1, 10000);
 
-/* FUNCTION: //teledrive callback function
+/* 
+ * FUNCTION: //teledrive callback function
  *  Called upon a receipt of data from //teledrive
  */
 void ackermannCB(const ackermann_msgs::AckermannDrive &drive){
@@ -62,12 +63,13 @@ void ackermannCB(const ackermann_msgs::AckermannDrive &drive){
 ros::NodeHandle nh;
 ros::Subscriber<ackermann_msgs::AckermannDrive> sub("teledrive", &ackermannCB );
 
-/* FUNCTION: setup function
+/* 
+ * FUNCTION: setup function
  *  runs once on startup
  */
 void setup() {
 
-  //Open Serial and roboclaw serial ports
+  //Open serial communication with roboclaw
   rc.begin(38400);
   
   // Set up ROS stuff
@@ -78,15 +80,16 @@ void setup() {
   l = new OAKSoftSwitch(&nh,"/auto",AUTO_LED_PIN);
 
   // Set actuators to default positions
-  rc.SpeedAccelDeccelPositionM1(address,0,300,0,velMsg,0);
+  rc.SpeedAccelDeccelPositionM1(address, 0, 300, 0, velMsg, 0);
   prevVelMsg = velMsg;
-  rc.SpeedAccelDeccelPositionM2(address,0,500,0,-steerMsg,0);
+  rc.SpeedAccelDeccelPositionM2(address, 0, 500, 0, -steerMsg, 0);
   prevSteerMsg = steerMsg;
 
   e->onStop(eStop);
 } //setup()
 
-/* FUNCTION: loop function
+/* 
+ * FUNCTION: loop function
  *  runs constantly
  */
 void loop() {
@@ -103,7 +106,8 @@ void loop() {
 
 } //loop()
 
-/* FUNCTION: RoboClaw command function
+/* 
+ * FUNCTION: RoboClaw command function
  *  Sends current velocity and steering vals to RoboClaw; called at ROBOCLAW_UPDATE_RATE
  */
 void updateRoboClaw(int velMsg, int steerMsg) {
@@ -118,20 +122,20 @@ void updateRoboClaw(int velMsg, int steerMsg) {
   prevVelMsg = velMsg;
   prevSteerMsg = steerMsg;
   
-  rc.SpeedAccelDeccelPositionM1(address,100000,1000,0,velMsg,0);
-  rc.SpeedAccelDeccelPositionM2(address,0,1000,0,steerMsg,0);
+  rc.SpeedAccelDeccelPositionM1(address, 100000, 1000, 0, velMsg, 0);
+  rc.SpeedAccelDeccelPositionM2(address, 0, 1000, 0, steerMsg, 0);
   prevMillis = millis();
 
-  /*char i[32];
-  snprintf(i, sizeof(i), "steerMsg = %d, velMsg = %d", steerMsg, velMsg);
-  nh.loginfo(i);*/
-  
-  
-  
+  #ifdef DEBUG
+    char i[32];
+    snprintf(i, sizeof(i), "steerMsg = %d, velMsg = %d", steerMsg, velMsg);
+    nh.loginfo(i);
+  #endif //DEBUG
 
 } //updateRoboClaw()
 
-/* FUNCTION: Steering conversion function
+/* 
+ * FUNCTION: Steering conversion function
  *  Converts ackermann steering angle to motor encoder value for RoboClaw
  */
 int steerConvert(float ack_steer){
@@ -153,7 +157,8 @@ int steerConvert(float ack_steer){
   return ack_steer;
 } //steerConvert
 
-/* FUNCTION: Velocity conversion function
+/* 
+ * FUNCTION: Velocity conversion function
  *  Converts ackermann velocity to motor encoder value for RoboClaw
  */
 int velConvert(float ack_vel){
@@ -169,7 +174,8 @@ int velConvert(float ack_vel){
   return ack_vel;
 } //velConvert()
 
-/* FUNCTION: Command stepping function
+/* 
+ * FUNCTION: Command stepping function
  *  Meters commands sent to motors to ensure quick response and low latency
  */
 
@@ -197,9 +203,11 @@ void stepActuator(int *msg, int *prevMsg, int step) {
 } //stepActuator()
 
 void eStop() {
-  char i[32];
-  snprintf(i, sizeof(i), "ERR: Stopping!");
-  nh.loginfo(i);
+  #ifdef DEBUG
+    char i[32];
+    snprintf(i, sizeof(i), "ERR: Stopping!");
+    nh.loginfo(i);
+  #endif //DEBUG
   
   digitalWrite(ESTOP_PIN, HIGH);
   delay(1000);
