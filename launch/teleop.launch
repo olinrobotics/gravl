@@ -1,16 +1,5 @@
 <launch>
-  <!--arg to check if serial node is already running-->
-  <arg name="serial_not_started" default="true"/>
-
+  <!-- This brings up teleop -->
   <node pkg="joy" type="joy_node" name="joystick"/>
   <node pkg="tractor" type="Teleop" name="joystick_teleop"/>
-
-  <!--this is mainly for including in other launch files-->
-  <!--start serial node if one is not running-->
-  <group if="$(arg serial_not_started)">
-    <node pkg="rosserial_python" type="serial_node.py" name="serial">
-      <param name="port" value="/dev/ttyACM0"/>
-      <param name="baud" value="115200"/>
-    </node>
-  </group>
 </launch>

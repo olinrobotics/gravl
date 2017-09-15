@@ -1,0 +1,3 @@
+ATTRS{idProduct}=="6014", ATTRS{idVendor}=="0403", MODE="666", SYMLINK+="piksi piksi_$attr{serial}", GROUP="dialout"
+ATTRS{idProduct}=="8398", ATTRS{idVendor}=="0403", MODE="666", SYMLINK+="piksi piksi_$attr{serial}", GROUP="dialout"
+ATTRS{idProduct}=="A4A7", ATTRS{idVendor}=="0525", MODE="666", SYMLINK+="piksi piksi_$attr{serial}", GROUP="dialout"
