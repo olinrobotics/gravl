@@ -1,17 +1,7 @@
 <launch>
-  <!--arg to check if serial node is already running-->
-  <arg name="serial_not_started" default="true"/>
-
+  <!-- This brings up waypoint following -->
   <node pkg="swiftnav_ros" type="swiftnav_ros_node" name="swiftnav_ros_node" output="screen">
-    <param name="port" value="/dev/ttyUSB0" />
+    <param name="port" value="/dev/piksi" />
   </node>
-
-  <!--this is mainly for including in other launch files-->
-  <!--start serial node if one is not running-->
-  <group if="$(arg serial_not_started)">
-    <node pkg="rosserial_python" type="serial_node.py" name="serial">
-      <param name="port" value="/dev/ttyACM0"/>
-      <param name="baud" value="115200"/>
-    </node>
-  </group>
+  <node pkg="tractor" type="gps.py" name="converter"/>
 </launch>
