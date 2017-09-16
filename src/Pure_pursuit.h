@@ -1,4 +1,0 @@
-#ifndef PURE_PURSUIT
-#define PURE_PURSUIT
-
-#endif //PURE_PURSUIT

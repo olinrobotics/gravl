@@ -12,13 +12,11 @@
 #include "config.h"
 #include "estop.h"
 #include "lights.h"
-#include "MotionControl.h"
 #include "button.h"
 
 // ROS variables
 ros::NodeHandle nh;
 Estop *e;
-MotionControl *m;
 Lights l;
 button *b;
 button *c;
@@ -37,7 +35,6 @@ void setup() {
   //b = new button(&nh, "/Button", 24, 100, CHANGE);
   //c = new button(&nh, "/Button2", 25, 100, CHANGE);
 
-  m->setup(&nh);
   l.setup();
   pinMode(13, OUTPUT);
 }

@@ -32,6 +32,7 @@ Estop::Estop(ros::NodeHandle *nh, const int pin, const unsigned int debounceTime
 
 /*
  * Global function that calls the object function
+ *
  * @param[in] instance Instance of the class
  */
 void Estop::globalStop(void *instance){
