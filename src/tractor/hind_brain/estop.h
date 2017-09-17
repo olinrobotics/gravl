@@ -13,19 +13,19 @@ public:
 	static void globalStop(void* instance);
 	void onStop(void (*func)());
 	void offStop(void (*func)());
-  bool isStopped();
+	bool isStopped();
 
 private:
-  ros::Publisher *hardEStop;
+    ros::Publisher *hardEStop;
 	ros::Subscriber<std_msgs::Bool, Estop> *softEStop;
-  std_msgs::Bool stopped;
+    std_msgs::Bool stopped;
 	bool softStopped = false;
 	const unsigned int debounceTime;
 	const int pin;
 	long last_mill;
 	void (*stopfunc)() = dummyFunc;
 	void (*startfunc)() = dummyFunc;
-  void onChange();
+    void onChange();
 	void softStopCB(const std_msgs::Bool &message);
 };
 

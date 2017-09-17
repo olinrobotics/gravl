@@ -143,9 +143,10 @@ include_directories(
 ## The recommended prefix ensures that target names across packages don't collide
 # add_executable(${PROJECT_NAME}_node src/tractor_node.cpp)
 
-add_executable( Camera src/Camera.cpp )
-add_executable( Teleop src/Teleop.cpp )
-add_executable( State src/State.cpp )
+add_executable( Camera src/camera/Camera.cpp )
+add_executable( Teleop src/teleop/Teleop.cpp )
+add_executable( State src/state/State.cpp )
+add_executable( Waypoint src/Waypoint.cpp )
 
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the
@@ -165,6 +166,7 @@ add_executable( State src/State.cpp )
 target_link_libraries( Camera ${OpenCV_LIBS} ${catkin_LIBRARIES} -lopencv_highgui -lopencv_core )
 target_link_libraries( Teleop ${catkin_LIBRARIES} )
 target_link_libraries( State ${catkin_LIBRARIES} )
+target_link_libraries( Waypoint ${catkin_LIBRARIES} )
 
 #############
 ## Install ##

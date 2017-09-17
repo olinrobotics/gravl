@@ -1,4 +1,5 @@
 <launch>
-  <node pkg="joy" name="joystick" type="joy_node"/>
-  <node pkg="tractor" name="joystick_teleop" type="Teleop"/>
+  <!-- This brings up teleop -->
+  <node pkg="joy" type="joy_node" name="joystick"/>
+  <node pkg="tractor" type="Teleop" name="joystick_teleop"/>
 </launch>

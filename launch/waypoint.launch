@@ -1,0 +1,7 @@
+<launch>
+  <!-- This brings up waypoint following -->
+  <node pkg="swiftnav_ros" type="swiftnav_ros_node" name="swiftnav_ros_node" output="screen">
+    <param name="port" value="/dev/piksi" />
+  </node>
+  <node pkg="tractor" type="gps.py" name="converter"/>
+</launch>

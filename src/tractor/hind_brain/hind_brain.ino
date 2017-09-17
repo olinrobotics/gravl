@@ -1,14 +1,14 @@
 /**********************************************************************
-   KUBO Hindbrain Code (Teensie 3.5)
-   @file hind_brain.ino
-   @author: Connor Novak
-   @email: connor.novak@students.olin.edu
-   @version: 1.3
-
-   Basic OAK_compatible control of velocity actuator and
-   steering actuator through ackermann steering messages
-   over //teledrive, autonomous activation through boolean
-   message over /auto
+ * KUBO Hindbrain Code (Teensy 3.5)
+ * @file hind_brain.ino
+ * @author: Connor Novak
+ * @email: connor.novak@students.olin.edu
+ * @version: 1.2
+ * 
+ * Basic OAK_compatible control of velocity actuator and 
+ * steering actuator through ackermann steering messages 
+ * over //teledrive, autonomous activation through boolean 
+ * message over /auto
  **********************************************************************/
 
 #include "RoboClaw.h"
@@ -19,23 +19,23 @@
 #include "soft_switch.h"
 
 // Define pins, serial location
-const byte AUTO_LED_PIN 3
-const byte ESTOP_PIN 2
+const byte AUTO_LED_PIN = 3;
+const byte ESTOP_PIN = 2;
 #define RC_SERIAL Serial1
 #define address 0x80
-const int ROBOCLAW_UPDATE_RATE 500
+const int ROBOCLAW_UPDATE_RATE = 500;
 
 // Limit ranges of motors & controls (tuned)
-const int VEL_HIGH 2048
-const int VEL_LOW 190
-const int VEL_CONTROL_RANGE 2
-const int STEER_HIGH 1200
-const int STEER_LOW 600
-const int STEER_CONTROL_RANGE 90
+const int VEL_HIGH = 2048;
+const int VEL_LOW = 190;
+const int VEL_CONTROL_RANGE = 2;
+const int STEER_HIGH = 1200;
+const int STEER_LOW = 600;
+const int STEER_CONTROL_RANGE = 90;
 
 // Fidelity of actuators (subdivision of motion)
-const byte VEL_FIDELITY 5
-const byte STEER_FIDELITY 3
+const byte VEL_FIDELITY = 5;
+const byte STEER_FIDELITY = 3;
 
 // Def/init vars
 boolean isEStopped = false;
@@ -53,27 +53,31 @@ OAKSoftSwitch *l;
 RoboClaw rc(&Serial1, 10000);
 
 
-/* FUNCTION: //teledrive callback function
- *  ARGS: ros ackermann steering message
- *  RTRNS: none
- *  Called upon a receipt of data from //teledrive, updates steer and vel commands
-*/
-void ackermannCB(const ackermann_msgs::AckermannDrive &drive) {
-  
+/* 
+ * FUNCTION: //teledrive callback function
+ * ARGS: ros ackermanndrive message
+ * RTRNS: none
+ * Called upon a receipt of data from //teledrive
+ */
+void ackermannCB(const ackermann_msgs::AckermannDrive &drive){
   steerMsg = steerConvert(drive.steering_angle);
   velMsg = velConvert(drive.speed);
 
 } //ackermannCB()
 
 
-/* FUNCTION: /softestop callback function
+/* 
+ *  FUNCTION: /softestop callback function
  *  ARGS: ros boolean message
  *  RTRNS: none
  *  Called upon a receipt of data from /softestop, estops if true
-*/
+ */
 void softestopCB(const std_msgs::Bool &state) {
   if (state.data == true) {
-    eStop(ESTOP_PIN); 
+    eStop(ESTOP_PIN, isEStopped); 
+  }
+  else {
+    isEStopped = false;
   }
 } //softestopCB()
 
@@ -84,14 +88,15 @@ ros::Subscriber<ackermann_msgs::AckermannDrive> sub("teledrive", &ackermannCB );
 ros::Subscriber<std_msgs::Bool> sub2("softestop", &softestopCB );
 
 
-/* FUNCTION: setup function
- *  ARGS: none
- *  RTRNS: none
-    runs once on startup
-*/
+/* 
+ * FUNCTION: setup function
+ * ARGS: none
+ * RTRNS: none
+ *  runs once on startup
+ */
 void setup() {
 
-  //Open Roboclaw serial port
+  //Open serial communication with roboclaw
   rc.begin(38400);
 
   // Set up ROS node and initialize subscribers
@@ -115,7 +120,8 @@ void setup() {
 } //setup()
 
 
-/* FUNCTION: loop function
+/* 
+ * FUNCTION: loop function
  *  ARGS: none
  *  RTRNS: none
     runs constantly
@@ -137,7 +143,8 @@ void loop() {
 } //loop()
 
 
-/* FUNCTION: check serial function
+/* 
+ *  FUNCTION: check serial function
  * ARGS: nodehandle to check for connectivity
  * RTRNS: none
  * Estops if a given nodehandle isn't connected
@@ -157,8 +164,11 @@ void loop() {
  } //checkSerial()
 
  
-/* FUNCTION: RoboClaw command function
-    Sends current velocity and steering vals to RoboClaw; called at ROBOCLAW_UPDATE_RATE
+/* 
+ * FUNCTION: RoboClaw command function
+ * ARGS: integer velocity, integer steering angle
+ * RTRNS: none
+ * Sends current velocity and steering vals to RoboClaw; called at ROBOCLAW_UPDATE_RATE
 */
 void updateRoboClaw(int velMsg, int steerMsg) {
 
@@ -171,19 +181,28 @@ void updateRoboClaw(int velMsg, int steerMsg) {
 
   prevVelMsg = velMsg;
   prevSteerMsg = steerMsg;
-
+  
   rc.SpeedAccelDeccelPositionM1(address, 100000, 1000, 0, velMsg, 0);
   rc.SpeedAccelDeccelPositionM2(address, 0, 1000, 0, steerMsg, 0);
   prevMillis = millis();
 
+  #ifdef DEBUG
+    char i[32];
+    snprintf(i, sizeof(i), "steerMsg = %d, velMsg = %d", steerMsg, velMsg);
+    nh.loginfo(i);
+  #endif //DEBUG
+
 } //updateRoboClaw()
 
 
-/* FUNCTION: Steering conversion function
-    Converts ackermann steering angle to motor encoder value for RoboClaw
-*/
-int steerConvert(float ack_steer) {
-
+/* 
+ * FUNCTION: Steering conversion function
+ * ARGS: float ackermann steering angle
+ * RTRNS: converted ackermann steering angle
+ *  Converts ackermann steering angle to motor encoder value for RoboClaw
+ */
+int steerConvert(float ack_steer){
+  
   // Convert from range of input signal to range of output signal, then shift signal
   ack_steer = ack_steer * ((STEER_HIGH - STEER_LOW) / STEER_CONTROL_RANGE) + (STEER_HIGH + STEER_LOW) / 2;
 
@@ -202,11 +221,14 @@ int steerConvert(float ack_steer) {
 } //steerConvert
 
 
-/* FUNCTION: Velocity conversion function
-    Converts ackermann velocity to motor encoder value for RoboClaw
-*/
-int velConvert(float ack_vel) {
-
+/* 
+ * FUNCTION: Velocity conversion function
+ * ARGS: float ackermann velocity
+ * RTRNS: converted ackermann velocity
+ * Converts ackermann velocity to motor encoder value for RoboClaw
+ */
+int velConvert(float ack_vel){
+  
   // Reverse-removal Filter
   if (ack_vel < 0) {
     ack_vel = 0;
@@ -219,9 +241,13 @@ int velConvert(float ack_vel) {
 } //velConvert()
 
 
-/* FUNCTION: Command stepping function
-    Meters commands sent to motors to ensure quick response and low latency
-*/
+/* 
+ * FUNCTION: Command stepping function
+ * ARGS: current motor message, previous motor message, step size to check
+ * RTRNS: none
+ * Meters commands sent to motors to ensure quick response and low latency
+ */
+
 void stepActuator(int *msg, int *prevMsg, int step) {
 
   // Checks if stepping is necessary
@@ -246,7 +272,8 @@ void stepActuator(int *msg, int *prevMsg, int step) {
 } //stepActuator()
 
 
-/* FUNCTION eStop
+/* 
+ *  FUNCTION eStop
  *  ARGS: estop pin, state of estopped or not
  *  RTRNS: none
  *  Estops the tractor, sends an error message, and flips the estop state
@@ -264,4 +291,3 @@ void eStop(byte pin, bool state) {
   nh.loginfo(i);
   
 } //eStop()
-
