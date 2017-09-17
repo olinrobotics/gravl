@@ -74,7 +74,7 @@ void ackermannCB(const ackermann_msgs::AckermannDrive &drive){
  */
 void softestopCB(const std_msgs::Bool &state) {
   if (state.data == true) {
-    eStop(ESTOP_PIN, isEStopped); 
+    isEStopped = eStop(ESTOP_PIN, isEStopped); 
   }
   else {
     isEStopped = false;
@@ -128,11 +128,11 @@ void setup() {
 */
 void loop() {
 
-  // Checks for connectivity with mid-brain
-  checkSerial(&nh, ESTOP_PIN, isEStopped);
+  // Checks for connectivity with mid-brain and updates estopped state
+  isEStopped = checkSerial(&nh, ESTOP_PIN, isEStopped);
   
   // Sends commands to RoboClaw every ROBOCLAW_UPDATE_RATE milliseconds
-  if (millis() - prevMillis > ROBOCLAW_UPDATE_RATE) {
+  if (millis() - prevMillis > ROBOCLAW_UPDATE_RATE && !isEStopped) {
     updateRoboClaw(velMsg, steerMsg);
 
   }
@@ -146,21 +146,19 @@ void loop() {
 /* 
  *  FUNCTION: check serial function
  * ARGS: nodehandle to check for connectivity
- * RTRNS: none
+ * RTRNS: estop state
  * Estops if a given nodehandle isn't connected
  */
- void checkSerial(ros::NodeHandle *nh, byte eStopPin, bool eStopState) {
+ bool checkSerial(ros::NodeHandle *nh, byte eStopPin, bool eStopState) {
   if(nh->connected()) {
-     char i[32];
-    snprintf(i, sizeof(i), "Still connected");
-    nh->loginfo(i);
-    return;
+    return eStopState;
   }
-  else {
-    if(!isEStopped) {
-      eStop(eStopPin, eStopState); 
+  else { 
+    if(!eStopState) {
+      eStopState = eStop(eStopPin, eStopState); 
     }
   }
+  return eStopState;
  } //checkSerial()
 
  
@@ -275,10 +273,10 @@ void stepActuator(int *msg, int *prevMsg, int step) {
 /* 
  *  FUNCTION eStop
  *  ARGS: estop pin, state of estopped or not
- *  RTRNS: none
+ *  RTRNS: current state of estop
  *  Estops the tractor, sends an error message, and flips the estop state
  */
-void eStop(byte pin, bool state) {
+bool eStop(byte pin, bool state) {
   
   state = true;
   
@@ -289,5 +287,7 @@ void eStop(byte pin, bool state) {
   char i[32];
   snprintf(i, sizeof(i), "ERR: E-Stop pressed");
   nh.loginfo(i);
+
+  return state;
   
 } //eStop()
