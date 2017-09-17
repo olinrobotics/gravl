@@ -46,7 +46,7 @@ int prevSteerMsg;
 int prevVelMsg;
 
 // Declare switch & estop
-//Estop *e;
+Estop *e;
 OAKSoftSwitch *l;
 
 // Define roboclaw on 1st Teensie serial port
@@ -66,26 +66,9 @@ void ackermannCB(const ackermann_msgs::AckermannDrive &drive){
 } //ackermannCB()
 
 
-/* 
- *  FUNCTION: /softestop callback function
- *  ARGS: ros boolean message
- *  RTRNS: none
- *  Called upon a receipt of data from /softestop, estops if true
- */
-void softestopCB(const std_msgs::Bool &state) {
-  if (state.data == true) {
-    isEStopped = eStop(ESTOP_PIN, isEStopped); 
-  }
-  else {
-    isEStopped = false;
-  }
-} //softestopCB()
-
-
 // ROS variables
 ros::NodeHandle nh;
 ros::Subscriber<ackermann_msgs::AckermannDrive> sub("teledrive", &ackermannCB );
-ros::Subscriber<std_msgs::Bool> sub2("softestop", &softestopCB );
 
 
 /* 
@@ -103,10 +86,9 @@ void setup() {
   nh.getHardware()->setBaud(115200);
   nh.initNode(); // Initialize ROS nodehandle
   nh.subscribe(sub);
-  nh.subscribe(sub2);
 
   // Initialize estop and auto-switch
-  //e = new Estop(&nh, ESTOP_PIN, 1);
+  e = new Estop(&nh, ESTOP_PIN, 1);
   pinMode(ESTOP_PIN, OUTPUT);
   l = new OAKSoftSwitch(&nh, "/auto", AUTO_LED_PIN);
 
@@ -116,7 +98,8 @@ void setup() {
   rc.SpeedAccelDeccelPositionM2(address, 0, 500, 0, -steerMsg, 0);
   prevSteerMsg = steerMsg;
 
-  //e->onStop(eStop);
+  e->onStop(eStop);
+  e->offStop(eStart);
 } //setup()
 
 
@@ -129,7 +112,7 @@ void setup() {
 void loop() {
 
   // Checks for connectivity with mid-brain and updates estopped state
-  isEStopped = checkSerial(&nh, ESTOP_PIN, isEStopped);
+  checkSerial(&nh);
   
   // Sends commands to RoboClaw every ROBOCLAW_UPDATE_RATE milliseconds
   if (millis() - prevMillis > ROBOCLAW_UPDATE_RATE && !isEStopped) {
@@ -146,19 +129,15 @@ void loop() {
 /* 
  *  FUNCTION: check serial function
  * ARGS: nodehandle to check for connectivity
- * RTRNS: estop state
+ * RTRNS: none
  * Estops if a given nodehandle isn't connected
  */
- bool checkSerial(ros::NodeHandle *nh, byte eStopPin, bool eStopState) {
-  if(nh->connected()) {
-    return eStopState;
-  }
-  else { 
-    if(!eStopState) {
-      eStopState = eStop(eStopPin, eStopState); 
+ void checkSerial(ros::NodeHandle *nh) {
+  if(!nh->connected()) {
+    if(!isEStopped) {
+      eStop(); 
     }
   }
-  return eStopState;
  } //checkSerial()
 
  
@@ -272,22 +251,37 @@ void stepActuator(int *msg, int *prevMsg, int step) {
 
 /* 
  *  FUNCTION eStop
- *  ARGS: estop pin, state of estopped or not
- *  RTRNS: current state of estop
+ *  ARGS: none
+ *  RTRNS: none
  *  Estops the tractor, sends an error message, and flips the estop state
  */
-bool eStop(byte pin, bool state) {
+void eStop() {
   
-  state = true;
+  isEStopped = true;
   
-  digitalWrite(pin, HIGH);
-  delay(1000);
-  digitalWrite(pin, LOW);
+  digitalWrite(ESTOP_PIN, HIGH);
+  delay(2000);
+  digitalWrite(ESTOP_PIN, LOW);
   
   char i[32];
   snprintf(i, sizeof(i), "ERR: E-Stop pressed");
   nh.loginfo(i);
-
-  return state;
   
 } //eStop()
+
+
+/*
+ * FUNCTION eStart
+ * ARGS: none
+ * RTRNS: none
+ * Changes estopped state upon tractor restart
+ */
+ void eStart() {
+  isEStopped = false;
+
+  char i[32];
+  snprintf(i, sizeof(i), "MSG: Startup activated");
+  nh.loginfo(i);
+  
+ } //eStart()
+
