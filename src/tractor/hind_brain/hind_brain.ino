@@ -95,7 +95,7 @@ void setup() {
   // Set actuators to default positions
   rc.SpeedAccelDeccelPositionM1(address, 0, 300, 0, velMsg, 0);
   prevVelMsg = velMsg;
-  rc.SpeedAccelDeccelPositionM2(address, 0, 500, 0, -steerMsg, 0);
+  //rc.SpeedAccelDeccelPositionM2(address, 0, 500, 0, -steerMsg, 0);
   prevSteerMsg = steerMsg;
 
   e->onStop(eStop);
@@ -160,7 +160,7 @@ void updateRoboClaw(int velMsg, int steerMsg) {
   prevSteerMsg = steerMsg;
   
   rc.SpeedAccelDeccelPositionM1(address, 100000, 1000, 0, velMsg, 0);
-  rc.SpeedAccelDeccelPositionM2(address, 0, 1000, 0, steerMsg, 0);
+  //rc.SpeedAccelDeccelPositionM2(address, 0, 1000, 0, steerMsg, 0);
   prevMillis = millis();
 
   #ifdef DEBUG

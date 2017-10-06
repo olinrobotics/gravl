@@ -89,8 +89,9 @@ void Estop::softStopCB(const std_msgs::Bool &message){
   }
   else{
     softStopped = false;
-    if(!stopped.data)
-      (*startfunc)();
+    (*startfunc)();
+    //if(!stopped.data)
+      //(*startfunc)();
   }
 }
 
