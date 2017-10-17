@@ -5,9 +5,4 @@
     <param name="port" value="/dev/teensy"/>
     <param name="baud" value="115200"/>
   </node>
-
-  <include file="$(find tractor)/launch/rtk.launch"/>
-  <include file="$(find tractor)/launch/teleop.launch"/>
-  <include file="$(find tractor)/launch/lidar.launch"/>
-
 </launch>

@@ -16,6 +16,7 @@ find_package(catkin REQUIRED COMPONENTS
   image_transport
   dynamic_reconfigure
   ackermann_msgs
+  message_generation
 )
 set ( OpenCV_DIR "/usr/local/include/opencv2/")
 # find_package(OpenCV 3.2 REQUIRED)
@@ -55,11 +56,10 @@ set ( OpenCV_DIR "/usr/local/include/opencv2/")
 ##   * add every package in MSG_DEP_SET to generate_messages(DEPENDENCIES ...)
 
 ## Generate messages in the 'msg' folder
-# add_message_files(
-#   FILES
-#   Message1.msg
-#   Message2.msg
-# )
+add_message_files(
+  FILES
+  hemisphere.msg
+)
 
 ## Generate services in the 'srv' folder
 # add_service_files(
@@ -76,10 +76,11 @@ set ( OpenCV_DIR "/usr/local/include/opencv2/")
 # )
 
 ## Generate added messages and services with any dependencies listed here
-# generate_messages(
-#   DEPENDENCIES
-#   std_msgs
-# )
+generate_messages(
+  DEPENDENCIES
+  std_msgs
+  geometry_msgs
+)
 
 ################################################
 ## Declare ROS dynamic reconfigure parameters ##
@@ -113,7 +114,7 @@ catkin_package(
 #  INCLUDE_DIRS include
 #  LIBRARIES tractor
 #  CATKIN_DEPENDS roscpp rospy std_msgs
-#  DEPENDS system_lib
+  DEPENDS message_runtime
 )
 
 ###########
