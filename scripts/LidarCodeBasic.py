@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 import rospy 
 import math
+from std_msgs.msg import Bool
 from sensor_msgs.msg import LaserScan 
 from std_msgs.msg import String 
 from std_msgs.msg import Header 
@@ -8,6 +9,7 @@ import genpy
 from std_msgs.msg import String
 
 def callback(data):
+    self.pub0 = rospy.Publisher('/estop', Bool,  queue_size=10)
     totalDist= []
     i = 0
     while i < len(data.ranges):
@@ -58,7 +60,10 @@ def otherCode(data):
             #rospy.loginfo(i)
         i += 1
     if(obstaclePoints > numberOfPointsNeededToTrigger):
-        stopTheTractor() # Whatever code is needed to stop the tractor
+        stopTheTractor()    # Whatever code is needed to stop the tractor
+        self.pub0.publish(True)
+    else:
+        self.pub0.publish(False) 
     #rospy.loginfo(horizontalDistance[250])
     #rospy.loginfo(totalDist[128])
 def stopTheTractor():
