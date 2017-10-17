@@ -1,11 +1,11 @@
 
 // Initialize tuning variables
 
-int PLOW_SERVO_MAX = 155;
-int PLOW_SERVO_MIN = 87;
-int PLOW_SERVO_UP = 130;
-int PLOW_SERVO_DOWN = 87;
-int LED_DELAY = 500;
+const int PLOW_SERVO_MAX = 155;
+const int PLOW_SERVO_MIN = 87;
+const int PLOW_SERVO_UP = 130;
+const int PLOW_SERVO_DOWN = 87;
+const int LED_DELAY = 500;
 
 
 /* 
@@ -65,4 +65,37 @@ boolean updateLED(long *timer, boolean state) {
   
   return state;
 }
+
+/* 
+ * updateRoboClaw Function
+ * DESC: Sends current velocity and steering vals to RoboClaw; called every ROBOCLAW_UPDATE_RATE ms
+ * ARGS: left tread velocity, right tread velocity
+ * RTN: none
+ * 
+*/
+/*
+void updateRoboClaw(int l_vel, int r_vel) {
+
+  //Calculate step sizes based on fidelity
+  int steerStep = (STEER_HIGH - STEER_LOW) / STEER_FIDELITY;
+  int velStep = (VEL_HIGH - VEL_LOW) / VEL_FIDELITY;
+
+  stepActuator(&velMsg, &prevVelMsg, velStep);
+  stepActuator(&steerMsg, &prevSteerMsg, steerStep);
+
+  prevVelMsg = velMsg;
+  prevSteerMsg = steerMsg;
+  
+  rc.SpeedAccelDeccelPositionM1(address, 100000, 1000, 0, velMsg, 0);
+  //rc.SpeedAccelDeccelPositionM2(address, 0, 1000, 0, steerMsg, 0);
+  prevMillis = millis();
+
+  #ifdef DEBUG
+    char i[32];
+    snprintf(i, sizeof(i), "steerMsg = %d, velMsg = %d", steerMsg, velMsg);
+    nh.loginfo(i);
+  #endif //DEBUG
+
+} //updateRoboClaw()
+*/
 
