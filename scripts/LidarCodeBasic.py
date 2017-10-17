@@ -9,7 +9,7 @@ import genpy
 from std_msgs.msg import String
 
 def callback(data):
-    self.pub0 = rospy.Publisher('/estop', Bool,  queue_size=10)
+    
     totalDist= []
     i = 0
     while i < len(data.ranges):
@@ -60,10 +60,12 @@ def otherCode(data):
             #rospy.loginfo(i)
         i += 1
     if(obstaclePoints > numberOfPointsNeededToTrigger):
-        stopTheTractor()    # Whatever code is needed to stop the tractor
-        self.pub0.publish(True)
+        #stopTheTractor()    # Whatever code is needed to stop the tractor
+        pub0 = rospy.Publisher('/estop', Bool,  queue_size=10)
+        pub0.publish(True)
     else:
-        self.pub0.publish(False) 
+        pub0 = rospy.Publisher('/estop', Bool,  queue_size=10)
+        pub0.publish(False) 
     #rospy.loginfo(horizontalDistance[250])
     #rospy.loginfo(totalDist[128])
 def stopTheTractor():
