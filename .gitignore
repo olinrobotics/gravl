@@ -39,3 +39,5 @@
 *.clang_complete
 *.json
 /src/tractor/.poienvs
+
+*.swp
