@@ -2,9 +2,13 @@
 from math import *
 import rospy
 from std_msgs.msg import String
+from gps_common import GPSFix
+from publish_steering import publish_steering_angle
 
 """
 To Do:
+How do we insert the sense/think/act framework?
+What are the message types for the Hemisphere and how do we process?
 Verify math
 figure out how importing works
 make publishers work
@@ -14,7 +18,56 @@ create callback function
 calibrate data
 figure out why extra file is created
 """
+class GPS_navigation_node:
+    """
+    """
+    def __init__(self, waypoint_longitude, waypoint_latitude):
+    """
+    Initializes a GPS Navigation Node.
+    """
+        # Current latiude of the tractor (coordinate).
+        self.current_longitude = 0
+        # Current longitude of the tractor (coordinate).
+        self.current_latitude = 0
+        # Angle the car is currently facing (degrees).
+        self.current_angle = 10
+        # Longitude of the intended waypoint.
+        self.waypoint_longitude = waypoint_longitude
+        # Latitude of the intended waypoint.
+        self.waypoint_latitude = waypoint_latiude
+        # Set up the subscribers for both GPS modules. 
+        # TODO Check what the message type should be
+        rospy.Subscriber("RTK_GPS", GPSFix, rtk_callback)
+        # TODO Figure out what this message type will be. String for now.
+        rospy.Subscriber("Hemisphere_GPS", String, hemisphere_callback)
+        #################CALIBRATION########################
+        # The maximum angle the tractor can turn at once (degrees).
+        self.max_turn_angle = 45
+        # The minimum angle the tractor can turn at once (degrees).
+        self.min_turn_angle = -max_turn_angle
+        # Proportional constant for steering angle calculation
+        kp1 = 0.1
+        # Proportional constant for steering velocity calculation.
+        kp2 =  0.1
+        # Proportional constant for forwards velocity calculation.
+        kp3 = 0.1
+    
+    def rtk_callback(self, msg):
+        """
+        """
+        self.current_longitude = msg.longitude
+        self.current_latitude = msg.latitude
+        if (self.current_latitude != self.waypoint_latitude && \
+            self.current_longitude != self.waypoint_longitude):
+           deg_calculate_desired_angle()
+        
 
+    def hemisphere_callback():
+        """
+        """
+    
+
+    
 # GPS navigation pseudocode.
 
 # GPS
@@ -35,27 +88,12 @@ figure out why extra file is created
 # Multiply error by kp2 to get new velocity
 # Tune the p values to be accurate
 
-#########################UPDATE WITH CALLBACK#########################
-current_longitude  = 0
-current_latitude   = 0
-current_angle      = 10 #make sure this is in degrees
-waypoint_longitude = -0.1
-waypoint_latitude  = -1
-
-#########################CALIBRATION#########################
-max_turn_angle = 45               #in degrees
-min_turn_angle = -max_turn_angle
-
-kp1 = 1 #calibrate for steering angle
-kp2 = 1 #calibrate for steering velocity
-kp3 = 1 #calibrate for forwards velocity
-
-max_forward_speed = 2 #speed goes from 0 to 2
-min_forward_speed = 0
-max_turn_speed = 0.1 #calibrate to something reasonable (rad/s)
-
 #########################CORE FUNCTIONS#########################
-def deg_calculate_desired_angle(clat, clong, wlat, wlong):
+def deg_calculate_desired_angle(clat=self.current_latitude, clong=self.current_longitude, wlat=self.waypoint_latitude, wlong=self.waypoint_longitude):
+    """
+    Calculates the desired angle for the car based on the angle necessary
+    to drive towards the waypoint.
+    """
     longitude_difference =  wlong - clong
     latitude_difference = wlat - clat
     desired_angle_rad = atan2(longitude_difference, latitude_difference)
@@ -63,10 +101,14 @@ def deg_calculate_desired_angle(clat, clong, wlat, wlong):
     return desired_angle_deg #in degrees
 
 def deg_calculate_steering_error(current_angle, desired_angle):
+    """
+    """
     error =  desired_angle - current_angle
     return error #in degrees
 
 def deg_calculate_steering_angle(error, kp1):
+    """
+    """
     steering_angle = None
     if error < -max_turn_angle:
         steering_angle = -max_turn_angle
