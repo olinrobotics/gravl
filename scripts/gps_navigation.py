@@ -173,7 +173,7 @@ class GPS_navigation_node:
 # Testing functions.
 def run():
     # Test with some coordinates.
-    gps_test = GPSNavigatioNode(42.29, 72.26)
+    gps_test = GPSNavigationNode(42.29, 72.26)
     print "running..."
 
 if __name__=='__main__':
