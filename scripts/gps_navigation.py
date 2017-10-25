@@ -1,18 +1,13 @@
 #!/usr/bin/env python
 from math import *
 import rospy
-from std_msgs.msg import String
+
 
 """
-To Do:
-Verify math
-figure out how importing works
-make publishers work
-make publishers work with ackermann_msgs
-create degrees to radians conversions
-create callback function
-calibrate data
-figure out why extra file is created
+Notes:
+Currently, this only establishes the math, but isn't ready to use real data.
+The subscribe_position.py document successfully imports latitude and longitude
+from the GPS.bag file.
 """
 
 # GPS navigation pseudocode.
@@ -44,20 +39,21 @@ waypoint_latitude  = -1
 
 #########################CALIBRATION#########################
 max_turn_angle = 45               #in degrees
-min_turn_angle = -max_turn_angle
+min_turn_angle = -max_turn_angle  #since zero degrees is straight, max turns
+                                  #right and min turns left
 
 kp1 = 1 #calibrate for steering angle
 kp2 = 1 #calibrate for steering velocity
 kp3 = 1 #calibrate for forwards velocity
 
 max_forward_speed = 2 #speed goes from 0 to 2
-min_forward_speed = 0
+min_forward_speed = 0 #for calculations
 max_turn_speed = 0.1 #calibrate to something reasonable (rad/s)
 
-#########################CORE FUNCTIONS#########################
-def deg_calculate_desired_angle(clat, clong, wlat, wlong):
-    longitude_difference =  wlong - clong
-    latitude_difference = wlat - clat
+#########################CORE FUNCTIONS#################### #c = current
+def deg_calculate_desired_angle(clat, clong, wlat, wlong):  #w = waypoint
+    longitude_difference =  wlong - clong                   #lat = latitude
+    latitude_difference = wlat - clat                       #long = longitude
     desired_angle_rad = atan2(longitude_difference, latitude_difference)
     desired_angle_deg = desired_angle_rad * (180 / pi)
     return desired_angle_deg #in degrees
@@ -66,22 +62,22 @@ def deg_calculate_steering_error(current_angle, desired_angle):
     error =  desired_angle - current_angle
     return error #in degrees
 
-def deg_calculate_steering_angle(error, kp1):
-    steering_angle = None
-    if error < -max_turn_angle:
-        steering_angle = -max_turn_angle
+def deg_calculate_steering_angle(error, kp1): #Takes error and accounts for it
+    steering_angle = None                     #with steering angle. kp1 changes
+    if error < -max_turn_angle:               #how "direct" steering is-higher
+        steering_angle = -max_turn_angle      #kp1 results in sharper turning.
     elif error > max_turn_angle:
         steering_angle = max_turn_angle
     else:
-        steering_angle = kp1 * -error #if error is positive, want negative motion to compensate
-    return steering_angle #in degrees
+        steering_angle = kp1 * -error   #if error is positive, want negative
+    return steering_angle #in degrees   #motion to compensate
 
 def deg_calculate_forward_velocity(angle, kp3):
     forward_velocity = kp3 * (max_forward_speed/max_turn_angle) * angle
     print  (max_forward_speed/max_turn_angle) * angle  #something here is wrong with datatypes
     if forward_velocity >= max_forward_speed:
         forward_velocity = max_forward_speed
-    return forward_velocity
+    return forward_velocity #between min speed and max speed values
 
 #########################CALCULATED VALUES#########################
 desired_angle = deg_calculate_desired_angle(current_latitude, current_longitude, waypoint_latitude, waypoint_longitude)
@@ -90,7 +86,7 @@ steering_angle = deg_calculate_steering_angle(steering_error, kp1)
 forward_velocity = deg_calculate_forward_velocity(steering_angle, kp3)
 
 def run():
-    print "running..."
+    print "running..."      #print statements for testing
     print desired_angle
     print steering_error
     print steering_angle
