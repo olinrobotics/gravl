@@ -58,12 +58,6 @@ int main( int argc, char **argv ) {
     Canny(blurred, dst, lowThreshold, lowThreshold*ratio, kernel_size);
     if (!dst.empty()) {
         cout << dst.channels();
-        // someone who knows c++ might be able to explain this 
-        //dst = Scalar::all(0);
-        //copying? wat
-        //blurred.copyTo(dst);
-        //make a grayscale version
-        //cvtColor(dst, cdst, CV_BGR2GRAY);
         //make a vector of lines and do Hough Lines stuff 
         vector<Vec4i> lines;
         HoughLinesP(dst, lines, 1, CV_PI/180, 80, 30, 10);
@@ -72,11 +66,25 @@ int main( int argc, char **argv ) {
         Size s = dst.size();
         cdst = Mat::zeros(s.height, s.width, CV_8UC3);
         //display the lines I guess
-        for( size_t i = 0; i < 5; i++ )
+        float total_slope = 0;
+        float total_intercept = 0;
+        for( size_t i = 0; i < 10; i++ )
           {
             Vec4i l = lines[i];
             line( cdst, Point(l[0], l[1]), Point(l[2], l[3]), Scalar(0,0,255), 3, CV_AA);
+            float slope = (l[1] - l[3]) / (l[0] - l[2]);
+            float intercept = l[1] - slope*l[0];
+            total_slope += slope;
+            total_intercept += intercept;
+            //total_x1 += l[0];
+            //total_x2 += l[2];
+            //total_y1 += l[1];
+            //total_y2 += l[3];
           }
+        // make the average vector
+        float avg_slope = total_slope / 10.0;
+        float avg_intercept = total_intercept / 10.0;
+        line( cdst, Point(0, avg_intercept), Point(10000, avg_intercept + avg_slope*10000), Scalar(0,255,0), 3, CV_AA);
         //show the image
         imshow(edgemap_window_name, dst);
 
