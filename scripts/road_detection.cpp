@@ -72,19 +72,26 @@ int main( int argc, char **argv ) {
           {
             Vec4i l = lines[i];
             line( cdst, Point(l[0], l[1]), Point(l[2], l[3]), Scalar(0,0,255), 3, CV_AA);
-            float slope = (l[1] - l[3]) / (l[0] - l[2]);
-            float intercept = l[1] - slope*l[0];
-            total_slope += slope;
-            total_intercept += intercept;
-            //total_x1 += l[0];
-            //total_x2 += l[2];
-            //total_y1 += l[1];
-            //total_y2 += l[3];
+            float slope = (l[0] - l[2]) / (l[1] - l[3]);
+            float intercept = l[0] - slope*l[1];
+            printf("%f\n", slope);
+            if (slope < 10.0) {
+                total_slope += slope;
+                total_intercept += intercept;
+            }
           }
-        // make the average vector
+        // average of the top two lines
+        float avg_x = (lines[0][0] + lines[1][0]) / 2.0;
+        float avg_y = (lines[0][1] + lines[1][1]) / 2.0;
+        // midpoint of the image
+        float mid_x = cdst.size().width / 2.0;
+
         float avg_slope = total_slope / 10.0;
+        printf("%f", avg_slope);
+        //std::cout << avg_slope;
         float avg_intercept = total_intercept / 10.0;
-        line( cdst, Point(0, avg_intercept), Point(10000, avg_intercept + avg_slope*10000), Scalar(0,255,0), 3, CV_AA);
+        //line( cdst, Point(mid_x, cdst.size().height), Point(avg_x, avg_y), Scalar(0,255,0), 3, CV_AA);
+        line( cdst, Point(mid_x, cdst.size().height), Point(mid_x + (avg_slope*cdst.size().height), 0), Scalar(255, 0, 0), 3, CV_AA);
         //show the image
         imshow(edgemap_window_name, dst);
 
