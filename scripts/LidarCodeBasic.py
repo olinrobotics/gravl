@@ -35,7 +35,6 @@ def otherCode(data):
     pub0 = rospy.Publisher('/estop', Bool,  queue_size=10) # init your publishers early
     pub1 = rospy.Publisher('/scan_verticals', Float64,  queue_size=10)
     pub2 = rospy.Publisher('/scan_horizontals', Float64,  queue_size=10) 
-    # puts the distance away into a separate variable # Converts step to degrees
     totalDist = [] #Setting arrays
     verticalDistance = [] # Distance from front of tractor
     horizontalDistance = [] # Distance from center of tractor

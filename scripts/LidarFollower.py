@@ -40,7 +40,7 @@ def otherCode(data):
     pub0 = rospy.Publisher('/estop', Bool,  queue_size=10) # init your publishers early
     pub1 = rospy.Publisher('/scan_verticals', Float64,  queue_size=10)
     pub2 = rospy.Publisher('/scan_horizontals', Float64,  queue_size=10)
-    pubAcker = rospy.Publisher('myNewMadeUpAcker', AckermannDrive, queue_size=10) 
+    pubAcker = rospy.Publisher('/autodrive', AckermannDrive, queue_size=10) 
     ack_msg = AckermannDrive()
     totalDist = [] #Setting arrays
     verticalDistance = [] # Distance from front of tractor
