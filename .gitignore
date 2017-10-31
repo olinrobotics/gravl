@@ -41,3 +41,10 @@
 /src/tractor/.poienvs
 
 *.swp
+
+# CMake bullshit
+scripts/CMakeCache.txt
+*.cmake
+scripts/Makefile
+scripts/CMakeFiles/
+

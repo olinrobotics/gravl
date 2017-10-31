@@ -6,6 +6,8 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <math.h>
+#include <unordered_set>
+//#include <tr1/unordered_map>
 
 using namespace cv;
 using namespace std;
@@ -30,6 +32,39 @@ bool vec4_linelength_comparator(Vec4i i, Vec4i j) {
     int i_length = sqrt ( pow((i[0] - i[2]), 2) + pow((i[1] - i[3]), 2) );
     int j_length = sqrt ( pow((j[0] - j[2]), 2) + pow((j[1] - j[3]), 2) );
     return (i_length > j_length);
+}
+
+/*
+ * Given two lines, see if they are almost colinear, that is, there slopes are close
+ * and they aren't close to the same part of the image as well. Should make it easier
+ * to work with Hough Transforms that aren't quite tuned perfectly.
+ */
+bool are_almost_colinear(Vec4i l1, Vec4i l2) {
+    // thresholds for how close the slope and y' distance should be for it to count
+    int slope_threshold = 2;
+    int dist_threshold = 10;
+    //slopes
+    int slope_l1 = (l1[1] - l1[3]) / (l1[0] - l1[2]);
+    int slope_l2 = (l2[1] - l2[3]) / (l2[0] - l2[2]);
+    //check whether slopes are close enough
+    if (( slope_l1 + slope_threshold > slope_l2 ) and ( slope_l1 - slope_threshold < slope_l2 )) {
+        //TODO check if order of endpoints is significant and make sure
+        // we get the endpoint of each thats closest to eachother
+        int a = l2[0];
+        int b = l2[1];
+        int c = l1[2];
+        int d = l1[3];
+        //The algebraic bs that I worked out, based on the following system of equations:
+        // y - d = 1/slope_l1(x - c)
+        // y - b = slope_l2(x - a)
+        int x = ( d - b + slope_l2*a - (1/slope_l1)*c ) / ( slope_l2 - (1/slope_l1) );
+        int y = slope_l2*(x - c) + d;
+        int dist = sqrt ( pow( (x-c), 2 ) + pow( (y-d), 2 ) );
+        if ( dist < dist_threshold ) {
+            return true;
+        }
+    }
+    return false;
 }
 
 int main( int argc, char **argv ) {
@@ -65,20 +100,28 @@ int main( int argc, char **argv ) {
         sort ( lines.begin(), lines.end(), vec4_linelength_comparator);
         Size s = dst.size();
         cdst = Mat::zeros(s.height, s.width, CV_8UC3);
-        //display the lines I guess
+        // getting average slope of the lines
         float total_slope = 0;
         float total_intercept = 0;
+        // make a hashmap of the consolidated lines
+        unordered_set<int> consolidated_lines;
+        // display the top lines
         for( size_t i = 0; i < 10; i++ )
           {
             Vec4i l = lines[i];
             line( cdst, Point(l[0], l[1]), Point(l[2], l[3]), Scalar(0,0,255), 3, CV_AA);
             float slope = (l[0] - l[2]) / (l[1] - l[3]);
             float intercept = l[0] - slope*l[1];
-            printf("%f\n", slope);
+            // hard coding a thing that avoids the horizon
             if (slope < 10.0) {
                 total_slope += slope;
                 total_intercept += intercept;
             }
+            for ( auto it = consolidated_lines.begin(); it != consolidated_lines.end(); ++it ) {
+                int l1_index = *it;
+                Vec4i l1 = lines[l1_index];
+            }
+                
           }
         // average of the top two lines
         float avg_x = (lines[0][0] + lines[1][0]) / 2.0;
