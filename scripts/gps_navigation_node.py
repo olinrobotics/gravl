@@ -53,18 +53,13 @@ class GPS_navigation_node:
         self.kp3 = 0.1
         #Whether or not the waypoint has been reached.
         self.waypoint_reached = False
-        # Set up the subscribers for both GPS modules. 
         while not waypoint_reached:
-            # TODO Check what the message type should be
-            rtk_sub = rospy.Subscriber("RTK_GPS", GPSFix, rtk_callback)
-            # TODO Figure out what this message type will be. String for now.
-            h_sub = rospy.Subscriber("Hemisphere_GPS", String, hemisphere_callback)
-            data = message_filters.TimeSynchronizer([rtk_sub, ih_sub], 10)
-            ts.registerCallback(callback)
+        #TODO We need to figure out the callback function such that we get
+        #updated heading and rtk at the same time. If we time synch the 
             rospy.spin()
         print("Waypoint reached!")
     
-    def callback(self, rtk_data, h_data):
+    def update(self, rtk_data, h_data):
         """
         Processes gps data and publishes new steering angle accordingly.
        
@@ -81,6 +76,8 @@ class GPS_navigation_node:
         self.current_angle = h_data.angle
         new_steering_angle = 0
         new_velocity = 0
+        # TODO Make this not directly comparing floating points
+        
         if (self.current_latitude != self.waypoint_latitude && \
             self.current_longitude != self.waypoint_longitude):
             desired_angle = deg_calculate_desired_angle(self.current_latitude,\
@@ -167,11 +164,21 @@ class GPS_navigation_node:
             forward_velocity = max_forward_speed
         return forward_velocity
 
-# Testing functions.
+
 def run():
-    # Test with some coordinates.
-    gps_test = GPSNavigatioNode(42.29, 72.26)
-    print "running..."
+    # TODO I guess the concept here would be you create objects for each
+    #      the nodes as needed and publish them.
+    # TODO Check what the message type should be
+    rtk_sub = rospy.Subscriber("RTK_GPS", NavSatFix, callback)
+    # TODO Figure out what this message type will be. String for now.
+    v_sub = rospy.Subscriber("vel", TwistStamped, callback)
+    # h_sub = rospy.Subscriber("Hemisphere_GPS", String, callback)
+    data = message_filters.TimeSynchronizer([rtk_sub, ih_sub], 10)
+    ts.registerCallback(callback)
+    gps_test = GPSNavigationNode(42.29, 72.26)
+    rospy.spin() 
+    def callback("RTK_GPS", "vel"):
+
 
 if __name__=='__main__':
     run()
