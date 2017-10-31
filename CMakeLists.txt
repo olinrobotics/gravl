@@ -20,10 +20,10 @@ find_package(catkin REQUIRED COMPONENTS
 )
 set ( OpenCV_DIR "/usr/local/include/opencv2/")
 # find_package(OpenCV 3.2 REQUIRED)
-
+set(CMAKE_CXX_FLAGS "-std=c++11")
 
 ## System dependencies are found with CMake's conventions
-# find_package(Boost REQUIRED COMPONENTS system)
+find_package(Boost REQUIRED COMPONENTS system)
 
 
 ## Uncomment this if the package has a setup.py. This macro ensures
@@ -58,7 +58,7 @@ set ( OpenCV_DIR "/usr/local/include/opencv2/")
 ## Generate messages in the 'msg' folder
 add_message_files(
   FILES
-  hemisphere.msg
+  Hemisphere.msg
 )
 
 ## Generate services in the 'srv' folder
@@ -111,10 +111,10 @@ generate_dynamic_reconfigure_options(
 ## CATKIN_DEPENDS: catkin_packages dependent projects also need
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
-#  INCLUDE_DIRS include
+  INCLUDE_DIRS /usr/include/boost/algorithm
 #  LIBRARIES tractor
 #  CATKIN_DEPENDS roscpp rospy std_msgs
-  DEPENDS message_runtime
+  DEPENDS message_runtime system_lib lrt
 )
 
 ###########
@@ -148,6 +148,8 @@ add_executable( Camera src/camera/Camera.cpp )
 add_executable( Teleop src/teleop/Teleop.cpp )
 add_executable( State src/state/State.cpp )
 add_executable( Waypoint src/Waypoint.cpp )
+add_executable( Hemisphere src/hemisphere/Hemisphere.cpp )
+
 
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the
@@ -168,6 +170,8 @@ target_link_libraries( Camera ${OpenCV_LIBS} ${catkin_LIBRARIES} -lopencv_highgu
 target_link_libraries( Teleop ${catkin_LIBRARIES} )
 target_link_libraries( State ${catkin_LIBRARIES} )
 target_link_libraries( Waypoint ${catkin_LIBRARIES} )
+target_link_libraries( Hemisphere ${catkin_LIBRARIES} ${Boost_LIBRARIES} -lrt)
+
 
 #############
 ## Install ##

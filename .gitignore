@@ -48,3 +48,5 @@ scripts/CMakeCache.txt
 scripts/Makefile
 scripts/CMakeFiles/
 
+# PointGrey Ros Bags
+*pointgrey[0-9].bag

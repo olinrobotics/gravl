@@ -7,7 +7,8 @@ from std_msgs.msg import String
 from std_msgs.msg import Header 
 import genpy
 from std_msgs.msg import String
-from std_msgs.msg import Float64
+from std_msgs.msg import Float64, Float32
+from ackermann_msgs.msg import AckermannDrive
 
 def callback(data):
     totalDist= [] #Make a new array, this stuff is currently just for debugging, and unneccesary
@@ -26,15 +27,21 @@ def listener():
     # anonymous=True flag means that rospy will choose a unique
     # name for our 'listener' node so that multiple listeners can
     # run simultaneously.
-    rospy.init_node('listener', anonymous=True) # idk what this does tbh
-    rospy.Subscriber('scan',LaserScan,callback) # Subscribes to the laser thing, calls the callback function
-    rospy.spin() # loops it
+    rospy.init_node('listener', anonymous=True)
+    rospy.Subscriber('scan',LaserScan,callback)
+    rospy.spin()
 def otherCode(data):
 # Code is supposed to detect if there is an obstacle, and if so, stop the tractor
-# Rougly complete, may not work in parcel B
+# lines with *** coordinated to the bravobot - 10/15/17
+# Things do to before completion:
+# Actually import data -- Done
+# Find out how to stop the tractor -- In Progress
+# Test various values to make sure it works
     pub0 = rospy.Publisher('/estop', Bool,  queue_size=10) # init your publishers early
     pub1 = rospy.Publisher('/scan_verticals', Float64,  queue_size=10)
-    pub2 = rospy.Publisher('/scan_horizontals', Float64,  queue_size=10) 
+    pub2 = rospy.Publisher('/scan_horizontals', Float64,  queue_size=10)
+    pubAcker = rospy.Publisher('/autodrive', AckermannDrive, queue_size=10) 
+    ack_msg = AckermannDrive()
     totalDist = [] #Setting arrays
     verticalDistance = [] # Distance from front of tractor
     horizontalDistance = [] # Distance from center of tractor
@@ -66,17 +73,23 @@ def otherCode(data):
     averageHor = Float64() #average horizontal distance of the obstacle
     averageNull = Float64() # if there aren't any obstacles
     averageNull.data = -1
-    if(triggerPoints > numberOfPointsNeededToTrigger): # if there is an obstacle that will hit the tractor
-        #  stop the tractor
-        pub0.publish(True)
-    else:
-        # don't stop the tractor
-        pub0.publish(False)
     if(obstaclePoints > 0):
         averageVert.data = sumOfVert / obstaclePoints # Computes average distance of obstacle from tractor
         averageHor.data = sumOfHor / obstaclePoints # Computes avearge distance from center of tractor
         pub1.publish(averageVert) #Publishes
         pub2.publish(averageHor) #Pubslishes
+        angle = math.tan(averageHor.data / averageVert.data) # Finds the angle at which the tractor should turn
+        if (averageVert.data > 3): #If obstacle is far away, go fast
+            speed = 2
+        elif(averageVert.data > 2): # if obstacle is closish, go slow
+            speed = 1
+        else: # if obstacle is really close, stop moving
+            speed = 0
+        ack_msg.speed = speed # set speed to the ackermann message
+        ack_msg.steering_angle = angle # set the angle to the ackermann message 
+        if(abs(angle) > 0.77): #something about being too far away makes it turn really far, so i kinda hard coded it
+            ack_msg.steering_angle = 0.0
+        pubAcker.publish(ack_msg) # publish
     else:
         pub1.publish(averageNull) # -1 because no obstacles   
         pub2.publish(averageNull) # -1 because no obstacles
