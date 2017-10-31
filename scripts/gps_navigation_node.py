@@ -104,13 +104,10 @@ class GPS_navigation_node:
     # TODO We should decide if these are class functions or static methods
     # we can use for wherever. I don't see a reason for making them static,
     # but I also don't know the whole situation.
-    # I'll make them class methods for now because it makes the default
-    # values nicer, but it's a pretty quick change.
-    def deg_calculate_desired_angle(clat=self.current_latitude, clong=self.current_longitude, wlat=self.waypoint_latitude, wlong=self.waypoint_longitude):
+    def deg_calculate_desired_angle(clat, clong, wlat, wlong):
         """
         Calculates the desired angle (in degrees) for the car based on the 
         angle necessary to drive towards the waypoint.
-
         clat : Current latitude coordinate of the vehicle.
         clong : Current longitude coordinate of the vehicle.
         wlat : Current latitude coordinate of the vehicle.
