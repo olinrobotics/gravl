@@ -147,7 +147,7 @@ include_directories(
 add_executable( Camera src/camera/Camera.cpp )
 add_executable( Teleop src/teleop/Teleop.cpp )
 add_executable( State src/state/State.cpp )
-add_executable( Waypoint src/Waypoint.cpp )
+add_executable( Waypoint src/waypoint/Waypoint.cpp )
 add_executable( Hemisphere src/hemisphere/Hemisphere.cpp )
 
 
