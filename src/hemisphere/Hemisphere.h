@@ -20,10 +20,12 @@ class Hemisphere{
 public:
 	explicit Hemisphere();
 	void run();
+
 private:
 	void publish();
 	ros::NodeHandle n;
 	ros::Publisher heading;
+	tractor::Hemisphere hem;
 
 	int fd;
 	struct termios oldtio, newtio;
