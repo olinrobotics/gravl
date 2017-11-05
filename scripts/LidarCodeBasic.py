@@ -10,7 +10,8 @@ import genpy
 from std_msgs.msg import String
 from std_msgs.msg import Float64
 class ObstacleDetection():
-    self.hasSensed = False
+    def __init__(self):
+        self.hasSensed = False
     def callback(self,data):
         totalDist= [] #Make a new array, this stuff is currently just for debugging, and unneccesary
         i = 0 # Using a manual for loop because i dont know python
@@ -67,7 +68,7 @@ class ObstacleDetection():
         averageHor = Float64() #average horizontal distance of the obstacle
         averageNull = Float64() # if there aren't any obstacles
         averageNull.data = -1
-        if(triggerPoints > numberOfPointsNeededToTrigger and !self.hasSensed): # if there is an obstacle that will hit the tractor
+        if(triggerPoints > numberOfPointsNeededToTrigger and not self.hasSensed): # if there is an obstacle that will hit the tractor
             #  stop the tractor
             pub0.publish(True)
             self.hasSensed = True
