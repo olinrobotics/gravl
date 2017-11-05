@@ -69,9 +69,7 @@ class ObstacleDetection():
         if(triggerPoints > numberOfPointsNeededToTrigger): # if there is an obstacle that will hit the tractor
             #  stop the tractor
             pub0.publish(True)
-        else:
-            # don't stop the tractor
-            pub0.publish(False)
+            delay(500)
         if(obstaclePoints > 0):
             averageVert.data = sumOfVert / obstaclePoints # Computes average distance of obstacle from tractor
             averageHor.data = sumOfHor / obstaclePoints # Computes avearge distance from center of tractor
