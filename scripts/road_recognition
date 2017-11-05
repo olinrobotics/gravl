@@ -1,5 +1,9 @@
 #!/usr/bin/env python
-# Kawin Nikomborirak
+#     _/    _/                                _/                _/      _/
+#    _/  _/      _/_/_/  _/      _/      _/      _/_/_/        _/_/    _/
+#   _/_/      _/    _/  _/      _/      _/  _/  _/    _/      _/  _/  _/
+#  _/  _/    _/    _/    _/  _/  _/  _/    _/  _/    _/      _/    _/_/
+# _/    _/    _/_/_/      _/      _/      _/  _/    _/      _/      _/
 # Supposed to display a transformed image from the camera, using the
 # recognize_road function.
 # For some reason very laggy
@@ -16,7 +20,7 @@ class road_recognition:
             '/camera/image_raw', Image, self.callback, queue_size=10)
         self.bridge = CvBridge()
 
-    def recognize_road(img):
+    def recognize_road(self, img):
         return img
 
     def callback(self, data):
@@ -24,7 +28,7 @@ class road_recognition:
             cv_image = self.bridge.imgmsg_to_cv2(data, 'mono8')
         except CvBridgeError as e:
             print(e)
-        cv2.imshow('Image window', cv_image)
+        cv2.imshow('Image window', self.recognize_road(cv_image))
         cv2.waitKey()
 
 
