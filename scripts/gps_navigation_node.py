@@ -103,7 +103,7 @@ class GPSNavigationNode:
             return
 
     #########################CORE FUNCTIONS#########################
-    # TODO Decide if there's any reason to make this static.
+    # TODO Decide if there's any reason to make this block static.
 
     def deg_calculate_desired_angle(clat, clong, wlat, wlong):
         """
@@ -132,8 +132,7 @@ class GPSNavigationNode:
         calculation by means of a GPS waypoint). 
         Returns the number of degrees to turn to face the desired angle.
         """
-        error =  desired_angle - current_angle
-        return error
+            return desired_angle - current_angle
 
     def deg_calculate_steering_angle(error, kp1):
         """
@@ -145,10 +144,8 @@ class GPSNavigationNode:
         Returns angle (in degrees) that the vehicle should turn in.
         """
         steering_angle = None
-        if error < -max_turn_angle:
-            steering_angle = -max_turn_angle
-        elif error > max_turn_angle:
-            steering_angle = max_turn_angle
+        if error > abs(self.max_turn_angle):
+            steering_angle = self.max_turn_angle
         else:
             steering_angle = kp1 * -error
         return steering_angle
@@ -162,15 +159,19 @@ class GPSNavigationNode:
         tuned empircally.
         Returns the new forward velocity for the vehicle.
         """
-        forward_velocity = kp3 * (max_forward_speed/max_turn_angle) * angle
-        if forward_velocity >= max_forward_speed:
-            forward_velocity = max_forward_speed
+        # TODO Confirm whether or not this math checks out. 
+        forward_velocity = kp3 * \
+                 (self.max_forward_speed/self.max_turn_angle) * angle
+        if forward_velocity >= self.max_forward_speed:
+            forward_velocity = self.max_forward_speed
         return forward_velocity
 
 
 def run():
     rospy.init_node("GPSNavigationNode")
     try:
+        # TODO Go through data set, pick waypoints (might be somewhat 
+        # arbitrary but it would be good to test actual navigation.
         waypoint_array = []
         gps_nav_node = GPSNavigationNode(waypoint_array)
     except rospy.ROSInterruptException:
