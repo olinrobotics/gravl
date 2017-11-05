@@ -2,84 +2,84 @@
 
 from math import *
 import rospy
-import message_filters
-# using string as a proxy for whatever the hemisphere outputs. Should be fixed.
-from std_msgs.msg import String
-from gps_common import GPSFix
-from ackermann_msgs import AckermannDrive
+from message_filters import TimeSynchronizer
+from sensor_msgs.msg import NavSatFix
+# TODO Ensure that this still works with the custom hemisphere message.
+from Hemisphere.msg import Hemisphere
+from ackermann_msgs.msg import AckermannDrive
 
-"""
-TODO:
-How do we insert the sense/think/act framework?
-What are the message types for the Hemisphere and how do we process?
-Verify math
-create degrees to radians conversions if necessary
-decidee how to structure callback function more rigorously
-calibrate data
-figure out why extra file is created
-"""
-class GPS_navigation_node:
+class GPSNavigationNode:
     """
     ROS Node for GPS navigation using a rtk GPS and hemisphere vector GPS
     for an Ackermann-steered vehicle. Must be instantiated with a specific
-    GPS waypoint for the vehicle to drive towards.
+    GPS waypoint list for the vehicle to drive towards in sequence.
     """
-    def __init__(self, waypoint_longitude, waypoint_latitude):
-    """
-    Initializes a GPS Navigation Node.
-    waypoint_longitude : Longitude coordinate of desired waypoint.
-    waypoint_latitude : Latitude coordinate of desired waypoint.
-    """
+    def __init__(self, waypoint_array=[]):
+        """
+        Initializes a GPS Navigation Node.
+        waypoint_array : An array of waypoints, in the format of 
+                    [[lat, long], [lat, long], [lat, long]]
+        """
+        # Initial setup that can be reused for any number of waypoints.
+        self.fix = rospy.Subscriber('fix', NavSatFix)
+        self.dir = rospy.Subscriber('direction', Hemisphere)
+        self.nav_data = \
+                     message_filters.TimeSynchronizer([self.fix, self.dir], 10)
+        self.pub = rospy.Publisher('cmds', AckermannDrive, queue_size = 10)
         # Current latiude of the tractor (coordinate).
-        self.current_longitude = 0
+        self.current_longitude = None
         # Current longitude of the tractor (coordinate).
-        self.current_latitude = 0
+        self.current_latitude = None
         # Angle the car is currently facing (degrees).
-        self.current_angle = 10
-        # Longitude of the intended waypoint.
-        self.waypoint_longitude = waypoint_longitude
-        # Latitude of the intended waypoint.
-        self.waypoint_latitude = waypoint_latiude
+        self.current_angle = None
+        # The target longitude of the tractor (coordinate)
+        self.waypoint_longitude = None
+        # the target latitude of the car.
+        self.waypoint_latitude = None
         # The maximum angle the tractor can turn at once (degrees).
         self.max_turn_angle = 45
         # The minimum angle the tractor can turn at once (degrees).
         self.min_turn_angle = -max_turn_angle
-        #################CALIBRATION########################
+        #Whether or not the waypoint has been reached.
+        self.waypoint_reached = False
+        # After synchronizing the data streams, we can register one callback.
+        self.nav_data.registerCallback(self.update)
+
+        # Set up for the PID controller.
         # Proportional constant for steering angle calculation
         self.kp1 = 0.1
         # Proportional constant for steering velocity calculation.
         self.kp2 =  0.1
         # Proportional constant for forwards velocity calculation.
         self.kp3 = 0.1
-        #Whether or not the waypoint has been reached.
-        self.waypoint_reached = False
-        while not waypoint_reached:
-        #TODO We need to figure out the callback function such that we get
-        #updated heading and rtk at the same time. If we time synch the 
-            rospy.spin()
-        print("Waypoint reached!")
-    
-    def update(self, rtk_data, h_data):
+
+        # Iterate through each waypoint set.
+        for waypoint in waypoint_array:
+            while not self.waypoint_reached:
+                self.waypoint_latiude = waypoint[0]
+                self.waypoint_longitude = waypoint[1]
+                rospy.spin()
+            # At this point, waypoint_reached will be set to true by the
+            # update function, so we'll need to set it to false to ensure
+            # that it actually navigates to the next point.
+            self.waypoint_reached = False
+
+    def update(self):
         """
-        Processes gps data and publishes new steering angle accordingly.
-       
-        rtk_data : Data from RTK GPS, time synchronized with hemisphere.
-        h_data : Data from Hemisphere GPS, time synchronized with RTK. 
+        Processes gps data and waypoint and publishes new steering angle.
         """
-        # Make sure we have both    
-        if rtk_data is None or h_data is None:
+        # Double check there is data from fix and from the Hemisphere.
+        if nav_data.longitude is None or nav_data.direction is None:
             return
-        # These message identifiers are a little arbitrary, need to fix.
-        # TODO Figure out what is needed to access each field.
-        self.current_longitude = rtk_data.longitude
-        self.current_latitude = rtk_data.latitude
-        self.current_angle = h_data.angle
-        new_steering_angle = 0
-        new_velocity = 0
-        # TODO Make this not directly comparing floating points
-        
-        if (self.current_latitude != self.waypoint_latitude && \
-            self.current_longitude != self.waypoint_longitude):
+
+        # Update class variables.
+        self.current_longitude = nav_data.longitude
+        self.current_latitude = nav_data.latitude
+        self.current_angle = nav_data.direciton
+
+        # Figure out how to proceed if the tractorhas not reached.
+        if (isclose(self.current_latitude, self.waypoint_latitude) and \
+            isclose(self.current_longitude, self.waypoint_longitude)):
             desired_angle = deg_calculate_desired_angle(self.current_latitude,\
                             self.current_longitude, self.waypoint_latitude, \
                             self.waypoint_longitude)
@@ -89,18 +89,22 @@ class GPS_navigation_node:
                                  self.kp1)
             new_velocity = deg_calculate_forward_velocity(new_steering_angle, \
                            self.kp3)
+            
+            # Create and publish a drive message.
             drive_msg = AckermannDrive()
+            drive_msg.header.stamp = rospy.Time.now()
             drive_msg.steering_angle = new_steering_angle
             drive_msg.speed = abs(new_velocity)
+            self.pub.publish(drive_msg)
 
+        # Otherwise, we're ready to move on to the next waypoint.
         else: 
             self.waypoint_reached = True
             return
 
     #########################CORE FUNCTIONS#########################
-    # TODO We should decide if these are class functions or static methods
-    # we can use for wherever. I don't see a reason for making them static,
-    # but I also don't know the whole situation.
+    # TODO Decide if there's any reason to make this block static.
+
     def deg_calculate_desired_angle(clat, clong, wlat, wlong):
         """
         Calculates the desired angle (in degrees) for the car based on the 
@@ -128,8 +132,7 @@ class GPS_navigation_node:
         calculation by means of a GPS waypoint). 
         Returns the number of degrees to turn to face the desired angle.
         """
-        error =  desired_angle - current_angle
-        return error
+            return desired_angle - current_angle
 
     def deg_calculate_steering_angle(error, kp1):
         """
@@ -141,12 +144,10 @@ class GPS_navigation_node:
         Returns angle (in degrees) that the vehicle should turn in.
         """
         steering_angle = None
-        if error < -max_turn_angle:
-            steering_angle = -max_turn_angle
-        elif error > max_turn_angle:
-            steering_angle = max_turn_angle
+        if error > abs(self.max_turn_angle):
+            steering_angle = self.max_turn_angle
         else:
-            steering_angle = kp1 * -error #if error is positive, want negative motion to compensate
+            steering_angle = kp1 * -error
         return steering_angle
 
     def deg_calculate_forward_velocity(angle, kp3):
@@ -158,27 +159,23 @@ class GPS_navigation_node:
         tuned empircally.
         Returns the new forward velocity for the vehicle.
         """
-        forward_velocity = kp3 * (max_forward_speed/max_turn_angle) * angle
-        # print  (max_forward_speed/max_turn_angle) * angle) 
-        if forward_velocity >= max_forward_speed:
-            forward_velocity = max_forward_speed
+        # TODO Confirm whether or not this math checks out. 
+        forward_velocity = kp3 * \
+                 (self.max_forward_speed/self.max_turn_angle) * angle
+        if forward_velocity >= self.max_forward_speed:
+            forward_velocity = self.max_forward_speed
         return forward_velocity
 
 
 def run():
-    # TODO I guess the concept here would be you create objects for each
-    #      the nodes as needed and publish them.
-    # TODO Check what the message type should be
-    rtk_sub = rospy.Subscriber("RTK_GPS", NavSatFix, callback)
-    # TODO Figure out what this message type will be. String for now.
-    v_sub = rospy.Subscriber("vel", TwistStamped, callback)
-    # h_sub = rospy.Subscriber("Hemisphere_GPS", String, callback)
-    data = message_filters.TimeSynchronizer([rtk_sub, ih_sub], 10)
-    ts.registerCallback(callback)
-    gps_test = GPSNavigationNode(42.29, 72.26)
-    rospy.spin() 
-    def callback("RTK_GPS", "vel"):
-
+    rospy.init_node("GPSNavigationNode")
+    try:
+        # TODO Go through data set, pick waypoints (might be somewhat 
+        # arbitrary but it would be good to test actual navigation.
+        waypoint_array = []
+        gps_nav_node = GPSNavigationNode(waypoint_array)
+    except rospy.ROSInterruptException:
+        pass    
 
 if __name__=='__main__':
     run()
