@@ -6,7 +6,6 @@
 # _/    _/    _/_/_/      _/      _/      _/  _/    _/      _/      _/
 # Supposed to display a transformed image from the camera, using the
 # recognize_road function.
-# For some reason very laggy
 
 import rospy
 from cv_bridge import CvBridge, CvBridgeError
@@ -41,7 +40,7 @@ class road_recognition:
         except CvBridgeError as e:
             print(e)
         cv2.imshow('Image window', self.recognize_road(cv_image))
-        cv2.waitKey()
+        cv2.waitKey(1)
 
 
 def main():
