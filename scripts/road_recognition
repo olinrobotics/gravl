@@ -21,9 +21,22 @@ class road_recognition:
         self.bridge = CvBridge()
 
     def recognize_road(self, img):
-        kern = cv2.getGaborKernel((9, 9), 6, 0, 10.0, 0.1, 0.1, ktype=cv2.CV_32F)
-        kern /= 5
-        return cv2.filter2D(img, cv2.CV_8UC3, kern)
+        img = img[300:964, :]  # Cut out the sky
+        filters = []
+        # Combine different texture rotations
+        for theta in np.arange(-np.pi / 4, np.pi / 4, np.pi / 16):
+            kern = cv2.getGaborKernel(
+                (31, 31), 4, theta, 10.0, 0.1, 0.5, ktype=cv2.CV_32F)
+            kern /= 1.5 * kern.sum()
+            filters.append(kern)
+        accum = np.zeros_like(img)
+        for kern in filters:
+            fimg = cv2.filter2D(img, cv2.CV_8UC3, kern)
+            np.maximum(accum, fimg, accum)
+        accum = accum
+        blurred = cv2.medianBlur(accum, 11)
+        # lines = cv2.Canny(blurred, 100, 200)
+        return blurred
 
     def callback(self, data):
         try:
