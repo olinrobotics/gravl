@@ -1,0 +1,48 @@
+#!/usr/bin/env python
+#     _/    _/                                _/                _/      _/
+#    _/  _/      _/_/_/  _/      _/      _/      _/_/_/        _/_/    _/
+#   _/_/      _/    _/  _/      _/      _/  _/  _/    _/      _/  _/  _/
+#  _/  _/    _/    _/    _/  _/  _/  _/    _/  _/    _/      _/    _/_/
+# _/    _/    _/_/_/      _/      _/      _/  _/    _/      _/      _/
+# Supposed to display a transformed image from the camera, using the
+# recognize_road function.
+
+import rospy
+from cv_bridge import CvBridge, CvBridgeError
+import cv2
+from sensor_msgs.msg import Image
+import numpy as np
+
+
+class road_recognition:
+    def __init__(self):
+        self.image = rospy.Subscriber(
+            '/camera/image_raw', Image, self.callback, queue_size=10)
+        self.bridge = CvBridge()
+
+    def recognize_road(self, img):
+        kern = cv2.getGaborKernel((9, 9), 6, 0, 10.0, 0.1, 0.1, ktype=cv2.CV_32F)
+        kern /= 5
+        return cv2.filter2D(img, cv2.CV_8UC3, kern)
+
+    def callback(self, data):
+        try:
+            cv_image = self.bridge.imgmsg_to_cv2(data, 'mono8')
+        except CvBridgeError as e:
+            print(e)
+
+        cv2.imshow('Image window', self.recognize_road(cv_image))
+        cv2.waitKey(1)
+
+
+def main():
+    road_recognition()
+    rospy.init_node('road_recognition', anonymous=True)
+    try:
+        rospy.spin()
+    except KeyboardInterrupt:
+        print('Shutting down')
+
+
+if __name__ == '__main__':
+    main()
