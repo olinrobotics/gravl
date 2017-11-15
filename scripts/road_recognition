@@ -21,9 +21,37 @@ class road_recognition:
         self.bridge = CvBridge()
 
     def recognize_road(self, img):
-        kern = cv2.getGaborKernel((9, 9), 6, 0, 10.0, 0.1, 0.1, ktype=cv2.CV_32F)
-        kern /= 5
-        return cv2.filter2D(img, cv2.CV_8UC3, kern)
+        img = img[300:964, :]  # Cut out the sky
+        filters = []
+        # Combine different texture rotations
+        # for theta in np.arange(-np.pi / 4, np.pi / 4, np.pi / 16):
+        #     kern = cv2.getGaborKernel(
+        #         (31, 31), 4, theta, 10.0, 0.1, 0.5, ktype=cv2.CV_32F)
+        #     kern /= 1.5 * kern.sum()
+        #     filters.append(kern)
+        # accum = np.zeros_like(img)
+        # for kern in filters:
+        #     fimg = cv2.filter2D(img, cv2.CV_8UC3, kern)
+        #     np.maximum(accum, fimg, accum)
+        # accum = accum
+        equ = cv2.equalizeHist(img)
+        for theta in np.arange(7 * np.pi/16,9 * np.pi/16, np.pi / 32):
+            kern = cv2.getGaborKernel(
+                (31, 31), 3, theta, 15.0, 0.1, 0, ktype=cv2.CV_32F)
+            kern /= 1.5 * kern.sum()
+            filters.append(kern)
+        accum = np.zeros_like(img)
+        for kern in filters:
+            fimg = cv2.filter2D(equ, cv2.CV_8UC3, kern)
+            np.maximum(accum, fimg, accum)
+        accum = cv2.equalizeHist(accum)
+        # blurred = cv2.medianBlur(equ, 11)
+        # edges = cv2.Canny(blurred, 10,100)
+        # lines = cv2.HoughLinesP(blurred, 1, np.pi / 180,
+        #                         100, 100, 10)
+        # for x1, y1, x2, y2 in lines[0]:
+        #     cv2.line(blurred, (x1, y1), (x2, y2), (0, 255, 0), 2)
+        return accum
 
     def callback(self, data):
         try:
