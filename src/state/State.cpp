@@ -14,10 +14,10 @@ State::State(){
 void State::stateCB(const std_msgs::Bool &msg){
   if(msg.data){
     telesub.shutdown();
-    waysub = n.subscribe("autodrive", 10, &State::autoCB, this);
+    autosub = n.subscribe("autodrive", 10, &State::autoCB, this);
   }
   else{
-    waysub.shutdown();
+    autosub.shutdown();
     telesub = n.subscribe("teledrive", 10, &State::teleCB, this);
   }
 }
