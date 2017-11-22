@@ -4,10 +4,10 @@
  * @author: Connor Novak
  * @email: connor.novak@students.olin.edu
  * @version: 1.3
- * 
- * Basic OAK_compatible control of velocity actuator and 
- * steering actuator through ackermann steering messages 
- * over /drive, autonomous activation through boolean 
+ *
+ * Basic OAK_compatible control of velocity actuator and
+ * steering actuator through ackermann steering messages
+ * over /drive, autonomous activation through boolean
  * message over /auto, estop capability over /softestop
  **********************************************************************/
 
@@ -61,7 +61,7 @@ unsigned long prevMillis = millis();
 int velMsg_check;
 
 
-/* 
+/*
  * FUNCTION: ackermannCB()
  * DESC: Called upon msg receipt from /drive; saves data to global vars
  * ARGS: ros ackermanndrive message
@@ -80,13 +80,13 @@ ros::NodeHandle nh;
 ros::Subscriber<ackermann_msgs::AckermannDrive> sub("drive", &ackermannCB);
 
 
-/* 
+/*
  * FUNCTION: setup()
  * DESC: runs once on startup
  * ARGS: none
  * RTNS: none
  */
-void setup() { // ----------S----------S----------S
+void setup() { // ----------S----------S----------S----------S----------S
 
   //Open serial communication with roboclaw
   rc.begin(38400);
@@ -106,7 +106,7 @@ void setup() { // ----------S----------S----------S
   e->offStop(eStart);
 
   // TODO Operator verify that actuators are in default positions
-  
+
   // Set actuators to default positions
   rc.SpeedAccelDeccelPositionM1(address, 0, 300, 0, velMsg, 0);
   prevVelMsg = velMsg;
@@ -116,13 +116,13 @@ void setup() { // ----------S----------S----------S
 } //setup()
 
 
-/* 
+/*
  * FUNCTION: loop()
  * DESC:  loops constantly
  * ARGS: none
  * RTNS: none
 */
-void loop() { // ----------L----------L----------L----------L----------L----------L----------L----------L
+void loop() { // ----------L----------L----------L----------L----------L
 
   // Checks for connectivity with mid-brain and updates estopped state
   checkSerial(&nh);
@@ -132,7 +132,7 @@ void loop() { // ----------L----------L----------L----------L----------L--------
     updateRoboClaw(velMsg, steerMsg);
 
   }
-  
+
   // Updates node
   nh.spinOnce();
   delay(1);
@@ -140,9 +140,9 @@ void loop() { // ----------L----------L----------L----------L----------L--------
 } //loop()
 
 
-// ----------F----------F----------F----------F----------F----------F----------F----------F----------F
+// ----------F----------F----------F----------F----------F----------F----------F
 
-/* 
+/*
  * FUNCTION: checkSerial()
  * DESC: Estops if node isn't connected
  * ARGS: nodehandle to check for connectivity
@@ -153,13 +153,13 @@ void loop() { // ----------L----------L----------L----------L----------L--------
   // If node isn't connected and tractor isn't estopped, estop
   if(!nh->connected()) {
     if(!isEStopped) {
-      eStop(); 
+      eStop();
     }
   }
  } //checkSerial()
 
- 
-/* 
+
+/*
  * FUNCTION: updateRoboClaw()
  * DESC: Sends current velocity and steering vals to RoboClaw; called at ROBOCLAW_UPDATE_RATE
  * ARGS: integer velocity, integer steering angle
@@ -179,32 +179,41 @@ void updateRoboClaw(int velMsg, int steerMsg) {
   prevVelMsg = velMsg;
   prevSteerMsg = steerMsg;
 
-  // Write msgs to RoboClaw
+  // Write velocity to RoboClaw
   rc.SpeedAccelDeccelPositionM1(address, 100000, 1000, 0, velMsg, 0);
-  rc.SpeedAccelDeccelPositionM2(address, 0, 1000, 0, steerMsg, 0);
-  char i[32];
-  snprintf(i, sizeof(i), "DBG: velMsg = %d", velMsg);
-  nh.loginfo(i);
+
+  // Write steering to RoboClaw if tractor is moving, else returns debug msg
+  if (velMsg > 0) {
+    rc.SpeedAccelDeccelPositionM2(address, 0, 1000, 0, steerMsg, 0);
+  }
+  else {
+    #ifdef DEBUG
+    char i[32];
+    snprintf(i, sizeof(i), "ERR: tractor not moving, steering message failed");
+    nh.loginfo(i);
+    #endif //DEBUG
+  }
+
   prevMillis = millis();  // Reset timer
 
   // roslog msgs if debugging
   #ifdef DEBUG
     char j[32];
     snprintf(j, sizeof(j), "DBG: steerMsg = %d, velMsg = %d", steerMsg, velMsg);
-    nh.loginfo(i);
+    nh.loginfo(j);
   #endif //DEBUG
 
 } //updateRoboClaw()
 
 
-/* 
+/*
  * FUNCTION: steerConvert()
  * DESC: Converts ackermann steering angle to motor encoder value for RoboClaw
  * ARGS: float ackermann steering angle
  * RTNS: converted encoder steering angle
  */
 int steerConvert(float ack_steer){
-  
+
   // Convert from range of input signal to range of output signal, then shift signal
   ack_steer = ack_steer * ((STEER_HIGH - STEER_LOW) / STEER_CONTROL_RANGE) + (STEER_HIGH + STEER_LOW) / 2;
 
@@ -223,14 +232,14 @@ int steerConvert(float ack_steer){
 } //steerConvert
 
 
-/* 
+/*
  * FUNCTION: velConvert()
  * DESC: Converts ackermann velocity to motor encoder value for RoboClaw
  * ARGS: float ackermann velocity
  * RTRNS: converted ackermann velocity
  */
 int velConvert(float ack_vel){
-  
+
   // filter to remove tractor reversal commands (platform wont back up)
   if (ack_vel < 0) {
     ack_vel = 0;
@@ -243,7 +252,7 @@ int velConvert(float ack_vel){
 } //velConvert()
 
 
-/* 
+/*
  * FUNCTION: stepActuator()
  * DESC: Meters commands sent to motors to ensure quick response and low latency
  * ARGS: current motor message, previous motor message, step size to check
@@ -259,7 +268,7 @@ void stepActuator(int *msg, int *prevMsg, int step) {
     #ifdef DEBUG
     nh.loginfo("DBG: Stepping signal");
     #endif //DEBUG
-    
+
     // If signal increasing, step up
     if (*msg > *prevMsg) {
       *msg = *prevMsg + step;
@@ -278,27 +287,27 @@ void stepActuator(int *msg, int *prevMsg, int step) {
 } //stepActuator()
 
 
-/* 
+/*
  *  FUNCTION eStop()
  *  DESC: Estops tractor, sends error message, flips estop state
  *  ARGS: none
  *  RTRNS: none
  */
 void eStop() {
-  
+
   isEStopped = true;
 
   // Logs estop msg
   char i[32];
   snprintf(i, sizeof(i), "ERR: Tractor E-Stopped");
   nh.loginfo(i);
-  
+
   // Toggle relay to stop engine
   digitalWrite(ESTOP_PIN, HIGH);
   delay(2000);
   digitalWrite(ESTOP_PIN, LOW);
-  
-  
+
+
 } //eStop()
 
 
@@ -315,6 +324,5 @@ void eStop() {
   char i[32];
   snprintf(i, sizeof(i), "MSG: EStop Disactivated");
   nh.loginfo(i);
-  
- } //eStart()
 
+ } //eStart()
