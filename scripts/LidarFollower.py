@@ -1,10 +1,10 @@
 #!/usr/bin/env python
-import rospy 
+import rospy
 import math
 from std_msgs.msg import Bool
-from sensor_msgs.msg import LaserScan 
-from std_msgs.msg import String 
-from std_msgs.msg import Header 
+from sensor_msgs.msg import LaserScan
+from std_msgs.msg import String
+from std_msgs.msg import Header
 import genpy
 from std_msgs.msg import String
 from std_msgs.msg import Float64, Float32
@@ -16,7 +16,7 @@ class ObstacleFollower():
         while i < len(data.ranges): # for loop stuff
             totalDist.append(data.ranges[i]) # assign each range to the array to make it canfigurable
             if totalDist[i] > 1000000: # converting all 'inf' to an actual number
-                totalDist[i] = 100000 
+                totalDist[i] = 100000
             i += 1 # parsing
         self.otherCode(data) #calling below code
         #print(totalDist[600])
@@ -39,7 +39,7 @@ class ObstacleFollower():
         pub0 = rospy.Publisher('/estop', Bool,  queue_size=10) # init your publishers early
         pub1 = rospy.Publisher('/scan_verticals', Float64,  queue_size=10)
         pub2 = rospy.Publisher('/scan_horizontals', Float64,  queue_size=10)
-        pubAcker = rospy.Publisher('/autodrive', AckermannDrive, queue_size=10) 
+        pubAcker = rospy.Publisher('/autodrive', AckermannDrive, queue_size=10)
         ack_msg = AckermannDrive()
         totalDist = [] #Setting arrays
         verticalDistance = [] # Distance from front of tractor
@@ -48,7 +48,7 @@ class ObstacleFollower():
         while i < len(data.ranges):
             totalDist.append(data.ranges[i])
             if totalDist[i] > 1000000:
-                totalDist[i] = 100000        
+                totalDist[i] = 100000
             verticalDistance.append(abs(math.cos(math.radians((i - 380.0) * (190.0 / 760.0))) * totalDist[i])) # Computes the distance from the object
             horizontalDistance.append(math.sin(math.radians((i - 380.0) * (190.0 / 760.0))) * totalDist[i]) # Computes the distance parallel to tractor
             i += 1
@@ -79,16 +79,16 @@ class ObstacleFollower():
             pub2.publish(averageHor) #Pubslishes
             angle = math.tan(averageHor.data / averageVert.data) # Finds the angle at which the tractor should turn
             if (averageVert.data > 1): #If obstacle is far away, go fast
-                speed = 0.5 * (averageVert.data) - 0.5
+                speed = 0.2 + 0.5 * (averageVert.data) - 0.5
             else: # if obstacle is really close, stop moving
                 speed = 0
             ack_msg.speed = speed # set speed to the ackermann message
-            ack_msg.steering_angle = angle # set the angle to the ackermann message 
-            if(abs(angle) > 0.77 and averageVert.data > 1): #something about being too far away makes it turn really far, so i kinda hard coded it
+            ack_msg.steering_angle = math.degrees(angle) # set the angle to the ackermann message
+            if(abs(ack_msg.steering_angle) > 45 or averageVert.data < 1): #something about being too far away makes it turn really far, so i kinda hard coded it
                 ack_msg.steering_angle = 0.0
             pubAcker.publish(ack_msg) # publish
         else:
-            pub1.publish(averageNull) # -1 because no obstacles   
+            pub1.publish(averageNull) # -1 because no obstacles
             pub2.publish(averageNull) # -1 because no obstacles
 
 if __name__ == '__main__':

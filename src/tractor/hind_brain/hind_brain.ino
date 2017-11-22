@@ -23,10 +23,6 @@
 Estop *e;
 OAKSoftSwitch *l;
 
-// Declare ROS node & subscriber
-ros::NodeHandle nh;
-ros::Subscriber<ackermann_msgs::AckermannDrive> sub("drive", &ackermannCB);
-
 // Def/Init Constants ----------C----------C----------C
 
 // Physical Pins
@@ -36,7 +32,7 @@ const byte ESTOP_PIN = 2;
 // RoboClaw & Settings
 #define RC_SERIAL Serial1
 #define address 0x80
-#define ROBOCLAW_UPDATE_RATE = 500;
+#define ROBOCLAW_UPDATE_RATE 500
 RoboClaw rc(&Serial1, 10000);
 
 // General Constants
@@ -62,6 +58,7 @@ unsigned int velMsg = VEL_HIGH;                     // High vel var = low vel
 int prevSteerMsg;
 signed int steerMsg = (STEER_HIGH + STEER_LOW) / 2; // Straight steer in middle
 unsigned long prevMillis = millis();
+int velMsg_check;
 
 
 /* 
@@ -73,8 +70,14 @@ unsigned long prevMillis = millis();
 void ackermannCB(const ackermann_msgs::AckermannDrive &drive){
   steerMsg = steerConvert(drive.steering_angle);
   velMsg = velConvert(drive.speed);
+  velMsg_check = drive.speed;
 
 } //ackermannCB()
+
+
+// Declare ROS node & subscriber
+ros::NodeHandle nh;
+ros::Subscriber<ackermann_msgs::AckermannDrive> sub("drive", &ackermannCB);
 
 
 /* 
@@ -123,13 +126,13 @@ void loop() { // ----------L----------L----------L----------L----------L--------
 
   // Checks for connectivity with mid-brain and updates estopped state
   checkSerial(&nh);
-  
+
   // Sends commands to RoboClaw every ROBOCLAW_UPDATE_RATE milliseconds
   if (millis() - prevMillis > ROBOCLAW_UPDATE_RATE && !isEStopped) {
     updateRoboClaw(velMsg, steerMsg);
 
   }
-
+  
   // Updates node
   nh.spinOnce();
   delay(1);
@@ -179,12 +182,15 @@ void updateRoboClaw(int velMsg, int steerMsg) {
   // Write msgs to RoboClaw
   rc.SpeedAccelDeccelPositionM1(address, 100000, 1000, 0, velMsg, 0);
   rc.SpeedAccelDeccelPositionM2(address, 0, 1000, 0, steerMsg, 0);
+  char i[32];
+  snprintf(i, sizeof(i), "DBG: velMsg = %d", velMsg);
+  nh.loginfo(i);
   prevMillis = millis();  // Reset timer
 
   // roslog msgs if debugging
   #ifdef DEBUG
-    char i[32];
-    snprintf(i, sizeof(i), "DBG: steerMsg = %d, velMsg = %d", steerMsg, velMsg);
+    char j[32];
+    snprintf(j, sizeof(j), "DBG: steerMsg = %d, velMsg = %d", steerMsg, velMsg);
     nh.loginfo(i);
   #endif //DEBUG
 
@@ -251,8 +257,6 @@ void stepActuator(int *msg, int *prevMsg, int step) {
 
     // Logs step verification if debugging
     #ifdef DEBUG
-    char i[32];
-    nh.loginfo(i);
     nh.loginfo("DBG: Stepping signal");
     #endif //DEBUG
     
