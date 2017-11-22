@@ -2,6 +2,13 @@
 This folder holds general scripts for GRAVL
 
 ### Files
+
+#### `circle_drive.py`
+Drives Kubo in a circle at a slow speed to determine wheel slippage. To run, first start a roscore by running the command `roscore` in a new Terminal.
+Then, in another Terminal, start the state machine controller by running the command `rosrun tractor State`. Finally, in a new Terminal, execute
+the circle driving script by running the command `circle_drive.py`. Make sure that Kubo is set up and running by following the instructions on the homepage
+of the Github GRAVL wiki.
+
 #### `test_pointgrey.py`
 Displays raw imagery from a pointgrey camera publishing through ROS. To run, first setup a pointgrey camera such that it is
 publishing over ROS by looking at this wiki page: ([link](https://github.com/olinrobotics/gravl/wiki/Kubo:-Cameras))  Then,
@@ -9,8 +16,8 @@ run the pointgrey program by entering `python pointgrey.py` in the Terminal.
 
 #### `pointgrey_bag.py`
 Displays bag file of pointgrey camera imagery. To run, first setup a pointgrey camera such that it is
-publishing over ROS by looking at this wiki page: ([link](https://github.com/olinrobotics/gravl/wiki/Kubo:-Cameras))  Then, 
-run the program by entering `python pointgrey_bag.py "filename"`, where `"filename"` is the name of a rosbag file of the 
+publishing over ROS by looking at this wiki page: ([link](https://github.com/olinrobotics/gravl/wiki/Kubo:-Cameras))  Then,
+run the program by entering `python pointgrey_bag.py "filename"`, where `"filename"` is the name of a rosbag file of the
 `/camera/image_raw` topic.
 
 #### `LidarCodeBasic.py`
