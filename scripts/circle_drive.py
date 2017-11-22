@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 import rospy                                                                    # ROS library for python use
-from ackermann_msgs.msg import AckermannDriveStamped                            # ROS Ackermann Steering message
+from ackermann_msgs.msg import AckermannDrive                                   # ROS Ackermann Steering message
 
 # Set Constants
 
@@ -16,17 +16,16 @@ Function: drives tractor along continuous circle
 def drive_circle(speed, turn):
 
     # Setup
-    ack_msg = AckermannDriveStamped()
+    ack_msg = AckermannDrive()
     rospy.init_node('circle_driver')
-    drive_publish = rospy.Publisher('autodrive',AckermannDriveStamped, queue_size=1)
+    drive_publish = rospy.Publisher('autodrive',AckermannDrive, queue_size=1)
     r = rospy.Rate(20)
 
     # Command loop, runs while roscore is up
     while not rospy.is_shutdown():
         r.sleep()
-        ack_msg.header.stamp = rospy.Time.now()
-        ack_msg.drive.steering_angle = turn
-        ack_msg.drive.speed = speed
+        ack_msg.steering_angle = turn
+        ack_msg.speed = speed
         drive_publish.publish(ack_msg)
 
 # Runs this section if the file is run in isolation
