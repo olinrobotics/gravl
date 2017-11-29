@@ -22,19 +22,8 @@ class road_recognition:
 
     def recognize_road(self, img):
         img = img[300:964, :]  # Cut out the sky
+
         filters = []
-        # Combine different texture rotations
-        # for theta in np.arange(-np.pi / 4, np.pi / 4, np.pi / 16):
-        #     kern = cv2.getGaborKernel(
-        #         (31, 31), 4, theta, 10.0, 0.1, 0.5, ktype=cv2.CV_32F)
-        #     kern /= 1.5 * kern.sum()
-        #     filters.append(kern)
-        # accum = np.zeros_like(img)
-        # for kern in filters:
-        #     fimg = cv2.filter2D(img, cv2.CV_8UC3, kern)
-        #     np.maximum(accum, fimg, accum)
-        # accum = accum
-        # equ = img
         for theta in np.arange(np.pi/4,3 * np.pi/4, np.pi / 16):
             kern = cv2.getGaborKernel(
                 (31, 31), 4, theta, 10.0, 0.1, 0.1, ktype=cv2.CV_32F)
@@ -46,16 +35,17 @@ class road_recognition:
             np.maximum(accum, fimg, accum)
         accum = cv2.equalizeHist(accum)
         accum = cv2.GaussianBlur(accum, (5, 5), 0)
-        # blurred = cv2.bilateralFilter(accum, 9, 75, 75)
-        # accum = cv2.equalizeHist(accum)
 
-        # blurred = cv2.medianBlur(equ, 11)
-        # edges = cv2.Canny(blurred, 00,100)
-        # lines = cv2.HoughLinesP(blurred, 1, np.pi / 180,
-        #                         100, 100, 10)
-        # for x1, y1, x2, y2 in lines[0]:
-        #     cv2.line(blurred, (x1, y1), (x2, y2), (0, 255, 0), 2)
-        return accum
+        Z = accum.reshape((-1, 2))
+        Z = np.float32(Z)
+        criteria = (cv2.TERM_CRITERIA_EPS + cv2.TERM_CRITERIA_MAX_ITER, 10, 1.0)
+        K = 3
+        ret, label, center = cv2.kmeans(Z,K,None,criteria,10,cv2.KMEANS_RANDOM_CENTERS)
+        center = np.uint8(center)
+        res = center[label.flatten()]
+        res2 = res.reshape((accum.shape))
+
+        return res2
 
     def callback(self, data):
         try:
