@@ -1,11 +1,10 @@
 #!/usr/bin/env python
-
 from math import *
 import rospy
+from msg.Hemisphere import Hemisphere
 from message_filters import TimeSynchronizer
 from sensor_msgs.msg import NavSatFix
-# TODO Ensure that this still works with the custom hemisphere message.
-from Hemisphere.msg import Hemisphere
+# TODO Ensure that this still works with the custom hemisphere messages
 from ackermann_msgs.msg import AckermannDrive
 
 class GPSNavigationNode:
@@ -132,7 +131,7 @@ class GPSNavigationNode:
         calculation by means of a GPS waypoint). 
         Returns the number of degrees to turn to face the desired angle.
         """
-            return desired_angle - current_angle
+        return desired_angle - current_angle
 
     def deg_calculate_steering_angle(error, kp1):
         """
