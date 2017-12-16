@@ -20,63 +20,52 @@ class road_recognition:
             '/camera/image_raw', Image, self.callback, queue_size=1)
         self.bridge = CvBridge()
 
-    def recognize_road(self, img, color):
+    def norm(self, x):
+        mu = 550
+        sigma = 100
+        return np.e**((-(x - mu) ** 2) / (2 * sigma ** 2)) / (np.sqrt(2 * np.pi * sigma ** 2))
+
+    def trap(self, img, line, m, n):
+        white = 0
+        total = 0
+        for r in range(line, img.shape[0], 10):
+            for c in range(int(r * m / (line - (img.shape[0])) + m * (img.shape[0]) / ((img.shape[0]) - line)),
+                           int((r * (n - img.shape[1]) + line * img.shape[1] -
+                                n * img.shape[0]) / (line - img.shape[0])),
+                           10):
+                white += img[r][c]
+                total += 1
+        return (white + 0.0) / total * self.norm(n - m)
+
+    def recognize_road(self, img):
         img = img[300:964, :]  # Cut out the sky
-        color = color[300:964, :]  # Cut out the sky
 
-        accum = img
-        # filters = []
-        # for theta in np.arange(np.pi/4,3 * np.pi/4, np.pi / 16):
-        #     kern = cv2.getGaborKernel(
-        #         (31, 31), 4, theta, 10.0, 0.1, 0.1, ktype=cv2.CV_32F)
-        #     kern /= 1.5 * kern.sum()
-        #     filters.append(kern)
-        # accum = np.zeros_like(img)
-        # for kern in filters:
-        #     fimg = cv2.filter2D(img, cv2.CV_8UC3, kern)
-        #     np.maximum(accum, fimg, accum)
-        accum = cv2.equalizeHist(accum)
-        accum = cv2.GaussianBlur(accum, (5, 5), 0)
+        line = int(img.shape[0] * 2 / 3)
 
-        Z = accum.reshape((-1, 2))
-        Z = np.float32(Z)
-        criteria = (cv2.TERM_CRITERIA_EPS +
-                    cv2.TERM_CRITERIA_MAX_ITER, 10, 1.0)
-        K = 4
-        ret, label, center = cv2.kmeans(
-            Z, K, None, criteria, 10, cv2.KMEANS_RANDOM_CENTERS)
-        center = np.uint8(center)
-        res = center[label.flatten()]
-        res2 = res.reshape((accum.shape))
-        th, dst = cv2.threshold(res2, 218, 255, cv2.THRESH_BINARY)
+        maxmn = 0
+        maxm = 0
+        maxn = 0
 
-        # edges = cv2.Canny(dst, 100, 200)
-        # lines = cv2.HoughLines(edges, 1, np.pi / 180, 10# 0)
-        # for line in lines:
-        #     for rho, theta in line:
-        #         a = np.cos(theta)
-        #         b = np.sin(theta)
-        #         x0 = a * rho
-        #         y0 = b * rho
-        #         x1 = int(x0 + 1000 * (-b))
-        #         y1 = int(y0 + 1000 * (a))
-        #         x2 = int(x0 - 1000 * (-b))
-        #         y2 = int(y0 - 1000 * (a))
+        for m in range(0, img.shape[1], 50):
+            for n in range(m, img.shape[1], 50):
+                val = self.trap(img, line, m, n)
+                if val > maxmn:
+                    maxmn = val
+                    maxm = m
+                    maxn = n
 
-                # cv2.line(dst, (x1, y1), (x2, y2), (177, 177, 177), 2)
-
-        # return dst
-        dstC = cv2.cvtColor(dst,cv2.COLOR_GRAY2RGB)
-        return cv2.addWeighted(color, 0.8, dstC, 0.2, 0)
+        cv2.line(img, (maxm, line), (0, img.shape[0]), 128, 10)
+        cv2.line(img, (maxn, line), (img.shape[1], img.shape[0]), 128, 10)
+        cv2.line(img, (maxm, line), (maxn, line), 128, 10)
+        return img
 
     def callback(self, data):
         try:
             cv_image = self.bridge.imgmsg_to_cv2(data, 'mono8')
-            cv_image_color = self.bridge.imgmsg_to_cv2(data, 'bgr8')
         except CvBridgeError as e:
             print(e)
 
-        cv2.imshow('Image window', self.recognize_road(cv_image, cv_image_color))
+        cv2.imshow('Image window', self.recognize_road(cv_image))
         cv2.waitKey(1)
 
 
