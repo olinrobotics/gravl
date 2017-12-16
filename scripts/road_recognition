@@ -17,8 +17,9 @@ import numpy as np
 class road_recognition:
     def __init__(self):
         self.image = rospy.Subscriber(
-            '/camera/image_raw', Image, self.callback, queue_size=1)
+            '/camera/image_raw', Image, self.callback)
         self.bridge = CvBridge()
+        self.image_pub = rospy.Publisher('trapezoid', Image)
 
     def norm(self, x):
         mu = 550
@@ -38,16 +39,14 @@ class road_recognition:
         return (white + 0.0) / total * self.norm(n - m)
 
     def recognize_road(self, img):
-        img = img[300:964, :]  # Cut out the sky
-
         line = int(img.shape[0] * 2 / 3)
 
         maxmn = 0
         maxm = 0
         maxn = 0
 
-        for m in range(0, img.shape[1], 50):
-            for n in range(m, img.shape[1], 50):
+        for m in range(0, img.shape[1], 100):
+            for n in range(m, img.shape[1], 100):
                 val = self.trap(img, line, m, n)
                 if val > maxmn:
                     maxmn = val
@@ -65,7 +64,12 @@ class road_recognition:
         except CvBridgeError as e:
             print(e)
 
-        cv2.imshow('Image window', self.recognize_road(cv_image))
+        road = self.recognize_road(cv_image)
+        try:
+            self.image_pub.publish(self.bridge.cv2_to_imgmsg(road, "mono8"))
+        except CvBridgeError as e:
+            print(e)
+        cv2.imshow('Image window', road)
         cv2.waitKey(1)
 
 
