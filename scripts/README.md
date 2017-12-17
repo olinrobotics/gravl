@@ -31,3 +31,10 @@ Takes a scan topic from LIDAR to track obstacles. To run, first either run a nod
 
 #### `gps_navigation_node.py`
 Takes latitude, longitude, and heading data from a topic and latitude and longitude data from waypoints and uses this data to produce ackermann drive velocity and steering angle messages  . To run, first setup the Hemisphere Vector GPS to publish heading data and the Swift Navigation RTK GPS to publish current latitude and longitude data. Then, run the program by entering `gps_navigation_node.py` in the Terminal.
+
+#### `recognize_road`
+Tries to recognize the road.
+At the moment, all it does is display an annotated video stream of a road, but will be modified to publish probably ackermann messages.
+To run, start `roscore`, play the rosbags which can be found on a usb in the lab, and `rosrun tractor road_recognition`.
+The script will subscribe to the topic `/camera/image_raw`.
+The important bit of code is the callback which establishes the publisher, and the recognize_road function which at the moment returns an annotated picture, but should soon give the tractor directions.
