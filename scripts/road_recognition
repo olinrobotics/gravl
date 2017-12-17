@@ -17,45 +17,46 @@ import numpy as np
 class road_recognition:
     def __init__(self):
         self.image = rospy.Subscriber(
-            '/camera/image_raw', Image, self.callback, queue_size=10)
+            '/camera/image_raw', Image, self.callback)
         self.bridge = CvBridge()
+        self.image_pub = rospy.Publisher('trapezoid', Image)
+
+    def norm(self, x):
+        mu = 550
+        sigma = 100
+        return np.e**((-(x - mu) ** 2) / (2 * sigma ** 2)) / (np.sqrt(2 * np.pi * sigma ** 2))
+
+    def trap(self, img, line, m, n):
+        white = 0
+        total = 0
+        for r in range(line, img.shape[0], 10):
+            for c in range(int(r * m / (line - (img.shape[0])) + m * (img.shape[0]) / ((img.shape[0]) - line)),
+                           int((r * (n - img.shape[1]) + line * img.shape[1] -
+                                n * img.shape[0]) / (line - img.shape[0])),
+                           10):
+                white += img[r][c]
+                total += 1
+        return (white + 0.0) / total * self.norm(n - m)
 
     def recognize_road(self, img):
-        img = img[300:964, :]  # Cut out the sky
-        filters = []
-        # Combine different texture rotations
-        # for theta in np.arange(-np.pi / 4, np.pi / 4, np.pi / 16):
-        #     kern = cv2.getGaborKernel(
-        #         (31, 31), 4, theta, 10.0, 0.1, 0.5, ktype=cv2.CV_32F)
-        #     kern /= 1.5 * kern.sum()
-        #     filters.append(kern)
-        # accum = np.zeros_like(img)
-        # for kern in filters:
-        #     fimg = cv2.filter2D(img, cv2.CV_8UC3, kern)
-        #     np.maximum(accum, fimg, accum)
-        # accum = accum
-        # equ = img
-        for theta in np.arange(np.pi/4,3 * np.pi/4, np.pi / 16):
-            kern = cv2.getGaborKernel(
-                (31, 31), 4, theta, 10.0, 0.1, 0.1, ktype=cv2.CV_32F)
-            kern /= 1.5 * kern.sum()
-            filters.append(kern)
-        accum = np.zeros_like(img)
-        for kern in filters:
-            fimg = cv2.filter2D(img, cv2.CV_8UC3, kern)
-            np.maximum(accum, fimg, accum)
-        accum = cv2.equalizeHist(accum)
-        accum = cv2.GaussianBlur(accum, (5, 5), 0)
-        # blurred = cv2.bilateralFilter(accum, 9, 75, 75)
-        # accum = cv2.equalizeHist(accum)
+        line = int(img.shape[0] * 2 / 3)
 
-        # blurred = cv2.medianBlur(equ, 11)
-        # edges = cv2.Canny(blurred, 00,100)
-        # lines = cv2.HoughLinesP(blurred, 1, np.pi / 180,
-        #                         100, 100, 10)
-        # for x1, y1, x2, y2 in lines[0]:
-        #     cv2.line(blurred, (x1, y1), (x2, y2), (0, 255, 0), 2)
-        return accum
+        maxmn = 0
+        maxm = 0
+        maxn = 0
+
+        for m in range(0, img.shape[1], 100):
+            for n in range(m, img.shape[1], 100):
+                val = self.trap(img, line, m, n)
+                if val > maxmn:
+                    maxmn = val
+                    maxm = m
+                    maxn = n
+
+        cv2.line(img, (maxm, line), (0, img.shape[0]), 128, 10)
+        cv2.line(img, (maxn, line), (img.shape[1], img.shape[0]), 128, 10)
+        cv2.line(img, (maxm, line), (maxn, line), 128, 10)
+        return img
 
     def callback(self, data):
         try:
@@ -63,7 +64,12 @@ class road_recognition:
         except CvBridgeError as e:
             print(e)
 
-        cv2.imshow('Image window', self.recognize_road(cv_image))
+        road = self.recognize_road(cv_image)
+        try:
+            self.image_pub.publish(self.bridge.cv2_to_imgmsg(road, "mono8"))
+        except CvBridgeError as e:
+            print(e)
+        cv2.imshow('Image window', road)
         cv2.waitKey(1)
 
 

@@ -6,6 +6,7 @@ from sensor_msgs.msg import LaserScan
 from std_msgs.msg import String
 from std_msgs.msg import Header
 import genpy
+import numpy as np
 from std_msgs.msg import String
 from std_msgs.msg import Float64, Float32
 from ackermann_msgs.msg import AckermannDrive
@@ -37,8 +38,6 @@ class ObstacleFollower():
     # Find out how to stop the tractor -- In Progress
     # Test various values to make sure it works
         pub0 = rospy.Publisher('/estop', Bool,  queue_size=10) # init your publishers early
-        pub1 = rospy.Publisher('/scan_verticals', Float64,  queue_size=10)
-        pub2 = rospy.Publisher('/scan_horizontals', Float64,  queue_size=10)
         pubAcker = rospy.Publisher('/autodrive', AckermannDrive, queue_size=10)
         ack_msg = AckermannDrive()
         totalDist = [] #Setting arrays
@@ -54,42 +53,64 @@ class ObstacleFollower():
             i += 1
         someDistanceAway = 4.5 # Essentially the ground ***
         lengthOfTheTractor = 1.2# Horizontal length of the tractor ***
-        obstaclePoints = 0 # Counts how many points are not the ground
+        obstaclePoints = [] # Counts how many points are not the ground
         triggerPoints = 0 # Counts number of points breaking threshold
         numberOfPointsNeededToTrigger = 15 # How many points must be seen to trigger a stop? ***
-        sumOfVert = 0 #initializing the sum of the vertical points
-        sumOfHor = 0#initializing the sum of the horizontal points
+        sumOfVert = [] #initializing the sum of the vertical points
+        sumOfHor = [] #initializing the sum of the horizontal points
+        obsNumber = -1#in case there are more than one obstacle
+        obsCount = 20 #if there is significant distince between obs points, treat as diffferent obs
         i = 0
         while i < len(totalDist): #Sweep throught the distances
             if(totalDist[i] < someDistanceAway): # Is there an object that is not the ground?
-                obstaclePoints += 1 # Add a point into the number of obstacle points
-                sumOfVert += verticalDistance[i] # kind of calculate average Vertical distance eventually
-                sumOfHor += horizontalDistance[i] # kind of calculate average Horizontal distance eventually
+                if(obsCount > 10):
+                    obsNumber += 1
+                    sumOfVert.append(0) # kind of calculate average Vertical distance eventually
+                    sumOfHor.append(0) # kind of calculate average Horizontal distance eventually
+                    obstaclePoints.append(0) # Add a point into the number of obstacle points
+                sumOfVert[obsNumber] += verticalDistance[i] # kind of calculate average Vertical distance eventually
+                sumOfHor[obsNumber] += horizontalDistance[i] # kind of calculate average Horizontal distance eventually
+                obstaclePoints[obsNumber] += 1
                 if(abs(horizontalDistance[i]) < (lengthOfTheTractor / 2.0)): #Will the obstacle hit the tractor?
                     triggerPoints += 1 # Add a point the the number of triggers
+                obsCount = 0 # reset obsCount
+                
+            else:
+                obsCount += 1
             i += 1
+        i = 0
+        newSumOfVert = np.array(sumOfVert,dtype=np.float)
+        newSumOfHor = np.array(sumOfHor,dtype=np.float)
+        newObsPts = np.array(obstaclePoints,dtype = np.float)
+        print("verticalData:",newSumOfVert / newObsPts)
+        print("horizontalData",newSumOfHor / newObsPts)
+        print("obstaclePoints = ",obstaclePoints)
+        while i < len(obstaclePoints):
+            if(((newSumOfVert[i] / newObsPts[i]) < 0.02)):
+                newSumOfHor[i] = 35000
+            i += 1
+        absoSumOfHor = np.absolute(newSumOfHor / newObsPts)
+        #absoSumOfHor = absoSumOfHor.tolist()
+        targetObstacle = np.argmin(absoSumOfHor)
+        print("targetObstacle=",targetObstacle)
         averageVert = Float64() #average vertical distance of the obstacle
         averageHor = Float64() #average horizontal distance of the obstacle
         averageNull = Float64() # if there aren't any obstacles
         averageNull.data = -1
-        if(obstaclePoints > 0):
-            averageVert.data = sumOfVert / obstaclePoints # Computes average distance of obstacle from tractor
-            averageHor.data = sumOfHor / obstaclePoints # Computes avearge distance from center of tractor
-            pub1.publish(averageVert) #Publishes
-            pub2.publish(averageHor) #Pubslishes
-            angle = math.tan(averageHor.data / averageVert.data) # Finds the angle at which the tractor should turn
-            if (averageVert.data > 1): #If obstacle is far away, go fast
-                speed = 0.2 + 0.5 * (averageVert.data) - 0.5
-            else: # if obstacle is really close, stop moving
-                speed = 0
-            ack_msg.speed = speed # set speed to the ackermann message
-            ack_msg.steering_angle = math.degrees(angle) # set the angle to the ackermann message
-            if(abs(ack_msg.steering_angle) > 45 or averageVert.data < 1): #something about being too far away makes it turn really far, so i kinda hard coded it
-                ack_msg.steering_angle = 0.0
-            pubAcker.publish(ack_msg) # publish
-        else:
-            pub1.publish(averageNull) # -1 because no obstacles
-            pub2.publish(averageNull) # -1 because no obstacles
+        averageVert.data = sumOfVert[targetObstacle] / obstaclePoints[targetObstacle] # Computes average distance of obstacle from tractor
+        averageHor.data = sumOfHor[targetObstacle] / obstaclePoints[targetObstacle] # Computes avearge distance from center of tractor
+        print(averageVert.data)
+        angle = math.tan(averageHor.data / averageVert.data) # Finds the angle at which the tractor should turn
+        if (averageVert.data > 1): #If obstacle is far away, go fast
+            speed = 0.2 + 0.5 * (averageVert.data) - 0.5
+        else: # if obstacle is really close, stop moving
+            speed = 0
+        print("speed = ",speed)
+        ack_msg.speed = speed # set speed to the ackermann message
+        ack_msg.steering_angle = math.degrees(angle) # set the angle to the ackermann message
+        if(abs(ack_msg.steering_angle) > 45 or averageVert.data < 1): #something about being too far away makes it turn really far, so i kinda hard coded it
+            ack_msg.steering_angle = 0.0
+        pubAcker.publish(ack_msg) # publish
 
 if __name__ == '__main__':
     obstec = ObstacleFollower()
