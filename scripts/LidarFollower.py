@@ -79,26 +79,27 @@ class ObstacleFollower():
                 obsCount += 1
             i += 1
         i = 0
-        while i < len(obstaclePoints):
-            if(obstaclePoints[i] < 16):
-                sumOfHor[i] = 3500
-            i += 1
         newSumOfVert = np.array(sumOfVert,dtype=np.float)
         newSumOfHor = np.array(sumOfHor,dtype=np.float)
         newObsPts = np.array(obstaclePoints,dtype = np.float)
         print("verticalData:",newSumOfVert / newObsPts)
         print("horizontalData",newSumOfHor / newObsPts)
         print("obstaclePoints = ",obstaclePoints)
+        while i < len(obstaclePoints):
+            if(((newSumOfVert[i] / newObsPts[i]) < 0.02)):
+                newSumOfHor[i] = 35000
+            i += 1
         absoSumOfHor = np.absolute(newSumOfHor / newObsPts)
         #absoSumOfHor = absoSumOfHor.tolist()
         targetObstacle = np.argmin(absoSumOfHor)
-        print(targetObstacle)
+        print("targetObstacle=",targetObstacle)
         averageVert = Float64() #average vertical distance of the obstacle
         averageHor = Float64() #average horizontal distance of the obstacle
         averageNull = Float64() # if there aren't any obstacles
         averageNull.data = -1
         averageVert.data = sumOfVert[targetObstacle] / obstaclePoints[targetObstacle] # Computes average distance of obstacle from tractor
         averageHor.data = sumOfHor[targetObstacle] / obstaclePoints[targetObstacle] # Computes avearge distance from center of tractor
+        print(averageVert.data)
         angle = math.tan(averageHor.data / averageVert.data) # Finds the angle at which the tractor should turn
         if (averageVert.data > 1): #If obstacle is far away, go fast
             speed = 0.2 + 0.5 * (averageVert.data) - 0.5
