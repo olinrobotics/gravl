@@ -11,7 +11,7 @@
     	<param name="_port" value="/dev/ttyACM0"/>
     	<param name="baud" value="115200"/>
     </node>
-    <node name="State" pkg="tractor" type="State State.cpp">
+    <node name="State" pkg="tractor" type="State">
     </node>
 
 </launch>
