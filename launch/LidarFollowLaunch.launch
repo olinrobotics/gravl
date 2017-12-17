@@ -1,0 +1,17 @@
+<launch>
+
+	<node name="hokuyo" pkg="urg_node" type="urg_node">
+  		<param name="ip_address" value="192.168.1.10" />
+  	</node>
+  	<node name="lidarFollow" pkg="tractor" type="LidarFollower.py"/>
+  	<!-- This brings up teleop -->
+    <node pkg="joy" type="joy_node" name="joystick"/>
+    <node pkg="tractor" type="Teleop" name="joystick_teleop"/>
+    <node pkg="rosserial_python" type="serial_node.py" name="InitTeensie">
+    	<param name="_port" value="/dev/ttyACM0"/>
+    	<param name="baud" value="115200"/>
+    </node>
+    <node name="State" pkg="tractor" type="State State.cpp">
+    </node>
+
+</launch>
