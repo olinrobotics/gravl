@@ -58,7 +58,6 @@ unsigned int velMsg = VEL_HIGH;                     // High vel var = low vel
 int prevSteerMsg;
 signed int steerMsg = (STEER_HIGH + STEER_LOW) / 2; // Straight steer in middle
 unsigned long prevMillis = millis();
-int velMsg_check;
 
 
 /*
@@ -70,8 +69,7 @@ int velMsg_check;
 void ackermannCB(const ackermann_msgs::AckermannDrive &drive){
   steerMsg = steerConvert(drive.steering_angle);
   velMsg = velConvert(drive.speed);
-  velMsg_check = drive.speed;
-
+  
 } //ackermannCB()
 
 
@@ -126,13 +124,13 @@ void loop() { // ----------L----------L----------L----------L----------L
 
   // Checks for connectivity with mid-brain and updates estopped state
   checkSerial(&nh);
-
+  
   // Sends commands to RoboClaw every ROBOCLAW_UPDATE_RATE milliseconds
   if (millis() - prevMillis > ROBOCLAW_UPDATE_RATE && !isEStopped) {
     updateRoboClaw(velMsg, steerMsg);
 
   }
-
+    
   // Updates node
   nh.spinOnce();
   delay(1);
@@ -174,21 +172,21 @@ void updateRoboClaw(int velMsg, int steerMsg) {
   //Update velMsg based on step
   stepActuator(&velMsg, &prevVelMsg, velStep);
   stepActuator(&steerMsg, &prevSteerMsg, steerStep);
-
+  
   // Update prev msgs
   prevVelMsg = velMsg;
   prevSteerMsg = steerMsg;
-
+  
   // Write velocity to RoboClaw
   rc.SpeedAccelDeccelPositionM1(address, 100000, 1000, 0, velMsg, 0);
 
   // Write steering to RoboClaw if tractor is moving, else returns debug msg
-  if (velMsg > 0) {
+  if (velMsg < VEL_HIGH) {
     rc.SpeedAccelDeccelPositionM2(address, 0, 1000, 0, steerMsg, 0);
   }
   else {
     #ifdef DEBUG
-    char i[32];
+    char i[48];
     snprintf(i, sizeof(i), "ERR: tractor not moving, steering message failed");
     nh.loginfo(i);
     #endif //DEBUG
@@ -198,7 +196,7 @@ void updateRoboClaw(int velMsg, int steerMsg) {
 
   // roslog msgs if debugging
   #ifdef DEBUG
-    char j[32];
+    char j[36];
     snprintf(j, sizeof(j), "DBG: steerMsg = %d, velMsg = %d", steerMsg, velMsg);
     nh.loginfo(j);
   #endif //DEBUG

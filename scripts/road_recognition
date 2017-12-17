@@ -19,32 +19,48 @@ class road_recognition:
         self.image = rospy.Subscriber(
             '/camera/image_raw', Image, self.callback)
         self.bridge = CvBridge()
-        self.image_pub = rospy.Publisher('trapezoid', Image)
+        self.image_pub = rospy.Publisher('trapezoid', Image, queue_size=10)
 
     def norm(self, x):
+        '''Finds the y-value of a normal curve centered at the mean
+        (mu) road width and standard deviation sigma. This is used to
+        make some road locations more prominent than others.'''
         mu = 550
         sigma = 100
         return np.e**((-(x - mu) ** 2) / (2 * sigma ** 2)) / (np.sqrt(2 * np.pi * sigma ** 2))
 
     def trap(self, img, line, m, n):
+        '''Returns mean intensity within a trapezoid with the base on
+        the bottom of the image. Takes an image, a number of pixels
+        above the bottom of the image (line) the top of the trapezoid
+        should be, a left point (m) an right (n) on that line, and
+        calculates the average pixel intensity of the region inside
+        the trapezoid'''
         white = 0
         total = 0
-        for r in range(line, img.shape[0], 10):
+        for r in range(line, img.shape[0], 10):  # check every 10
+            # pixels, otherwise this will take too long to run
             for c in range(int(r * m / (line - (img.shape[0])) + m * (img.shape[0]) / ((img.shape[0]) - line)),
                            int((r * (n - img.shape[1]) + line * img.shape[1] -
                                 n * img.shape[0]) / (line - img.shape[0])),
                            10):
                 white += img[r][c]
                 total += 1
-        return (white + 0.0) / total * self.norm(n - m)
+        return (white + 0.0) / total * self.norm(n - m)  # multiply by
+        # normal curve to favor m and n some distance apart
 
     def recognize_road(self, img):
+        '''The function used by the node to find the road.'''
+
+        # Look for a road 1/3 of the image from the bottom
         line = int(img.shape[0] * 2 / 3)
 
         maxmn = 0
         maxm = 0
         maxn = 0
 
+        # Sweep possible top vertices for the trapezoid in the trap method, and keep the most intense one.
+        # check every 100 pixels for speed.
         for m in range(0, img.shape[1], 100):
             for n in range(m, img.shape[1], 100):
                 val = self.trap(img, line, m, n)
