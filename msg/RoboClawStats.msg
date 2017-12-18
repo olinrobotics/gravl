@@ -1,0 +1,5 @@
+uint16_t main_voltage
+uint8_t	logic_voltage
+uint16_t motor1_current
+uint16_t motor2_current
+uint16_t error
