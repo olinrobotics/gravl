@@ -42,5 +42,11 @@
 
 *.swp
 
+# CMake bullshit
+scripts/CMakeCache.txt
+*.cmake
+scripts/Makefile
+scripts/CMakeFiles/
+
 # PointGrey Ros Bags
 *pointgrey[0-9].bag
