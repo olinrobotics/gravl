@@ -147,7 +147,7 @@ include_directories(
 add_executable( Camera src/camera/Camera.cpp )
 add_executable( Teleop src/teleop/Teleop.cpp )
 add_executable( State src/state/State.cpp )
-add_executable( Waypoint src/Waypoint.cpp )
+add_executable( Waypoint src/waypoint/Waypoint.cpp )
 add_executable( Hemisphere src/hemisphere/Hemisphere.cpp )
 
 
@@ -220,3 +220,8 @@ target_link_libraries( Hemisphere ${catkin_LIBRARIES} ${Boost_LIBRARIES} -lrt)
 
 ## Add folders to be run by python nosetests
 # catkin_add_nosetests(test)
+
+
+# Test code for ros hello world example
+add_executable(hello_world scripts/hello_world.cpp)
+target_link_libraries(hello_world ${catkin_LIBRARIES})

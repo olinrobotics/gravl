@@ -1,3 +1,15 @@
+/******************************************************************************
+ * Hemisphere 
+ * @file Hemisphere.cpp
+ * @author Carl Moser
+ * @email carl.moser@students.olin.edu
+ * @version     1.0
+ *
+ * This takes the true heading from the Hemisphere GPS and publishes it
+ *
+ ******************************************************************************/
+
+
 #include "Hemisphere.h"
 #include <boost/algorithm/string.hpp>
 
@@ -28,8 +40,9 @@ Hemisphere::Hemisphere(){
 }
 
 void Hemisphere::publish(){
-	
-	
+	hem.header.stamp = ros::Time::now();
+	hem.direction = strtof(parsed.at(2).c_str(), 0);
+	heading.publish(hem);
 }
 
 void Hemisphere::run(){
@@ -37,7 +50,9 @@ void Hemisphere::run(){
 		read(fd,buf,255);
 		std::string nmea = buf;
 		boost::split(parsed, nmea, [](char c){return c == ',';});
-		this->publish();
+		if(parsed.at(0) == "$PASHR"){
+			this->publish();
+		}
   		ros::spinOnce();
 	}
 }
