@@ -44,7 +44,6 @@ const byte addresses[] = {0x31,0x30,0x29};
 // Variables
 ros::NodeHandle nh;
 Motion *motion;
-long last_millis;
 
 
 void setup() {
@@ -62,7 +61,7 @@ void setup() {
   delay(15); // Give the TOF sensors time to reset
   for(int i = 0; i < NUM_SENSOR; i++){
     digitalWrite(pin[i], HIGH);
-    tof_array[i] = new OAKVL53(&nh, names[i], 100, addresses[i]);
+    tof_array[i] = new OAKVL53(&nh, names[i], 50, addresses[i]);
   }
 
   /*******************************************
@@ -73,16 +72,12 @@ void setup() {
   plow = new OAKServo(&nh, "/plow", PLOW_SERVO_PIN);
   light = OAKSoftSwitch(&nh, "/light", LIGHT_PIN);
   motion = new Motion(&nh, &RC_SERIAL, RC_BAUD, RC_ADDRESS);
-  last_millis = millis();
 }
 
 void loop() {
   nh.spinOnce();
-  if(millis()-last_millis >= 100){
-    for(int i = 0; i < NUM_SENSOR; i++){
-      tof_array[i]->publish;
-    }
-
+  for(int i = 0; i < NUM_SENSOR; i++){
+    tof_array[i]->publish();
   }
 }
 
