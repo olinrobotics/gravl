@@ -3,23 +3,32 @@ This folder holds the C++ code for Kubo, the lab's autonomous tractor.
 
 ## 1. Nodes
 
+<!-- ********************Camera******************** -->
 ### 1.1 Camera
-#### 1.1.1 Published Topics
 
-#### 1.1.2 Subscribed Topics
+#### 1.1.1 Subscribed Topics
+ROS node that takes in a black and white image and filters out values that are not in the range between _low_filter_ and _high_filter_
+- __*/camera/usb_cam1/image_raw*__ ([sensor_msgs/Image](http://docs.ros.org/api/sensor_msgs/html/msg/Image.html))<br/>
+Black and white image to be modified and displayed
 
-### 1.2 Hemisphere
-#### 1.2.1 Published Topics
+#### 1.1.2 Parameters
+- __*low_filter*__ (int, default: 0)<br/>
+The low threshold for the image
+- __*high_filter*__ (int, default: 0)<br/>
+The high threshold for the image
+- __*filter*__ (bool, default: true)<br/>
+Filter the image?
 
-#### 1.2.2 Subscribed Topics
 
-### 1.3 State
+<!-- ********************DriveState******************** -->
+### 1.2 DriveState
 ROS node that publishes an AckermannDrive message passed on from teloperation and autonomous input based on a boolean
-#### 1.3.1 Published Topics
+
+#### 1.2.1 Published Topics
 - __*drive*__ ([ackermann_msgs/AckermannDrive](http://docs.ros.org/api/ackermann_msgs/html/msg/AckermannDrive.html))<br/>
 Forwarded drive message
 
-#### 1.3.2 Subscribed Topics
+#### 1.2.2 Subscribed Topics
 - __*auto*__ ([std_msgs/Bool](http://docs.ros.org/api/std_msgs/html/msg/Bool.html))<br/>
 Sets the published data to teleoperation or autonomous
 - __*autodrive*__ ([ackermann_msgs/AckermannDrive](http://docs.ros.org/api/ackermann_msgs/html/msg/AckermannDrive.html))<br/>
@@ -28,10 +37,30 @@ Autonomous input to be forwarded
 Teleoperation input to be forwarded
 
 
+<!-- ********************Hemisphere******************** -->
+### 1.3 Hemisphere
+ROS driver node that publishes true heading from the Hemisphere gps
+
+#### 1.3.1 Published Topics
+- __*heading*__ ([gravl/Hemisphere](https://github.com/olinrobotics/gravl/blob/master/msg/Hemisphere.msg))<br/>
+The true heading of the Hemisphere gps
+
+
+<!-- ********************Teleop******************** -->
 ### 1.4 Teleop
+ROS node for teleoperation of ackermann steering vehicles
+
 #### 1.4.1 Published Topics
+- __*auto*__ ([std_msgs/Bool](http://docs.ros.org/api/std_msgs/html/msg/Bool.html))<br/>
+Sets the published data to teleoperation or autonomous
+- __*softestop*__ ([std_msgs/Bool](http://docs.ros.org/api/std_msgs/html/msg/Bool.html))<br/>
+Software estop
+- __*teledrive*__ ([ackermann_msgs/AckermannDrive](http://docs.ros.org/api/ackermann_msgs/html/msg/AckermannDrive.html))<br/>
+Teleoperation output
 
 #### 1.4.2 Subscribed Topics
+- __*joy*__ ([sensor_msgs/Joy](http://docs.ros.org/api/sensor_msgs/html/msg/Joy.html))<br/>
+Gamepad input for teleoperation
 
 
 ## Misc stuff

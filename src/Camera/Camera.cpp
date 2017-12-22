@@ -1,3 +1,15 @@
+/******************************************************************************
+ * Camera 
+ * @file Camera.cpp
+ * @author Carl Moser
+ * @email carl.moser@students.olin.edu
+ * @version     1.0
+ *
+ * This takes in the image from the FLIR thermal camera and filters it
+ *
+ ******************************************************************************/
+
+
 #include <stdio.h>
 #include "Camera.h"
 

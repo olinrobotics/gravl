@@ -15,7 +15,9 @@
 
 #include "DriveState.h"
 
-// DriveState class
+/*
+ * DriveState constructor
+ */
 DriveState::DriveState(){
   state =  n.subscribe("auto", 10, &DriveState::stateCB, this);
   telesub = n.subscribe("teledrive", 10, &DriveState::teleCB, this);

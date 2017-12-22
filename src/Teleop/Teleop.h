@@ -12,7 +12,7 @@ public:
 private:
   ros::NodeHandle n;
   ros::Subscriber joystick;
-  ros::Publisher drive;
+  ros::Publisher teledrive;
   ros::Publisher softestop;
   ros::Publisher autonomous;
   std_msgs::Bool stop_msg;
