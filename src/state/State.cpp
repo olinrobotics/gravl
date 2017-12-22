@@ -1,3 +1,15 @@
+/******************************************************************************
+ * Hemisphere 
+ * @file State.cpp
+ * @author Carl Moser
+ * @email carl.moser@students.olin.edu
+ * @version     1.0
+ *
+ * This takes the true heading from the Hemisphere GPS and publishes it
+ *
+ ******************************************************************************/
+
+
 #include "State.h"
 
 // State class

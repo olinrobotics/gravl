@@ -16,7 +16,7 @@
 // Source for serial stuff http://www.tldp.org/HOWTO/text/Serial-Programming-HOWTO
 
 Hemisphere::Hemisphere(){
-	heading = n.advertise<tractor::Hemisphere>("heading", 1000);
+	heading = n.advertise<gravl::Hemisphere>("heading", 1000);
 	std::string serial_port;
 	if(!n.getParam("port", serial_port)){
 		ROS_ERROR("No serial port set");

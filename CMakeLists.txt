@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 2.8.3)
-project(tractor)
+project(gravl)
 
 ## Compile as C++11, supported in ROS Kinetic and newer
 # add_compile_options(-std=c++11)
@@ -24,6 +24,7 @@ set(CMAKE_CXX_FLAGS "-std=c++11")
 
 ## System dependencies are found with CMake's conventions
 find_package(Boost REQUIRED COMPONENTS system)
+# find_package( OpenCV REQUIRED )
 
 
 ## Uncomment this if the package has a setup.py. This macro ensures
@@ -142,13 +143,14 @@ include_directories(
 ## Declare a C++ executable
 ## With catkin_make all packages are built within a single CMake context
 ## The recommended prefix ensures that target names across packages don't collide
-# add_executable(${PROJECT_NAME}_node src/tractor_node.cpp)
 
 add_executable( Camera src/camera/Camera.cpp )
 add_executable( Teleop src/teleop/Teleop.cpp )
 add_executable( State src/state/State.cpp )
 add_executable( Waypoint src/waypoint/Waypoint.cpp )
 add_executable( Hemisphere src/hemisphere/Hemisphere.cpp )
+add_executable( road_detection src/road_detection.cpp )
+add_executable( hello_world src/hello_world.cpp)
 
 
 ## Rename C++ executable without prefix
@@ -162,16 +164,14 @@ add_executable( Hemisphere src/hemisphere/Hemisphere.cpp )
 # add_dependencies(${PROJECT_NAME}_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
 ## Specify libraries to link a library or executable target against
-# target_link_libraries(${PROJECT_NAME}_node
-#   ${catkin_LIBRARIES}
-# )
 
 target_link_libraries( Camera ${OpenCV_LIBS} ${catkin_LIBRARIES} -lopencv_highgui -lopencv_core )
 target_link_libraries( Teleop ${catkin_LIBRARIES} )
 target_link_libraries( State ${catkin_LIBRARIES} )
 target_link_libraries( Waypoint ${catkin_LIBRARIES} )
 target_link_libraries( Hemisphere ${catkin_LIBRARIES} ${Boost_LIBRARIES} -lrt)
-
+target_link_libraries( road_detection ${OpenCV_LIBS} )
+target_link_libraries( hello_world ${catkin_LIBRARIES})
 
 #############
 ## Install ##
@@ -220,8 +220,3 @@ target_link_libraries( Hemisphere ${catkin_LIBRARIES} ${Boost_LIBRARIES} -lrt)
 
 ## Add folders to be run by python nosetests
 # catkin_add_nosetests(test)
-
-
-# Test code for ros hello world example
-add_executable(hello_world scripts/hello_world.cpp)
-target_link_libraries(hello_world ${catkin_LIBRARIES})

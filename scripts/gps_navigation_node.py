@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 from math import *
 import rospy
-from msg.Hemisphere import Hemisphere
+from gravl.msg import Hemisphere
 from message_filters import TimeSynchronizer
 from sensor_msgs.msg import NavSatFix
 # TODO Ensure that this still works with the custom hemisphere messages

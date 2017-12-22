@@ -11,7 +11,7 @@
 #include <ros/ros.h>
 #include <std_msgs/Header.h>
 #include <geometry_msgs/Twist.h>
-#include <tractor/Hemisphere.h>
+#include <gravl/Hemisphere.h>
 
 #define BAUDRATE B19200
 #define _POSIX_SOURCE 1
@@ -25,7 +25,7 @@ private:
 	void publish();
 	ros::NodeHandle n;
 	ros::Publisher heading;
-	tractor::Hemisphere hem;
+	gravl::Hemisphere hem;
 
 	int fd;
 	struct termios oldtio, newtio;

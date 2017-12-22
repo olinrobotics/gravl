@@ -1,6 +1,0 @@
-cmake_minimum_required(VERSION 2.8)
-project( road_detection )
-find_package( OpenCV REQUIRED )
-add_executable( road_detection road_detection.cpp )
-target_link_libraries( road_detection ${OpenCV_LIBS} )
-SET(CMAKE_CXX_FLAGS "-std=c++0x")

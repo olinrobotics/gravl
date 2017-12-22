@@ -1,25 +1,64 @@
-### Overview
-This folder holds source code for Kubo, the lab's autonomous tractor.
+# Overview
+This folder holds the C++ code for Kubo, the lab's autonomous tractor.
 
-### Folders
+## 1. Nodes
 
-#### camera
+### 1.1 Camera
+#### 1.1.1 Published Topics
+drive
 
-#### hemisphere
+#### 1.1.2 Subscribed Topics
+- auto
+- autodrive
+- teledrive 
 
-#### hind_brain
+### 1.2 Hemisphere
+#### 1.2.1 Published Topics
+drive
+
+#### 1.2.2 Subscribed Topics
+- auto
+- autodrive
+- teledrive 
+
+### 1.3 State
+ROS node that publishes 
+#### 1.3.1 Published Topics
+drive ([ackermann_msgs/AckermannDrive](http://docs.ros.org/api/ackermann_msgs/html/msg/AckermannDrive.html))
+
+#### 1.3.2 Subscribed Topics
+- auto ([std_msgs/Bool](http://docs.ros.org/api/std_msgs/html/msg/Bool.html))<br/>
+hello
+- autodrive ([ackermann_msgs/AckermannDrive](http://docs.ros.org/api/ackermann_msgs/html/msg/AckermannDrive.html))
+- teledrive ([ackermann_msgs/AckermannDrive](http://docs.ros.org/api/ackermann_msgs/html/msg/AckermannDrive.html))
+
+### 1.4 Teleop
+#### 1.4.1 Published Topics
+drive
+
+#### 1.4.2 Subscribed Topics
+- auto
+- autodrive
+- teledrive 
+
+
+## Misc stuff
+
+### hind_brain
 This folder contains Arduino code for Kubo's hind brain, running on an Arduino
-Teensie. The code is run upon startup of Kubo's electronics; to interface with
+Teensy. The code is run upon startup of Kubo's electronics; to interface with
 the code, follow the tractor startup instructions on the home page of the Github
 gravl wiki.
 
-#### state
-This folder contains C++ files for Kubo's basic auto/teleop state machine. This
-code listens to the `/auto` topic and forwards data from either `/autodrive` or
-`/teledrive` to `/drive` based on the boolean sent to `/auto`. To run the state
-machine, ensure there is a roscore running, then in a new Terminal execute
-`rosrun tractor State`.
+### `road_detection.cpp`
+Takes a single image file of a road and theoretically draws a line of the direction to go in on an image.
+To run with an image file named road.jpg:
+```
+cd scripts
+cmake .
+make
+./road_detection road.jpg
+```
 
-#### teleop
-
-#### waypoint
+### `hello_world.cpp`
+Basic c++ hello world program
