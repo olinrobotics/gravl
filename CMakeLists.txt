@@ -144,11 +144,11 @@ include_directories(
 ## With catkin_make all packages are built within a single CMake context
 ## The recommended prefix ensures that target names across packages don't collide
 
-add_executable( Camera src/camera/Camera.cpp )
-add_executable( Teleop src/teleop/Teleop.cpp )
-add_executable( State src/state/State.cpp )
-add_executable( Waypoint src/waypoint/Waypoint.cpp )
-add_executable( Hemisphere src/hemisphere/Hemisphere.cpp )
+add_executable( Camera src/Camera/Camera.cpp )
+add_executable( Teleop src/Teleop/Teleop.cpp )
+add_executable( DriveState src/DriveState/DriveState.cpp )
+add_executable( Waypoint src/Waypoint/Waypoint.cpp )
+add_executable( Hemisphere src/Hemisphere/Hemisphere.cpp )
 add_executable( road_detection src/road_detection.cpp )
 add_executable( hello_world src/hello_world.cpp)
 
@@ -167,7 +167,7 @@ add_executable( hello_world src/hello_world.cpp)
 
 target_link_libraries( Camera ${OpenCV_LIBS} ${catkin_LIBRARIES} -lopencv_highgui -lopencv_core )
 target_link_libraries( Teleop ${catkin_LIBRARIES} )
-target_link_libraries( State ${catkin_LIBRARIES} )
+target_link_libraries( DriveState ${catkin_LIBRARIES} )
 target_link_libraries( Waypoint ${catkin_LIBRARIES} )
 target_link_libraries( Hemisphere ${catkin_LIBRARIES} ${Boost_LIBRARIES} -lrt)
 target_link_libraries( road_detection ${OpenCV_LIBS} )

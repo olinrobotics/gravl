@@ -1,13 +1,13 @@
-#ifndef STATE_H
-#define STATE_H
+#ifndef DRIVE_STATE_H
+#define DRIVE_STATE_H
 
 #include <ros/ros.h>
 #include <std_msgs/Bool.h>
 #include <ackermann_msgs/AckermannDrive.h>
 
-class State{
+class DriveState{
 public:
-  explicit State();
+  explicit DriveState();
 private:
   ros::NodeHandle n;
   ros::Subscriber state;
@@ -20,4 +20,4 @@ private:
   void autoCB(const ackermann_msgs::AckermannDrive &msg);
 };
 
-#endif //STATE_H
+#endif //DRIVE_STATE_H
