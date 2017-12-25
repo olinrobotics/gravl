@@ -12,7 +12,9 @@
 
 // Include Libraries
 #include <Arduino.h>
-#include "oak.h"
+#include <OAKSoftSwitch.h>
+#include <OAKVL53.h>
+#include <OAKServo.h>
 #include "motion.h"
 
 // Motion
@@ -60,8 +62,8 @@ void setup() {
   }
   delay(15); // Give the TOF sensors time to reset
   for(int i = 0; i < NUM_SENSOR; i++){
-    digitalWrite(pin[i], HIGH);
-    tof_array[i] = new OAKVL53(&nh, names[i], 50, addresses[i]);
+    digitalWrite(pins[i], HIGH);
+    tof_array[i] = new OAKVL53(&nh, names[i].c_str(), 50, addresses[i]);
   }
 
   /*******************************************
@@ -70,7 +72,7 @@ void setup() {
   *
   *******************************************/
   plow = new OAKServo(&nh, "/plow", PLOW_SERVO_PIN);
-  light = OAKSoftSwitch(&nh, "/light", LIGHT_PIN);
+  light = new OAKSoftSwitch(&nh, "/light", LIGHT_PIN);
   motion = new Motion(&nh, &RC_SERIAL, RC_BAUD, RC_ADDRESS);
 }
 
