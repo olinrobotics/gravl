@@ -1,12 +1,12 @@
 #ifndef HEMISPHERE_H
 #define HEMISPHERE_H
 
-#include <termios.h>                                                         |
-#include <stdio.h>                                                           |
-#include <unistd.h>                                                          |
-#include <fcntl.h>                                                           |
-#include <sys/signal.h>                                                      |
-#include <sys/types.h>  
+#include <termios.h>
+#include <stdio.h>
+#include <unistd.h>
+#include <fcntl.h>
+#include <sys/signal.h>
+#include <sys/types.h>
 
 #include <ros/ros.h>
 #include <std_msgs/Header.h>

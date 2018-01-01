@@ -18,13 +18,12 @@ find_package(catkin REQUIRED COMPONENTS
   ackermann_msgs
   message_generation
 )
-set ( OpenCV_DIR "/usr/local/include/opencv2/")
-# find_package(OpenCV 3.2 REQUIRED)
+find_package(OpenCV 3.2 REQUIRED)
 set(CMAKE_CXX_FLAGS "-std=c++11")
 
 ## System dependencies are found with CMake's conventions
 find_package(Boost REQUIRED COMPONENTS system)
-# find_package( OpenCV REQUIRED )
+find_package( OpenCV REQUIRED )
 
 
 ## Uncomment this if the package has a setup.py. This macro ensures
@@ -99,7 +98,7 @@ generate_messages(
 
 ## Generate dynamic reconfigure parameters in the 'cfg' folder
 generate_dynamic_reconfigure_options(
-   cfg/tractor_cfg.cfg
+   cfg/gravl_cfg.cfg
 )
 
 ###################################
@@ -150,8 +149,7 @@ add_executable( DriveState src/DriveState/DriveState.cpp )
 add_executable( Waypoint src/Waypoint/Waypoint.cpp )
 add_executable( Hemisphere src/Hemisphere/Hemisphere.cpp )
 add_executable( road_detection src/road_detection.cpp )
-add_executable( hello_world src/hello_world.cpp)
-
+add_executable( hello_world src/hello_world.cpp )
 
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the
@@ -165,7 +163,7 @@ add_executable( hello_world src/hello_world.cpp)
 
 ## Specify libraries to link a library or executable target against
 
-target_link_libraries( Camera ${OpenCV_LIBS} ${catkin_LIBRARIES} -lopencv_highgui -lopencv_core )
+target_link_libraries( Camera ${OpenCV_LIBS} ${catkin_LIBRARIES} )
 target_link_libraries( Teleop ${catkin_LIBRARIES} )
 target_link_libraries( DriveState ${catkin_LIBRARIES} )
 target_link_libraries( Waypoint ${catkin_LIBRARIES} )

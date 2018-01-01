@@ -1,8 +1,8 @@
 <?xml version="1.0"?>
 <package>
-  <name>tractor</name>
+  <name>gravl</name>
   <version>0.0.0</version>
-  <description>The tractor package</description>
+  <description>Olin's ground robotic autonomous vehicle lab repo</description>
 
   <!-- One maintainer tag required, multiple allowed, one person per tag -->
   <!-- Example:  -->
