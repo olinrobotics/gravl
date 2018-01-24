@@ -1,8 +1,8 @@
-cmake_minimum_required(VERSION 2.8.3)
+cmake_minimum_required(VERSION 2.8.11)
 project(gravl)
 
 ## Compile as C++11, supported in ROS Kinetic and newer
-# add_compile_options(-std=c++11)
+set(CMAKE_CXX_FLAGS "-std=c++11")
 
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
@@ -12,18 +12,33 @@ find_package(catkin REQUIRED COMPONENTS
   rospy
   std_msgs
   sensor_msgs
-  cv_bridge
+  geometry_msgs
   image_transport
   dynamic_reconfigure
   ackermann_msgs
   message_generation
+  mavros_msgs
+  nav_msgs
+  tf
 )
-find_package(OpenCV 3.2 REQUIRED)
-set(CMAKE_CXX_FLAGS "-std=c++11")
 
 ## System dependencies are found with CMake's conventions
 find_package(Boost REQUIRED COMPONENTS system)
-find_package( OpenCV REQUIRED )
+
+## QT dependencies
+find_package(Qt5Widgets)
+
+IF(Qt5Widgets_FOUND)
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${Qt5Widgets_EXECUTABLE_COMPILE_FLAGS}")
+  set(CMAKE_INCLUDE_CURRENT_DIR ON)
+  set(CMAKE_AUTOMOC ON)
+  set(CMAKE_AUTORCC ON)
+  set(CMAKE_AUTOUIC ON)
+
+  find_package(Qt5Qml)
+  find_package(Qt5Quick)
+  find_package(Qt5Positioning)
+ENDIF()
 
 
 ## Uncomment this if the package has a setup.py. This macro ensures
@@ -127,6 +142,8 @@ include_directories(
 # include
   ${catkin_INCLUDE_DIRS}
   ${OpenCV_INCLUDE_DIRS}
+  ${Qt5Widgets_INCLUDE_DIRS}
+  ${QtQml_INCLUDE_DIRS}
 )
 
 ## Declare a C++ library
@@ -143,13 +160,17 @@ include_directories(
 ## With catkin_make all packages are built within a single CMake context
 ## The recommended prefix ensures that target names across packages don't collide
 
-add_executable( Camera src/Camera/Camera.cpp )
+#add_executable( Camera src/Camera/Camera.cpp )
 add_executable( Teleop src/Teleop/Teleop.cpp )
 add_executable( DriveState src/DriveState/DriveState.cpp )
+add_executable( Driver src/Driver/Driver.cpp )
 add_executable( Waypoint src/Waypoint/Waypoint.cpp )
 add_executable( Hemisphere src/Hemisphere/Hemisphere.cpp )
-add_executable( road_detection src/road_detection.cpp )
+add_executable( idk src/arm_drone.cpp )
+#add_executable( road_detection src/road_detection.cpp )
 add_executable( hello_world src/hello_world.cpp )
+
+
 
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the
@@ -163,13 +184,27 @@ add_executable( hello_world src/hello_world.cpp )
 
 ## Specify libraries to link a library or executable target against
 
-target_link_libraries( Camera ${OpenCV_LIBS} ${catkin_LIBRARIES} )
+#target_link_libraries( Camera ${OpenCV_LIBS} ${catkin_LIBRARIES} )
 target_link_libraries( Teleop ${catkin_LIBRARIES} )
 target_link_libraries( DriveState ${catkin_LIBRARIES} )
+target_link_libraries( Driver ${catkin_LIBRARIES} )
 target_link_libraries( Waypoint ${catkin_LIBRARIES} )
-target_link_libraries( Hemisphere ${catkin_LIBRARIES} ${Boost_LIBRARIES} -lrt)
-target_link_libraries( road_detection ${OpenCV_LIBS} )
-target_link_libraries( hello_world ${catkin_LIBRARIES})
+target_link_libraries( Hemisphere ${catkin_LIBRARIES}
+  ${Boost_LIBRARIES} -lrt )
+target_link_libraries( idk ${catkin_LIBRARIES} )
+#target_link_libraries( road_detection ${OpenCV_LIBS} )
+target_link_libraries( hello_world ${catkin_LIBRARIES} )
+
+IF(Qt5Widgets_FOUND)
+  qt5_add_resources(QTEST_RESOURCES src/QT/qml.qrc)
+  add_executable( qtest src/QT/main.cpp src/QT/tractor_controller.cpp ${QTEST_RESOURCES} )
+  add_dependencies( qtest ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS} )
+  target_link_libraries( qtest Qt5::Widgets
+    Qt5::Qml 
+    Qt5::Quick 
+    Qt5::Positioning
+    ${catkin_LIBRARIES} )
+ENDIF()
 
 #############
 ## Install ##
