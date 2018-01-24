@@ -46,11 +46,22 @@ ROS driver node that publishes true heading from the Hemisphere gps
 The true heading of the Hemisphere gps
 
 
+<!-- ********************gps_map******************** -->
+### 1.4 gps_map
+ROS node for showing the position/heading on a map using Qt
+
+#### 1.4.1 Subscribed Topics
+- __*/gps/fix*__ ([sensor_msgs/NavSatFix](http://docs.ros.org/api/sensor_msgs/html/msg/NavSatFix.html))<br/>
+GPS position of the tractor
+- __*heading*__ ([gravl/Hemisphere](https://github.com/olinrobotics/gravl/blob/master/msg/Hemisphere.msg))<br/>
+The true heading of the Hemisphere gps
+
+
 <!-- ********************Teleop******************** -->
-### 1.4 Teleop
+### 1.5 Teleop
 ROS node for teleoperation of ackermann steering vehicles
 
-#### 1.4.1 Published Topics
+#### 1.5.1 Published Topics
 - __*auto*__ ([std_msgs/Bool](http://docs.ros.org/api/std_msgs/html/msg/Bool.html))<br/>
 Sets the published data to teleoperation or autonomous
 - __*softestop*__ ([std_msgs/Bool](http://docs.ros.org/api/std_msgs/html/msg/Bool.html))<br/>
@@ -58,7 +69,7 @@ Software estop
 - __*teledrive*__ ([ackermann_msgs/AckermannDrive](http://docs.ros.org/api/ackermann_msgs/html/msg/AckermannDrive.html))<br/>
 Teleoperation output
 
-#### 1.4.2 Subscribed Topics
+#### 1.5.2 Subscribed Topics
 - __*joy*__ ([sensor_msgs/Joy](http://docs.ros.org/api/sensor_msgs/html/msg/Joy.html))<br/>
 Gamepad input for teleoperation
 

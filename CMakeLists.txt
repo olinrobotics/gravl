@@ -197,9 +197,9 @@ target_link_libraries( hello_world ${catkin_LIBRARIES} )
 
 IF(Qt5Widgets_FOUND)
   qt5_add_resources(QTEST_RESOURCES src/QT/qml.qrc)
-  add_executable( qtest src/QT/main.cpp src/QT/tractor_controller.cpp ${QTEST_RESOURCES} )
-  add_dependencies( qtest ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS} )
-  target_link_libraries( qtest Qt5::Widgets
+  add_executable( gps_map src/QT/main.cpp src/QT/tractor_controller.cpp ${QTEST_RESOURCES} )
+  add_dependencies( gps_map ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS} )
+  target_link_libraries( gps_map Qt5::Widgets
     Qt5::Qml 
     Qt5::Quick 
     Qt5::Positioning

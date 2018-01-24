@@ -27,8 +27,8 @@ private:
 	QGeoCoordinate position() const;
 	void headingCB(const gravl::Hemisphere &msg);
 	void positionCB(const sensor_msgs::NavSatFix &msg);
-	void setHeading(const float &f);
-	void setPosition(const QGeoCoordinate &c);
+	void setHeading(const float &new_heading);
+	void setPosition(const QGeoCoordinate &new_position);
 };
 
 #endif //TRACTOR_CONTROLLER_H
