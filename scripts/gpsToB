@@ -11,10 +11,39 @@ class gpsToB:
         rospy.init_node('gpsToB')
         self.course_pub = rospy.Publisher('course', Float32, queue_size=10)
         self.loc_sub = rospy.Subscriber('/gps/fix', NavSatFix, self.callback)
+        self.destLat = destLat
+        self.destLong = destLong
         try:
             rospy.spin()
         except KeyboardInterrupt:
             print('Shutting down')
+
+    def angular_distance(self, latDep, longDep, latDest, longDest):
+        yDep = np.radians(latDep)
+        xDep = np.radians(longDep)
+        yDest = np.radians(latDest)
+        xDest = np.radians(longDest)
+
+        angular_x = 2 * np.arcsin(np.cos(yDep) * np.sin((xDep - xDest) / 2))
+        angular_y = yDep - yDest
+
+        return angular_x, angular_y
+
+    def calcTriangle(self, x, y):
+        r = 1
+
+        # vectorize positions of a triangle, with the departure oriented along the z-axis
+        dep = np.array([0, 0, r])
+        orth = np.array([-r * np.sin(x), 0, r * np.cos(x)])
+        dest = np.array([-r * np.sin(x), -r * np.cos(x) *
+                         np.sin(y), r * np.cos(x) * np.cos(y)])
+
+        vecToOrth = np.cross(np.cross(orth, dep), dep)
+        vecToDest = np.cross(np.cross(dest, dep), dep)
+        angle = np.arccos(np.dot(vecToOrth, vecToDest) /
+                          np.linalg.norm(vecToOrth / np.linalg.norm(vecToDest)))
+
+        return angle
 
     def callback(self, data):
         latitude = data.latitude
@@ -24,17 +53,12 @@ class gpsToB:
         dLatitude = self.destLat - latitude
         dLongitude = self.destLong - longitude
 
-        # convert long/lat diffs to kilometers
-        kiloLatitude = dLatitude * 1852 * 3 / 50
-        # approximate amount of km per latitude to be 1855.4 *
-        # np.cos(np.radians(latitude))
-        kiloLongitude = 1855.4 * \
-            np.cos(np.radians(latitude)) * dLongitude * 3 / 50
+        angular_x, angular_y = self.angular_distance(
+            latitude, longitude, self.destLat, self.destLong)
 
-        # find course
-        angle = np.degrees(np.arctan(kiloLongitude / kiloLatitude))
+        angle = self.calcTriangle(angular_x, angular_y)
 
-        self.course_pub.publish(angle)
+        self.course_pub.publish(-90 - np.degrees(angle))
 
 
 if __name__ == '__main__':
