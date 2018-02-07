@@ -5,12 +5,9 @@ import numpy as np
 from std_msgs.msg import Float32
 from sensor_msgs.msg import NavSatFix
 
-locLat = 27.175
-locLong = 78.0421
-
 
 class gpsToB:
-    def __init__(self):
+    def __init__(self, destLat, destLong):
         rospy.init_node('gpsToB')
         self.course_pub = rospy.Publisher('course', Float32, queue_size=10)
         self.loc_sub = rospy.Subscriber('/gps/fix', NavSatFix, self.callback)
@@ -24,12 +21,13 @@ class gpsToB:
         longitude = data.longitude
 
         # Find long/lat diffs
-        dLatitude = locLat - latitude
-        dLongitude = locLong - longitude
+        dLatitude = self.destLat - latitude
+        dLongitude = self.destLong - longitude
 
         # convert long/lat diffs to kilometers
         kiloLatitude = dLatitude * 1852 * 3 / 50
-        # approximate amount of km per latitude to be 1855.4 * np.cos(np.radians(latitude))
+        # approximate amount of km per latitude to be 1855.4 *
+        # np.cos(np.radians(latitude))
         kiloLongitude = 1855.4 * \
             np.cos(np.radians(latitude)) * dLongitude * 3 / 50
 
@@ -40,4 +38,5 @@ class gpsToB:
 
 
 if __name__ == '__main__':
-    gpsToB()
+    # heading to the Taj Mahal
+    gpsToB(27.175, 78.0421)
