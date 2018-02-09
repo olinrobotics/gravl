@@ -30,7 +30,7 @@ class gpsToB:
         return angular_x, angular_y
 
     def calcTriangle(self, x, y):
-        r = 1
+        r = 6371000
 
         # vectorize positions of a triangle, with the departure oriented along the z-axis
         dep = np.array([0, 0, r])
