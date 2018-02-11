@@ -17,7 +17,7 @@ class turnHeading:
         self.ackMsg = AckermannDrive()
         self.desiredHeading = 0
         self.currentHeading = 0
-        self.ackMsg.angle = (
+        self.ackMsg.steering_angle = (
             (self.currentHeading - self.desiredHeading > 0) * 2 - 1) * 45
         self.ackMsg.speed = 1
         self.pubAcker.publish(self.ackMsg)
