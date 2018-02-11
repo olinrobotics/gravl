@@ -8,6 +8,7 @@ from std_msgs.msg import Float64
 
 class turnHeading:
     def __init__(self):
+        rospy.init_node('turnHeading')
         self.pubAcker = rospy.Publisher(
             '/autodrive', AckermannDrive, queue_size=10)
         self.desiredHeadingSub = rospy.Subscriber(
