@@ -21,9 +21,16 @@ class turnHeading:
             (self.currentHeading - self.desiredHeading > 0) * 2 - 1) * 45
         self.ackMsg.speed = 1
         self.pubAcker.publish(self.ackMsg)
+        try:
+            rospy.spin()
+        except KeyboardInterrupt:
+            print('Shutting down')
 
     def desiredHeadingCallback(self, data):
         self.desiredHeading = data
 
     def currentHeadingCallback(self, data):
         self.currentHeading = data
+
+if __name__ == '__main__':
+    turnHeading()
