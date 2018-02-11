@@ -2,8 +2,8 @@
 
 import rospy
 from ackermann_msgs.msg import AckermannDrive
-from std_msgs import Float32
-from std_msgs import Float64
+from std_msgs.msgs import Float32
+from std_msgs.msgs import Float64
 
 
 class turnHeading:
