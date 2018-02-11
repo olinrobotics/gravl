@@ -15,8 +15,11 @@
 
 // Source for serial stuff http://www.tldp.org/HOWTO/text/Serial-Programming-HOWTO
 
+/*
+ * Constructor - advertises the heading, connects to the hemisphere
+ */
 Hemisphere::Hemisphere(){
-	heading = n.advertise<tractor::Hemisphere>("heading", 1000);
+	heading = n.advertise<gravl::Hemisphere>("heading", 1000);
 	std::string serial_port;
 	if(!n.getParam("port", serial_port)){
 		ROS_ERROR("No serial port set");
@@ -39,12 +42,19 @@ Hemisphere::Hemisphere(){
 	tcsetattr(fd,TCSANOW,&newtio);
 }
 
+/*
+ * Publishes the true heading
+ */
 void Hemisphere::publish(){
 	hem.header.stamp = ros::Time::now();
 	hem.direction = strtof(parsed.at(2).c_str(), 0);
 	heading.publish(hem);
 }
 
+/*
+ * Reads the serial stream from the Hemisphere for the heading,
+ * parses it, and then calls publish
+ */
 void Hemisphere::run(){
 	while(true){
 		read(fd,buf,255);

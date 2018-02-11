@@ -1,3 +1,15 @@
+/******************************************************************************
+ * Camera 
+ * @file Camera.cpp
+ * @author Carl Moser
+ * @email carl.moser@students.olin.edu
+ * @version     1.0
+ *
+ * This takes in the image from the FLIR thermal camera and filters it
+ *
+ ******************************************************************************/
+
+
 #include <stdio.h>
 #include "Camera.h"
 
@@ -10,8 +22,8 @@ int main(int argc, char **argv)
 	ros::init(argc, argv, "flir");
 	ros::NodeHandle n;
 	ros::Subscriber flir = n.subscribe("/camera/usb_cam1/image_raw", 10, FLIRCallback);
-	dynamic_reconfigure::Server<tractor::tractor_cfgConfig> server;
-	dynamic_reconfigure::Server<tractor::tractor_cfgConfig>::CallbackType f;
+	dynamic_reconfigure::Server<gravl::gravl_cfgConfig> server;
+	dynamic_reconfigure::Server<gravl::gravl_cfgConfig>::CallbackType f;
 	f = boost::bind(&dynamicCallback, _1, _2);
   	server.setCallback(f);
 	std::cout << "OpenCV version : " << CV_VERSION << std::endl;
@@ -33,7 +45,7 @@ void FLIRCallback(const sensor_msgs::ImageConstPtr&  msg){
 	cv::waitKey(1);
 }
 
-void dynamicCallback(tractor::tractor_cfgConfig &config, uint32_t level){
+void dynamicCallback(gravl::gravl_cfgConfig &config, uint32_t level){
 	low = config.low_filter;
 	high = config.high_filter;
 	filter = config.filter;
