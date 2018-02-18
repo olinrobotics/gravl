@@ -30,17 +30,15 @@ class gpsToB:
         return angular_x, angular_y
 
     def calcTriangle(self, x, y):
-        r = 6371000
-
         # vectorize positions of a triangle, with the departure oriented along the z-axis
-        dep = np.array([0, 0, r])
-        orth = np.array([-r * np.sin(x), 0, r * np.cos(x)])
-        dest = np.array([-r * np.sin(x), -r * np.cos(x) *
-                         np.sin(y), r * np.cos(x) * np.cos(y)])
+        dep = np.array([0, 0, 1])
+        orth = np.array([-np.sin(x), 0, np.cos(x)])
+        dest = np.array(
+            [-np.cos(x) * np.sin(y), np.sin(y), np.cos(x) * np.cos(y)])
 
         vecToOrth = np.cross(np.cross(orth, dep), dep)
         vecToDest = np.cross(np.cross(dest, dep), dep)
-        angle = np.arccos(np.dot(vecToOrth, vecToDest) /
+        angle = np.arccos(np.dot(vecToDest, vecToOrth) /
                           np.linalg.norm(vecToOrth / np.linalg.norm(vecToDest)))
 
         return angle
@@ -58,9 +56,8 @@ class gpsToB:
 
         angle = self.calcTriangle(angular_x, angular_y)
 
-        self.course_pub.publish(-90 - np.degrees(angle))
+        self.course_pub.publish(np.degrees(angle))
 
 
 if __name__ == '__main__':
-    # heading to the Taj Mahal
-    gpsToB(27.175, 78.0421)
+    gpsToB(42.29,-71.26)
