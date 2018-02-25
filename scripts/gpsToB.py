@@ -18,46 +18,17 @@ class gpsToB:
         except KeyboardInterrupt:
             print('Shutting down')
 
-    def angular_distance(self, latDep, longDep, latDest, longDest):
-        yDep = np.radians(latDep)
-        xDep = np.radians(longDep)
-        yDest = np.radians(latDest)
-        xDest = np.radians(longDest)
-
-        angular_x = 2 * np.arcsin(np.cos(yDep) * np.sin((xDep - xDest) / 2))
-        angular_y = yDep - yDest
-
-        return angular_x, angular_y
-
-    def calcTriangle(self, x, y):
-        # vectorize positions of a triangle, with the departure oriented along the z-axis
-        dep = np.array([0, 0, 1])
-        orth = np.array([-np.sin(x), 0, np.cos(x)])
-        dest = np.array(
-            [-np.cos(x) * np.sin(y), np.sin(y), np.cos(x) * np.cos(y)])
-
-        vecToOrth = np.cross(np.cross(orth, dep), dep)
-        vecToDest = np.cross(np.cross(dest, dep), dep)
-        angle = np.arccos(np.dot(vecToDest, vecToOrth) /
-                          np.linalg.norm(vecToOrth / np.linalg.norm(vecToDest)))
-
-        return angle
 
     def callback(self, data):
-        latitude = data.latitude
-        longitude = data.longitude
-
-        # Find long/lat diffs
-        dLatitude = self.destLat - latitude
-        dLongitude = self.destLong - longitude
-
-        angular_x, angular_y = self.angular_distance(
-            latitude, longitude, self.destLat, self.destLong)
-
-        angle = self.calcTriangle(angular_x, angular_y)
-
+        lat1 = np.radians(data.latitude)
+        lon1 = np.radians(data.longitude)
+        lat2 = np.radians(self.destLat)
+        lon2 = np.radians(self.destLong)
+        sina = np.cos(lat2) * np.sin(lon2 - lon1)
+        cosa = np.cos(lat1) * np.sin(lat2) - np.sin(lat1) * np.cos(lat2) * np.cos(lon2 - lon1)
+        angle = np.arctan2(sina, cosa)
         self.course_pub.publish(np.degrees(angle))
 
 
 if __name__ == '__main__':
-    gpsToB(42.29,-71.26)
+    gpsToB(72.29, -71.26)
