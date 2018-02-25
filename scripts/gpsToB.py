@@ -2,13 +2,13 @@
 # @author:
 #     __ __          _          _   __
 #    / //_/__ _   __(_)___     / | / /
-#   / ,< / _ \ | / / / __ \   /  |/ / 
-#  / /| /  __/ |/ / / / / /  / /|  /  
-# /_/ |_\___/|___/_/_/ /_/  /_/ |_/   
+#   / ,< / _ \ | / / / __ \   /  |/ /
+#  / /| /  __/ |/ / / / / /  / /|  /
+# /_/ |_\___/|___/_/_/ /_/  /_/ |_/
 # @date: 2018/02/25
 # summary: node which takes destination coordinates and publishes
 # bearing.
-                                    
+
 
 import rospy
 import numpy as np
@@ -20,6 +20,7 @@ class gpsToB:
     '''Starts a node which takes the destination latitude and
     longitude in the constructor and publishes the bearing to the
     destination.'''
+
     def __init__(self, destLat, destLong):
         rospy.init_node('gpsToB')
         self.course_pub = rospy.Publisher('course', Float32, queue_size=10)
@@ -36,7 +37,6 @@ class gpsToB:
         self.destLat = destLat
         self.destLong = destLong
 
-
     def callback(self, data):
         '''Publish the bearing. pdf here:
         https://badarabbas.files.wordpress.com/2011/03/paper.pdf'''
@@ -45,7 +45,8 @@ class gpsToB:
         lat2 = np.radians(self.destLat)
         lon2 = np.radians(self.destLong)
         sina = np.cos(lat2) * np.sin(lon2 - lon1)
-        cosa = np.cos(lat1) * np.sin(lat2) - np.sin(lat1) * np.cos(lat2) * np.cos(lon2 - lon1)
+        cosa = np.cos(lat1) * np.sin(lat2) - np.sin(lat1) * \
+            np.cos(lat2) * np.cos(lon2 - lon1)
         angle = np.arctan2(sina, cosa)
         self.course_pub.publish(np.degrees(angle))
 
