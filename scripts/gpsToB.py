@@ -7,6 +7,9 @@ from sensor_msgs.msg import NavSatFix
 
 
 class gpsToB:
+    '''Starts a node which takes the destination latitude and
+    longitude in the constructor and publishes the bearing to the
+    destination.'''
     def __init__(self, destLat, destLong):
         rospy.init_node('gpsToB')
         self.course_pub = rospy.Publisher('course', Float32, queue_size=10)
@@ -18,8 +21,15 @@ class gpsToB:
         except KeyboardInterrupt:
             print('Shutting down')
 
+    def setDestination(self, destLat, destLong):
+        '''Set the destination longitude and latitude'''
+        self.destLat = destLat
+        self.destLong = destLong
+
 
     def callback(self, data):
+        '''Publish the bearing. pdf here:
+        https://badarabbas.files.wordpress.com/2011/03/paper.pdf'''
         lat1 = np.radians(data.latitude)
         lon1 = np.radians(data.longitude)
         lat2 = np.radians(self.destLat)

@@ -14,7 +14,7 @@ class turnHeading:
         self.desiredHeadingSub = rospy.Subscriber(
             '/course', Float32, self.desiredHeadingCallback)
         self.currentHeadingSub = rospy.Subscriber(
-            '/course', Float64, self.currentHeadingCallback)
+            '/heading', Float64, self.currentHeadingCallback)
         self.ackMsg = AckermannDrive()
         self.desiredHeading = 0
         self.currentHeading = 0
@@ -32,6 +32,7 @@ class turnHeading:
 
     def currentHeadingCallback(self, data):
         self.currentHeading = data
+
 
 if __name__ == '__main__':
     turnHeading()
