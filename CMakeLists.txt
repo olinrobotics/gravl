@@ -59,6 +59,7 @@ ENDIF()
 add_message_files(
   FILES
   Hemisphere.msg
+  RoboClawStats.msg
 )
 
 ## Generate services in the 'srv' folder

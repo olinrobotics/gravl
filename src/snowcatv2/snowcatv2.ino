@@ -22,7 +22,6 @@
 #define RC_BAUD 38400
 #define RC_ADDRESS 0x80
 
-
 // TOF array
 #define NUM_SENSOR 3
 #define LEFT_TOF 1

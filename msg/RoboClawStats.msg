@@ -1,5 +1,6 @@
-uint16_t main_voltage
-uint8_t	logic_voltage
-uint16_t motor1_current
-uint16_t motor2_current
-uint16_t error
+std_msgs/Header header
+uint16 main_voltage
+uint8 logic_voltage
+int16 motor1_current
+int16 motor2_current
+uint16 error

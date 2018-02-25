@@ -4,14 +4,14 @@
 #include "RoboClaw.h"
 #include "ros.h"
 #include "geometry_msgs/Twist.h"
-#include "gravl/RoboClawStats.h"
+#include <gravl/RoboClawStats.h>
 
 class Motion{
 public:
-	explicit Motion(ros::NodeHandle *nh, const HardwareSerial *rc, const long baud, const uint8_t address);
+	explicit Motion(ros::NodeHandle *nh, HardwareSerial *rc, const long baud, const uint8_t address);
 
 private:
-	RoboClaw roboclaw;
+	RoboClaw *roboclaw;
 	ros::Publisher *status;
 	ros::Subscriber<geometry_msgs::Twist, Motion> *cmd;
 	gravl::RoboClawStats stats;
