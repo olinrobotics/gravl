@@ -1,12 +1,7 @@
 #!/usr/bin/env python
-# @author:
-#     __ __          _          _   __
-#    / //_/__ _   __(_)___     / | / /
-#   / ,< / _ \ | / / / __ \   /  |/ /
-#  / /| /  __/ |/ / / / / /  / /|  /
-# /_/ |_\___/|___/_/_/ /_/  /_/ |_/
-# @date: 2018/02/25
-# summary: node which takes destination coordinates and publishes
+# @author Kawin Nikomborirak
+# @date 2018/02/25
+# summary node which takes destination coordinates and publishes
 # bearing.
 
 
