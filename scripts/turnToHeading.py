@@ -40,5 +40,5 @@ class turnHeading:
         self.currentHeading = data
 
 
-# if __name__ == '__main__':
-#     turnHeading()
+if __name__ == '__main__':
+    turnHeading()
