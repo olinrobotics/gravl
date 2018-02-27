@@ -1,6 +1,6 @@
 #include "motion.h"
 
-Motion::Motion(ros::NodeHandle *nh, HardwareSerial *rc, const long baud, const uint8_t address):address(address){
+Motion::Motion(ros::NodeHandle *nh, HardwareSerial *rc, const long baud, const uint8_t address):address(address), lspeed(0), rspeed(0){
 	status = new ros::Publisher("/roboclawstatus", &stats);
 	cmd = new ros::Subscriber<geometry_msgs::Twist, Motion>("/cmd_vel", &Motion::vel_callback, this);
 	nh->advertise(*status);
@@ -19,8 +19,11 @@ void Motion::stat_pub(){
 	status->publish(&stats);
 }
 
-void Motion::vel_callback(const geometry_msgs::Twist &message){
-  
+void Motion::vel_callback(const geometry_msgs::Twist &vel){
+  	//Speed is quad pulses/sec
+  	vel.angular.z;
+	lspeed = QPPS_PER_REV * REV_PER_METER * vel.linear.x;
+	rspeed = QPPS_PER_REV * REV_PER_METER * vel.linear.x;
 	roboclaw->SpeedM1(address, 1);
 	roboclaw->SpeedM2(address, 1);
 }

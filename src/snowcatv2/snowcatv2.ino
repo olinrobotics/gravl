@@ -16,6 +16,7 @@
 #include <OAKVL53.h>
 #include <OAKServo.h>
 #include "motion.h"
+#include "odometry.h"
 
 // Motion
 #define RC_SERIAL Serial1
