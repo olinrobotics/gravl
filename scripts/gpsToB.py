@@ -46,5 +46,5 @@ class gpsToB:
         self.course_pub.publish(np.degrees(angle))
 
 
-if __name__ == '__main__':
-    gpsToB(72.29, -71.26)
+# if __name__ == '__main__':
+#     gpsToB(72.29, -71.26)
