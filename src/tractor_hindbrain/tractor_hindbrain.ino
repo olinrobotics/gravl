@@ -31,11 +31,11 @@ OAKEncoder *right_encoder;
 // Physical Pins
 const byte AUTO_LIGHT_PIN = 3;
 const byte ESTOP_PIN = 2;
-const byte ESTOP_SENSE_PIN = 12;
-const byte LEFT_ENCODER_A = 5;
-const byte LEFT_ENCODER_B = 6;
-const byte RIGHT_ENCODER_A = 7;
-const byte RIGHT_ENCODER_B = 8;
+const byte ESTOP_SENSE_PIN = 13;
+const byte LEFT_ENCODER_A = 9;
+const byte LEFT_ENCODER_B = 10;
+const byte RIGHT_ENCODER_A = 11;
+const byte RIGHT_ENCODER_B = 12;
 
 // RoboClaw & Settings
 #define RC_SERIAL Serial1
