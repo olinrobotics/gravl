@@ -16,11 +16,11 @@
 #include <Arduino.h>                        // Used for Arduino functions
 #include "ros.h"                            // Used for rosserial communication
 #include "ackermann_msgs/AckermannDrive.h"  // Used for rosserial steering message
-#include "estop.h"                          // Used to implement estop class
-#include "soft_switch.h"                    // Used to implement auto switch
+#include <OAKEstop.h>                       // Used to implement estop class
+#include <OAKSoftSwitch.h>                  // Used to implement auto switch
 
 // Declare switch & estop
-Estop *e;
+OAKEstop *e;
 OAKSoftSwitch *l;
 
 // Def/Init Constants ----------C----------C----------C
@@ -95,7 +95,7 @@ void setup() { // ----------S----------S----------S----------S----------S
   nh.subscribe(sub);
 
   // Initialize estop and auto-switch
-  e = new Estop(&nh, ESTOP_PIN, 1);
+  e = new OAKEstop(&nh, ESTOP_PIN, 1);
   pinMode(ESTOP_PIN, OUTPUT);
   l = new OAKSoftSwitch(&nh, "/auto", AUTO_LED_PIN);
 
