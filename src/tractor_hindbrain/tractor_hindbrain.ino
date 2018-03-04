@@ -18,20 +18,28 @@
 #include "ackermann_msgs/AckermannDrive.h"  // Used for rosserial steering message
 #include <OAKEstop.h>                       // Used to implement estop class
 #include <OAKSoftSwitch.h>                  // Used to implement auto switch
+#include <OAKEncoder.h>                     // Used to implement rotary encoders
 
 // Declare switch & estop
-OAKEstop *e;
-OAKSoftSwitch *l;
+OAKEstop *e_stop;
+OAKSoftSwitch *autonomous_light;
+OAKEncoder *left_encoder;
+OAKEncoder *right_encoder;
 
 // Def/Init Constants ----------C----------C----------C
 
 // Physical Pins
-const byte AUTO_LED_PIN = 3;
+const byte AUTO_LIGHT_PIN = 3;
 const byte ESTOP_PIN = 2;
+const byte ESTOP_SENSE_PIN = 2;
+const byte LEFT_ENCODER_A = 5;
+const byte LEFT_ENCODER_B = 6;
+const byte RIGHT_ENCODER_A = 7;
+const byte RIGHT_ENCODER_B = 8;
 
 // RoboClaw & Settings
 #define RC_SERIAL Serial1
-#define address 0x80
+#define ADDRESS 0x80
 #define ROBOCLAW_UPDATE_RATE 500
 RoboClaw rc(&Serial1, 10000);
 
@@ -39,19 +47,19 @@ RoboClaw rc(&Serial1, 10000);
 #define DEBUG TRUE
 const int VEL_HIGH = 2048;
 const int VEL_LOW = 190;
-const int VEL_CONTROL_RANGE = 2;    // Range of incoming signals
+const int VEL_CONTROL_RANGE = 2;      // Range of incoming signals
 const int STEER_HIGH = 1200;
 const int STEER_LOW = 600;
 const int STEER_CONTROL_RANGE = 90;
-const byte VEL_FIDELITY = 10;       // Stepping sub-division of actuator
+const byte VEL_FIDELITY = 10;         // Stepping sub-division of actuator
 const byte STEER_FIDELITY = 1;
+const byte ENCODER_UPDATE_RATE = 100; // Milliseconds
 
 
 // Def/Init Global Variables ----------V----------V----------V
 
 // States
 boolean isEStopped = false;
-boolean isAuto = false;
 
 int prevVelMsg;
 unsigned int velMsg = VEL_HIGH;                     // High vel var = low vel
@@ -85,8 +93,6 @@ ros::Subscriber<ackermann_msgs::AckermannDrive> sub("drive", &ackermannCB);
  * RTNS: none
  */
 void setup() { // ----------S----------S----------S----------S----------S
-
-  //Open serial communication with roboclaw
   rc.begin(38400);
 
   // Set up ROS node and initialize subscriber
@@ -95,20 +101,22 @@ void setup() { // ----------S----------S----------S----------S----------S
   nh.subscribe(sub);
 
   // Initialize estop and auto-switch
-  e = new OAKEstop(&nh, ESTOP_PIN, 1);
+  e_stop = new OAKEstop(&nh, ESTOP_SENSE_PIN, 1);
   pinMode(ESTOP_PIN, OUTPUT);
-  l = new OAKSoftSwitch(&nh, "/auto", AUTO_LED_PIN);
+  autonomous_light = new OAKSoftSwitch(&nh, "/auto", AUTO_LIGHT_PIN);
+  left_encoder = new OAKEncoder(&nh, "/left_encoder", 100, LEFT_ENCODER_A, LEFT_ENCODER_B);
+  right_encoder = new OAKEncoder(&nh, "/right_encoder", 100, RIGHT_ENCODER_A, RIGHT_ENCODER_B);
 
   // Provide estop and estart functions
-  e->onStop(eStop);
-  e->offStop(eStart);
+  e_stop->onStop(eStop);
+  e_stop->offStop(eStart);
 
   // TODO Operator verify that actuators are in default positions
 
   // Set actuators to default positions
-  rc.SpeedAccelDeccelPositionM1(address, 0, 300, 0, velMsg, 0);
+  rc.SpeedAccelDeccelPositionM1(ADDRESS, 0, 300, 0, velMsg, 0);
   prevVelMsg = velMsg;
-  rc.SpeedAccelDeccelPositionM2(address, 0, 500, 0, steerMsg, 0);
+  rc.SpeedAccelDeccelPositionM2(ADDRESS, 0, 500, 0, steerMsg, 0);
   prevSteerMsg = steerMsg;
 
 } //setup()
@@ -150,9 +158,7 @@ void loop() { // ----------L----------L----------L----------L----------L
 
   // If node isn't connected and tractor isn't estopped, estop
   if(!nh->connected()) {
-    if(!isEStopped) {
-      eStop();
-    }
+    eStop();
   }
  } //checkSerial()
 
@@ -178,11 +184,11 @@ void updateRoboClaw(int velMsg, int steerMsg) {
   prevSteerMsg = steerMsg;
   
   // Write velocity to RoboClaw
-  rc.SpeedAccelDeccelPositionM1(address, 100000, 1000, 0, velMsg, 0);
+  rc.SpeedAccelDeccelPositionM1(ADDRESS, 100000, 1000, 0, velMsg, 0);
 
   // Write steering to RoboClaw if tractor is moving, else returns debug msg
   if (velMsg < VEL_HIGH) {
-    rc.SpeedAccelDeccelPositionM2(address, 0, 1000, 0, steerMsg, 0);
+    rc.SpeedAccelDeccelPositionM2(ADDRESS, 0, 1000, 0, steerMsg, 0);
   }
   else {
     #ifdef DEBUG
