@@ -47,4 +47,4 @@ class gpsToB:
 
 
 if __name__ == '__main__':
-    gpsToB(72.29, -71.26)
+    gpsToB(42.294055, -71.264568)

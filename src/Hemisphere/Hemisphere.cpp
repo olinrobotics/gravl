@@ -20,11 +20,11 @@
  */
 Hemisphere::Hemisphere(){
 	heading = n.advertise<gravl::Hemisphere>("heading", 1000);
-	std::string serial_port;
-	if(!n.getParam("port", serial_port)){
+	std::string serial_port = "/dev/ttyUSB0";
+	/*if(!n.getParam("port", serial_port)){
 		ROS_ERROR("No serial port set");
 		exit(1);
-	}
+	}*/
 	fd = open(serial_port.c_str(), O_RDWR|O_NOCTTY);
 	if(fd<0){
 		ROS_ERROR("Could not open port");
