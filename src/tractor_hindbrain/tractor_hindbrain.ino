@@ -31,7 +31,7 @@ OAKEncoder *right_encoder;
 // Physical Pins
 const byte AUTO_LIGHT_PIN = 3;
 const byte ESTOP_PIN = 2;
-const byte ESTOP_SENSE_PIN = 2;
+const byte ESTOP_SENSE_PIN = 12;
 const byte LEFT_ENCODER_A = 5;
 const byte LEFT_ENCODER_B = 6;
 const byte RIGHT_ENCODER_A = 7;
@@ -104,8 +104,8 @@ void setup() { // ----------S----------S----------S----------S----------S
   e_stop = new OAKEstop(&nh, ESTOP_SENSE_PIN, 1);
   pinMode(ESTOP_PIN, OUTPUT);
   autonomous_light = new OAKSoftSwitch(&nh, "/auto", AUTO_LIGHT_PIN);
-  left_encoder = new OAKEncoder(&nh, "/left_encoder", 100, LEFT_ENCODER_A, LEFT_ENCODER_B);
-  right_encoder = new OAKEncoder(&nh, "/right_encoder", 100, RIGHT_ENCODER_A, RIGHT_ENCODER_B);
+  left_encoder = new OAKEncoder(&nh, "/left_encoder", ENCODER_UPDATE_RATE, LEFT_ENCODER_A, LEFT_ENCODER_B);
+  right_encoder = new OAKEncoder(&nh, "/right_encoder", ENCODER_UPDATE_RATE, RIGHT_ENCODER_A, RIGHT_ENCODER_B);
 
   // Provide estop and estart functions
   e_stop->onStop(eStop);
