@@ -1,11 +1,12 @@
 #include "odometry.h"
 
-Odometry::Odometry(ros::NodeHandle *nh):nh(nh){
+Odometry::Odometry(ros::NodeHandle *nh, const uint8_t left_pin_a, const uint8_t left_pin_b,
+					const uint8_t right_pin_a, const uint8_t right_pin_b):nh(nh){
 	broadcaster->init(*nh);
 	t->header.frame_id = "/odom";
 	t->child_frame_id = "/base_link";
-	left_wheel = new Encoder(5,6);
-	right_wheel = new Encoder(7,8);
+	left_wheel = new Encoder(left_pin_a, left_pin_b);
+	right_wheel = new Encoder(right_pin_a, right_pin_b);
 }
 
 void Odometry::odomPub(){
