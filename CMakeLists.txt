@@ -20,10 +20,15 @@ find_package(catkin REQUIRED COMPONENTS
   mavros_msgs
   nav_msgs
   tf
+  cv_bridge
 )
 
 ## System dependencies are found with CMake's conventions
 find_package(Boost REQUIRED COMPONENTS system)
+
+# OpenCV dependencies
+find_package(OpenCV 3.2 REQUIRED)
+include_directories( ${OpenCV_INCLUDE_DIRS} )
 
 ## QT dependencies
 find_package(Qt5Widgets)
@@ -50,30 +55,11 @@ ENDIF()
 ## Declare ROS messages, services and actions ##
 ################################################
 
-## To declare and build messages, services or actions from within this
-## package, follow these steps:
-## * Let MSG_DEP_SET be the set of packages whose message types you use in
-##   your messages/services/actions (e.g. std_msgs, actionlib_msgs, ...).
-## * In the file package.xml:
-##   * add a build_depend tag for "message_generation"
-##   * add a build_depend and a run_depend tag for each package in MSG_DEP_SET
-##   * If MSG_DEP_SET isn't empty the following dependency has been pulled in
-##     but can be declared for certainty nonetheless:
-##     * add a run_depend tag for "message_runtime"
-## * In this file (CMakeLists.txt):
-##   * add "message_generation" and every package in MSG_DEP_SET to
-##     find_package(catkin REQUIRED COMPONENTS ...)
-##   * add "message_runtime" and every package in MSG_DEP_SET to
-##     catkin_package(CATKIN_DEPENDS ...)
-##   * uncomment the add_*_files sections below as needed
-##     and list every .msg/.srv/.action file to be processed
-##   * uncomment the generate_messages entry below
-##   * add every package in MSG_DEP_SET to generate_messages(DEPENDENCIES ...)
-
 ## Generate messages in the 'msg' folder
 add_message_files(
   FILES
   Hemisphere.msg
+  RoboClawStats.msg
 )
 
 ## Generate services in the 'srv' folder
@@ -100,16 +86,6 @@ generate_messages(
 ################################################
 ## Declare ROS dynamic reconfigure parameters ##
 ################################################
-
-## To declare and build dynamic reconfigure parameters within this
-## package, follow these steps:
-## * In the file package.xml:
-##   * add a build_depend and a run_depend tag for "dynamic_reconfigure"
-## * In this file (CMakeLists.txt):
-##   * add "dynamic_reconfigure" to
-##     find_package(catkin REQUIRED COMPONENTS ...)
-##   * uncomment the "generate_dynamic_reconfigure_options" section below
-##     and list every .cfg file to be processed
 
 ## Generate dynamic reconfigure parameters in the 'cfg' folder
 generate_dynamic_reconfigure_options(
@@ -151,61 +127,50 @@ include_directories(
 #   src/${PROJECT_NAME}/tractor.cpp
 # )
 
-## Add cmake target dependencies of the library
-## as an example, code may need to be generated before libraries
-## either from message generation or dynamic reconfigure
-# add_dependencies(${PROJECT_NAME} ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
-
 ## Declare a C++ executable
 ## With catkin_make all packages are built within a single CMake context
 ## The recommended prefix ensures that target names across packages don't collide
-
-#add_executable( Camera src/Camera/Camera.cpp )
+add_executable( Camera src/Camera/Camera.cpp )
 add_executable( Teleop src/Teleop/Teleop.cpp )
 add_executable( DriveState src/DriveState/DriveState.cpp )
 add_executable( Driver src/Driver/Driver.cpp )
 add_executable( Waypoint src/Waypoint/Waypoint.cpp )
 add_executable( Hemisphere src/Hemisphere/Hemisphere.cpp )
 add_executable( idk src/arm_drone.cpp )
-#add_executable( road_detection src/road_detection.cpp )
+add_executable( road_detection src/road_detection.cpp )
 add_executable( hello_world src/hello_world.cpp )
 
 
-
-## Rename C++ executable without prefix
-## The above recommended prefix causes long target names, the following renames the
-## target back to the shorter version for ease of user use
-## e.g. "rosrun someones_pkg node" instead of "rosrun someones_pkg someones_pkg_node"
-# set_target_properties(${PROJECT_NAME}_node PROPERTIES OUTPUT_NAME node PREFIX "")
-
-## Add cmake target dependencies of the executable
-## same as for the library above
-# add_dependencies(${PROJECT_NAME}_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
-add_dependencies(Hemisphere ${${PROJECT_NAME}_EXPORTED_TARGETS} $catkin_EXPORTED_TARGETS)
-
 ## Specify libraries to link a library or executable target against
-
-#target_link_libraries( Camera ${OpenCV_LIBS} ${catkin_LIBRARIES} )
+target_link_libraries( Camera ${OpenCV_LIBS} ${catkin_LIBRARIES} )
 target_link_libraries( Teleop ${catkin_LIBRARIES} )
 target_link_libraries( DriveState ${catkin_LIBRARIES} )
 target_link_libraries( Driver ${catkin_LIBRARIES} )
 target_link_libraries( Waypoint ${catkin_LIBRARIES} )
-target_link_libraries( Hemisphere ${catkin_LIBRARIES}
-  ${Boost_LIBRARIES} -lrt )
+target_link_libraries( Hemisphere ${catkin_LIBRARIES} ${Boost_LIBRARIES} -lrt )
 target_link_libraries( idk ${catkin_LIBRARIES} )
-#target_link_libraries( road_detection ${OpenCV_LIBS} )
+target_link_libraries( road_detection ${OpenCV_LIBS} )
 target_link_libraries( hello_world ${catkin_LIBRARIES} )
 
-IF(Qt5Widgets_FOUND)
-  qt5_add_resources(QTEST_RESOURCES src/QT/qml.qrc)
-  add_executable( gps_map src/QT/main.cpp src/QT/tractor_controller.cpp ${QTEST_RESOURCES} )
-  add_dependencies( gps_map ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS} )
-  target_link_libraries( gps_map Qt5::Widgets
-    Qt5::Qml 
-    Qt5::Quick 
-    Qt5::Positioning
-    ${catkin_LIBRARIES} )
-ENDIF()
+
+## Add cmake target dependencies of the executable
+## same as for the library above
+# add_dependencies(${PROJECT_NAME}_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+add_dependencies(Hemisphere ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+
+
+#IF(Qt5Widgets_FOUND)
+#  MESSAGE(WARNING ${Qt5Widgets_INCLUDE_DIRS})
+#  qt5_add_resources(QTEST_RESOURCES src/QT/qml.qrc)
+#  add_executable( gps_map src/QT/main.cpp src/QT/tractor_controller.cpp ${QTEST_RESOURCES} )
+#  add_dependencies( gps_map ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS} )
+#  target_link_libraries( gps_map
+#    Qt5::Widgets
+#    Qt5::Qml 
+#    Qt5::Quick 
+#    Qt5::Positioning
+#    ${catkin_LIBRARIES} )
+#ENDIF()
 
 #############
 ## Install ##
