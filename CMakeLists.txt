@@ -115,7 +115,6 @@ catkin_package(
 ## Specify additional locations of header files
 ## Your package locations should be listed before other locations
 include_directories(
-# include
   ${catkin_INCLUDE_DIRS}
   ${OpenCV_INCLUDE_DIRS}
   ${Qt5Widgets_INCLUDE_DIRS}
@@ -138,7 +137,6 @@ add_executable( Waypoint src/Waypoint/Waypoint.cpp )
 add_executable( Hemisphere src/Hemisphere/Hemisphere.cpp )
 add_executable( idk src/arm_drone.cpp )
 add_executable( road_detection src/road_detection.cpp )
-add_executable( hello_world src/hello_world.cpp )
 
 
 ## Specify libraries to link a library or executable target against
@@ -150,7 +148,6 @@ target_link_libraries( Waypoint ${catkin_LIBRARIES} )
 target_link_libraries( Hemisphere ${catkin_LIBRARIES} ${Boost_LIBRARIES} -lrt )
 target_link_libraries( idk ${catkin_LIBRARIES} )
 target_link_libraries( road_detection ${OpenCV_LIBS} )
-target_link_libraries( hello_world ${catkin_LIBRARIES} )
 
 
 ## Add cmake target dependencies of the executable
