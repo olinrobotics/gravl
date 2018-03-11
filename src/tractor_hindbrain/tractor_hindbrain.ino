@@ -90,7 +90,11 @@ void loop() { // ----------L----------L----------L----------L----------L
     if (millis() - prevMillis > ROBOCLAW_UPDATE_RATE && !isEStopped) {
       //updateRoboClaw(velMsg, steerMsg);
     }
-    
+
+    // Publish the encoders
+    left_encoder->publish();
+    right_encoder->publish();
+
     // Updates node
     nh.spinOnce();
     delay(1);
@@ -113,9 +117,7 @@ void eStop() {
   isEStopped = true;
 
   // Logs estop msg
-  char i[32];
-  snprintf(i, sizeof(i), "ERR: Tractor E-Stopped");
-  nh.loginfo(i);
+  nh.loginfo("ERR: Tractor E-Stopped");
 
   // Toggle relay to stop engine
   digitalWrite(ESTOP_PIN, HIGH);
@@ -132,9 +134,7 @@ void eStop() {
   isEStopped = false;
 
   // Logs verification msg
-  char i[32];
-  snprintf(i, sizeof(i), "MSG: EStop Disactivated");
-  nh.loginfo(i);
+  nh.loginfo("MSG: EStop Disactivated");
 
   digitalWrite(ESTOP_PIN, LOW);
  }
