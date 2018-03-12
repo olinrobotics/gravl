@@ -32,6 +32,7 @@ const byte LEFT_ENCODER_B = 10;
 const byte RIGHT_ENCODER_A = 11;
 const byte RIGHT_ENCODER_B = 12;
 
+
 // General Constants
 const byte ENCODER_UPDATE_RATE = 100; // Milliseconds
 const int ROBOCLAW_UPDATE_RATE = 500;
