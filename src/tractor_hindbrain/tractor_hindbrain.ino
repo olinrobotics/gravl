@@ -4,7 +4,7 @@
  * @author: Connor Novak
  * @author: Carl Moser
  * @email: connor.novak@students.olin.edu
- * @version: 1.3
+ * @version: 1.4
  *
  * Basic OAK_compatible control of velocity actuator and
  * steering actuator through ackermann steering messages
@@ -17,6 +17,7 @@
 #include <OAKEstop.h>                       // Used to implement estop class
 #include <OAKSoftSwitch.h>                  // Used to implement auto switch
 #include <OAKEncoder.h>                     // Used to implement rotary encoders
+#include "motion.h"                         // Used to control the motion actuators
 
 #define DEBUG TRUE
 
@@ -31,23 +32,24 @@ const byte LEFT_ENCODER_B = 10;
 const byte RIGHT_ENCODER_A = 11;
 const byte RIGHT_ENCODER_B = 12;
 
-
 // General Constants
 const byte ENCODER_UPDATE_RATE = 100; // Milliseconds
-const byte ROBOCLAW_UPDATE_RATE = 500;
+const int ROBOCLAW_UPDATE_RATE = 500;
 
 
 // Def/Init Global Variables ----------V----------V----------V
-boolean isEStopped = false;
-unsigned long prevMillis = millis();
+boolean is_e_stopped = false;
+unsigned long prev_millis = millis();
 
 
-// Declare ROS stuff
+// Declare ROS and Class stuff
 ros::NodeHandle nh;
 OAKEstop *e_stop;
 OAKSoftSwitch *autonomous_light;
 OAKEncoder *left_encoder;
 OAKEncoder *right_encoder;
+Motion *motion;
+
 
 /*
  * FUNCTION: setup()
@@ -57,7 +59,7 @@ OAKEncoder *right_encoder;
  */
 void setup() { // ----------S----------S----------S----------S----------S
 
-  // Set up ROS node and initialize subscriber
+  // Setup ROS
   nh.getHardware()->setBaud(115200);
   nh.initNode(); // Initialize ROS nodehandle
 
@@ -73,6 +75,9 @@ void setup() { // ----------S----------S----------S----------S----------S
   // Setup encoders
   left_encoder = new OAKEncoder(&nh, "/left_encoder", ENCODER_UPDATE_RATE, LEFT_ENCODER_A, LEFT_ENCODER_B);
   right_encoder = new OAKEncoder(&nh, "/right_encoder", ENCODER_UPDATE_RATE, RIGHT_ENCODER_A, RIGHT_ENCODER_B);
+
+  motion = new Motion(&nh);
+  motion->homeActuators();
 }
 
 
@@ -83,12 +88,13 @@ void setup() { // ----------S----------S----------S----------S----------S
  * RTNS: none
 */
 void loop() { // ----------L----------L----------L----------L----------L
+
   // Check if connected | Estop if not connected
-  if(nh.connected()){
+  if (nh.connected()) {
   
     // Sends commands to RoboClaw every ROBOCLAW_UPDATE_RATE milliseconds
-    if (millis() - prevMillis > ROBOCLAW_UPDATE_RATE && !isEStopped) {
-      //updateRoboClaw(velMsg, steerMsg);
+    if (millis() - prev_millis > ROBOCLAW_UPDATE_RATE && !is_e_stopped) {
+      motion->updateRoboClaw();
     }
 
     // Publish the encoders
@@ -98,9 +104,12 @@ void loop() { // ----------L----------L----------L----------L----------L
     // Updates node
     nh.spinOnce();
     delay(1);
-  } else{
+  }
+  else {
     eStop();
   }
+
+  prev_millis = millis();
 }
 
 
@@ -114,13 +123,17 @@ void loop() { // ----------L----------L----------L----------L----------L
  */
 void eStop() {
 
-  isEStopped = true;
+  is_e_stopped = true;
 
   // Logs estop msg
-  nh.loginfo("ERR: Tractor E-Stopped");
+  nh.logwarn("ERR: Tractor E-Stopped");
 
-  // Toggle relay to stop engine
+  // Enable relay to stop engine and home actuators
   digitalWrite(ESTOP_PIN, HIGH);
+  motion->homeActuators();
+
+  // Lock system for 2 seconds to make sure engine is killed
+  delay(2000);
 }
 
 
@@ -130,11 +143,11 @@ void eStop() {
  * ARGS: none
  * RTNS: none
  */
- void eStart() {
-  isEStopped = false;
+void eStart() {
+  is_e_stopped = false;
 
   // Logs verification msg
   nh.loginfo("MSG: EStop Disactivated");
 
   digitalWrite(ESTOP_PIN, LOW);
- }
+}
