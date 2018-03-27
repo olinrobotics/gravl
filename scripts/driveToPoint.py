@@ -75,6 +75,9 @@ class driveToPoint:
             self.ackMsg.steering_angle = (
                 (self.currentHeading - self.desiredHeading < 0) * 2 - 1) * np.pi / 4
 
+        self.ackMsg.speed = 0 if d < .1 else 1
+
+
 
 if __name__ == '__main__':
     turnHeading()
