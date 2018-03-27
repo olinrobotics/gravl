@@ -11,9 +11,14 @@ from std_msgs.msg import Float64
 import numpy as np
 
 
-class turnHeading:
+class driveToPoint:
+    '''Turn to a point. This file takes into account cases such as
+    points close together.
+    @param lon: the destination longitude
+    @param lat: the destination latitude'''
+
     def __init__(self, lon=0, lat=0):
-        rospy.init_node('turnHeading')
+        rospy.init_node('driveToPoint')
 
         self.destLon = lon
         self.destLat = lat
@@ -59,10 +64,16 @@ class turnHeading:
         latDelta = (self.depLat - self.destLat) * 60 * 1852
 
         d = (lonDelta ** 2 + latDelta ** 2) ** .5
-        maxD = np.sin(np.radians(self.desiredHeading -
-                                 self.currentHeading)) * 2 * np.pi
-        if d < maxD:
-            self.ackMsg.steering_angle = ((self.currentHeading - self.desiredHeading < 0) * 2 - 1) * np.pi / 4
+
+        # minimum distance the destination can be for a direct turn
+        # considering the turning radius.
+        minD = 2 * self.turnRad * np.sin(np.radians(self.desiredHeading -
+                                                    self.currentHeading)) * 2 * np.pi
+
+        # If the point is too close, turn sharply in the other direction.
+        if d < minD:
+            self.ackMsg.steering_angle = (
+                (self.currentHeading - self.desiredHeading < 0) * 2 - 1) * np.pi / 4
 
 
 if __name__ == '__main__':
