@@ -26,7 +26,7 @@ class goToPoints:
             dest.setDestination(location[0], location[1])
             while True:
                 # while still more than a meter from destination
-                if ((location[0] - self.lat) ** 2 + (location[1] - self.lon) ** 2) ** .5 < 1.0 / 60 / 1852:
+                if ((location[0] - self.lat) ** 2 + (location[1] - self.lon) ** 2) ** .5 < 1.0 / 60 / 1852 / .04:
                     break
 
         # keep tractor in the final destination
