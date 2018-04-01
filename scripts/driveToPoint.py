@@ -5,6 +5,7 @@
 # bearing.
 
 import rospy
+from gravl.srv import StopTractor
 from ackermann_msgs.msg import AckermannDrive
 from std_msgs.msg import Float32
 from std_msgs.msg import Float64
@@ -20,6 +21,7 @@ class driveToPoint:
     def __init__(self, lon=0, lat=0):
         rospy.init_node('driveToPoint')
 
+        self.going = False
         self.destLon = lon
         self.destLat = lat
 
@@ -75,8 +77,16 @@ class driveToPoint:
             self.ackMsg.steering_angle = (
                 (self.currentHeading - self.desiredHeading < 0) * 2 - 1) * np.pi / 4
 
-        self.ackMsg.speed = 0 if d < .1 else 1
+            self.ackMsg.speed = 0 if d < .1 or self.going else 1
 
+    def handleStop(self, req):
+        self.going = req.drive
+        return StopTractorResponse(self.going)
+
+    def stopServer(self):
+        rospy.init_node('stop_server')
+        s = rospy.Service('stop_server', StopTractor, handleStop)
+        rospy.spin()
 
 
 if __name__ == '__main__':
