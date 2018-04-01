@@ -4,6 +4,7 @@ import rospy
 from turnToHeading import turnHeading
 from gpsToB import gpsToB
 from sensor_msgs.msg import NavSatFix
+from gravl.srv import StopTractor
 
 
 class goToPoints:
@@ -30,7 +31,13 @@ class goToPoints:
                     break
 
         # keep tractor in the final destination
-        dest.setDestination(self.lat, self.lon)
+        # dest.setDestination(self.lat, self.lon)
+        rospy.wait_for_service('stop_tractor')
+        try:
+            stop_tractor = rospy.ServiceProxy('stop_tractor', StopTractor)
+            ret = stop_tractor(False)
+        except rospy.ServiceException, e:
+            print('Service Call failed: %s'%e)
 
     def callback(self, data):
         self.lat = data.latitude
