@@ -1,0 +1,29 @@
+!!python/object/new:dynamic_reconfigure.encoding.Config
+dictitems:
+  angle_max: 2.356194490192345
+  angle_min: -2.356194490192345
+  cluster: 1
+  frame_id: laser
+  groups: !!python/object/new:dynamic_reconfigure.encoding.Config
+    dictitems:
+      angle_max: 2.356194490192345
+      angle_min: -2.356194490192345
+      cluster: 1
+      frame_id: laser
+      groups: !!python/object/new:dynamic_reconfigure.encoding.Config
+        state: []
+      id: 0
+      name: Default
+      parameters: !!python/object/new:dynamic_reconfigure.encoding.Config
+        state: []
+      parent: 0
+      skip: 1
+      state: true
+      tf_prefix: ''
+      time_offset: 0.0
+      type: ''
+    state: []
+  skip: 1
+  tf_prefix: ''
+  time_offset: 0.0
+state: []
