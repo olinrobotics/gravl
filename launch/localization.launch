@@ -13,5 +13,5 @@
 	<!-- <node name="camera_to_base" pkg="tf" type="static_transform_publisher" args="2.08 0 1.04 0 0 0 /base_link /image_raw 50" /> -->
 	<!-- <node name="hemisphere_tf" pkg="tf" type="static_transform_publisher" args="1.94 0 1.49 0 0 0 50" /base_link /heading > -->
 	<node name="laser2_to_base" pkg="tf" type="static_transform_publisher" args="2.20 0 1.30 0 1.571 0 /base_link /laser 50" />
-	<node name="imu_to_base" pkg="tf" type="static_transform_publisher" args="0.56 0 1.35 /base_link /imu/data 50" />
+	<node name="imu_to_base" pkg="tf" type="static_transform_publisher" args="-0.56 0 1.35 0 -1.571 0 /base_link /imu 50" />
 </launch>
