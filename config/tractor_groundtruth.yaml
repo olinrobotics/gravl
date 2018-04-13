@@ -4,8 +4,9 @@ two_d_mode: false
 print_diagnostics: true
 publish_tf: true
 publish_acceleration: true
+imu_used: true
 
 map_frame: map
-odom_frame: earth
+odom_frame: odom
 base_link_frame: base_link
 world_frame: earth
