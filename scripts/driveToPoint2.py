@@ -46,6 +46,7 @@ class driveToPoint:
         self.desiredHeading = data.data
 
     def currentHeadingCallback(self, data):
+        print(data)
         self.currentHeading = data.direction
 
     def positionCallback(self, data):
@@ -61,9 +62,8 @@ class driveToPoint:
         mDist = latDist * latToM
         mDist[1] *= np.cos(np.radians(self.dest[0]))
         d = np.linalg.norm(mDist)
-        print(d)
 
-        self.ackMsg.speed = 1
+        self.ackMsg.speed = 1 if d > 1 else 0
         self.pubAcker.publish(self.ackMsg)
 
 
