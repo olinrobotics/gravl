@@ -84,15 +84,15 @@ class driveToPoint:
         # distance from target
         d = np.linalg.norm(mDist)
 
-        # minimum distance a point can be to make a direct turn
-        minD = 2 * self.turnRad * \
-            np.sin(np.radians(self.desiredHeading -
-                              self.currentHeadinsibg)) * 2 * np.pi
+        # # minimum distance a point can be to make a direct turn
+        # minD = 2 * self.turnRad * \
+        #     np.sin(np.radians(self.desiredHeading -
+        #                       self.currentHeadinsibg)) * 2 * np.pi
 
-        # if the point is to close, teardrop turn.
-        if d < minD:
-            self.ackMsg.steering_angle = (
-                (self.currentHeading - self.desiredHeading < 0) * 2 - 1) * np.pi / 4
+        # # if the point is to close, teardrop turn.
+        # if d < minD:
+        #     self.ackMsg.steering_angle = (
+        #         (self.currentHeading - self.desiredHeading < 0) * 2 - 1) * np.pi / 4
 
         self.ackMsg.speed = 1 if d > 1 else 0
         self.pubAcker.publish(self.ackMsg)
