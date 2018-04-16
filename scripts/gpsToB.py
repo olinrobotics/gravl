@@ -47,6 +47,7 @@ class gpsToB:
         cosa = np.cos(p1[0]) * np.sin(p2[0]) - np.sin(p1[0]) * \
             np.cos(p2[0]) * np.cos(p2[1] - p1[1])
         angle = np.arctan2(sina, cosa)
+        angle += 2 * np.pi if angle < 0 else 0
         self.course_pub.publish(np.degrees(angle))
 
 
