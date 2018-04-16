@@ -1,10 +1,10 @@
 <launch>
   <!--Start up teleop-->
-  <include file="$(find tractor)/launch/teleop.launch" ns="teleop">
+  <include file="$(find gravl)/launch/teleop.launch" ns="teleop">
 
   <!--Start up waypoint following-->
-  <include file="$(find tractor)/launch/waypoint.launch" ns="waypoint">
+  <include file="$(find gravl)/launch/waypoint.launch" ns="waypoint">
 
   <!--Start up state machine-->
-  <node pkg="tractor" type="State" name="state"/>
+  <node pkg="gravl" type="State" name="state"/>
 </launch>
