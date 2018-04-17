@@ -12,11 +12,13 @@ from gravl.msg import Hemisphere
 
 
 class driveToPoint:
-    def __init__(self, dest=np.array([42.294055, -71.264568])):
+    def __init__(self, dests=np.reshape([42.294055, -71.264568], (1, 2))):
         rospy.init_node('driveToPoint')
 
         # destination coordinates
-        self.dest = dest
+        self.dests = dests
+        self.currentPoint = 0
+        self.dest = self.dests[self.currentPoint]
 
         # turning radius of tractor [m]
         self.turnRad = 2
@@ -94,7 +96,14 @@ class driveToPoint:
         #     self.ackMsg.steering_angle = (
         #         (self.currentHeading - self.desiredHeading < 0) * 2 - 1) * np.pi / 4
 
-        self.ackMsg.speed = 1 if d > 1 else 0
+        # self.ackMsg.speed = 1 if d > 1 else 0
+        if d < 1:
+            if self.currentPoint == self.dests.shape[0] - 1:
+                self.ackMsg.speed = 0
+            else:
+                self.currentPoint += 1
+                self.dest = self.dests[self.currentPoint]
+
         self.pubAcker.publish(self.ackMsg)
 
 
