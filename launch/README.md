@@ -15,6 +15,11 @@ Launches basic tractor functionality
 - teleop
 - lidar (main)
 
+### `imu.launch`
+Launches phidgets imu and imu_filtering node
+- imu_node
+- imu_filter_node
+
 ### `ir.launch`
 Launches usb_cam1 node for infrared camera
 
@@ -37,10 +42,20 @@ Launches static and kinetic tf frames for Kubo localization
 - hemisphere -> base
 - RTK GPS -> base
 
+### `localize_test.launch`
+Launch nodes for testing localization with ekf_localization_node
+- robot_localization
+- imu.launch
+- rtk.launch
+
+### `rtk.launch`
+Launches rtk gps node
+
 ### `teleop.launch`
 Launches nodes for reading and publishing joystick commands
 - joystick (joy_node)
 - joystick_teleop
 
 ### `telewaypoint.launch`
-Launches 
+
+### `waypoint.launch`
