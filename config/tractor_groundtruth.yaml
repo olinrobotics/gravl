@@ -3,8 +3,10 @@ sensor_timeout: 0.5
 two_d_mode: false
 print_diagnostics: true
 publish_tf: true
-publish_acceleration: true
+publish_acceleration: false
+odom_used: true
 imu_used: true
+vo_used: false
 
 map_frame: map
 odom_frame: odom
