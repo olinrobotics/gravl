@@ -1,0 +1,4 @@
+<launch>
+   <node pkg="phidgets_imu" type="phidgets_imu_node" name="phidget_node"/>
+   <node pkg="imu_filter_madgwick" type="imu_filter_node" name="imu_filter_node"/>
+ </launch>
