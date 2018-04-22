@@ -1,0 +1,7 @@
+<launch>
+  <!-- This brings up the sensors & nodes necessary  -->
+  <include file="$(find gravl)/launch/localization.launch"/>
+  <include file="$(find gravl)/launch/rtk.launch"/>
+  <include file="$(find gravl)/launch/imu.launch"/>
+
+</launch>
