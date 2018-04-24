@@ -18,7 +18,7 @@ class Tfbroadcaster():
 
         # Initialize state variables
         self.pos = [0.0,0.0,0.0]
-        self.vel = [0.0,0.0,0.0]
+        self.vel = [0.6,0.0,0.0]                    # Speed for tractor at low gear, low RPM, full pedal
         self.orientation = [0,0,0,0]
 
         self.update_rate = 10.0                     # Hz
