@@ -38,3 +38,7 @@ At the moment, all it does is display an annotated video stream of a road, but w
 To run, start `roscore`, play the rosbags which can be found on a usb in the lab, and `rosrun tractor road_recognition`.
 The script will subscribe to the topic `/camera/image_raw`.
 The important bit of code is the callback which establishes the publisher, and the recognize_road function which at the moment returns an annotated picture, but should soon give the tractor directions.
+
+#### `temp_tf_broadcaster.py`
+Publishes kinetic transform from /base_link to /map
+Bugged out currently, supposed to listen to imu data and represent the base_link - map transform based on that. This may be done better by the ekf node, if it gets working.
