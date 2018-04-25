@@ -7,8 +7,8 @@
   	</node>
 
 	<!-- Test Nodes -->
-	<!-- <node name="temp_tf_broadcaster" pkg="gravl" type="temp_tf_broadcaster.py" >
-</node> -->
+	<node name="temp_tf_broadcaster" pkg="gravl" type="temp_tf_broadcaster.py" >
+</node>
 	<!-- Static Transform Nodes -->
 	<node name="map_to_world" pkg="tf2_ros" type="static_transform_publisher" args="0 0 0 0 0 0 /earth /map" />
 	<node name="gps_to_base" pkg="tf" type="static_transform_publisher" args="0.03 0 2.21 0 0 0 /base_link /gps/fix 2" />
