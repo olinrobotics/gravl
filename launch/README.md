@@ -23,6 +23,10 @@ Launches phidgets imu and imu_filtering node
 ### `ir.launch`
 Launches usb_cam1 node for infrared camera
 
+### `laser_to_pc.launch`
+Launches nodes to convert laser scans to single point cloud
+Copied from: http://www.theconstructsim.com/merge-laser-scans-single-pointcloud/
+
 ### `LidarFollowLaunch.launch`
 TODO
 
