@@ -1,9 +1,12 @@
 <launch>
 <!-- rosrun tf view_frames -->
 	<node pkg="robot_localization" type="ekf_localization_node" name="tractor_groundtruth">
-		<rosparam command="load" file="$(find tractor)/config/tractor_groundtruth.yaml"/>
+		<rosparam command="load" file="$(find gravl)/config/tractor_groundtruth.yaml"/>
   	</node>
   	<node name="world_frame_transform" pkg="tf2_ros" type="static_transform_publisher" args="0 0 0 0 0 0 /earth /base_link" />
-  	<node name="gps_tf" pkg="tf" type="static_transform_publisher" args="0 0 2.5 0 0 0 /base_link /gps 2" />
-  	<node pkg="tf" type="static_transform_publisher" name="laser_to_base" args="2 0 1 0 0 0 /base_link /laser 50" />
+  	<node name="gps_tf" pkg="tf" type="static_transform_publisher" args="0.03 0 2.21 0 0 0 /base_link /gps 2" />
+  	<!-- <node name="laser_to_base" pkg="tf" type="static_transform_publisher" args="2.02 0 1.19 0.157 0 0 /base_link /laser 50" /> -->
+		<!-- <node name="camera_to_base" pkg="tf" type="static_transform_publisher" args="2.08 0 1.04 0 0 0 /base_link /image_raw 50" /> -->
+		<!-- <node name="hemisphere_tf" pkg="tf" type="static_transform_publisher" args="1.94 0 1.49 0 0 0 50" /> -->
+		<node name="laser2_to_base" pkg="tf" type="static_transform_publisher" args="2.20 0 1.30 0 1.571 0 /base_link /laser 50" />
 </launch>
