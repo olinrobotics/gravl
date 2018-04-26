@@ -6,5 +6,5 @@
   <include file="$(find gravl)/launch/waypoint.launch" ns="waypoint">
 
   <!--Start up state machine-->
-  <node pkg="gravl" type="State" name="state"/>
+  <node pkg="gravl" type="DriveState" name="state"/>
 </launch>

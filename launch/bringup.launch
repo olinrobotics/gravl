@@ -6,8 +6,8 @@
     <param name="baud" value="115200"/>
   </node>
 
-  <include file="$(find tractor)/launch/rtk.launch"/>
-  <include file="$(find tractor)/launch/teleop.launch"/>
-  <include file="$(find tractor)/launch/lidar.launch"/>
+  <include file="$(find gravl)/launch/rtk.launch"/>
+  <include file="$(find gravl)/launch/teleop.launch"/>
+  <include file="$(find gravl)/launch/lidar.launch"/>
 
 </launch>
