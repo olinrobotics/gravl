@@ -56,7 +56,7 @@ void Hemisphere::publish(){
  * parses it, and then calls publish
  */
 void Hemisphere::run(){
-	while(true){
+	while(ros::ok()){
 		read(fd,buf,255);
 		std::string nmea = buf;
 		boost::split(parsed, nmea, [](char c){return c == ',';});
