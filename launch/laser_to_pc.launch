@@ -1,12 +1,13 @@
 <!-- Brings up nodes to convert multiple laser scans to 1 point cloud -->
 <!-- http://www.theconstructsim.com/merge-laser-scans-single-pointcloud/ -->
 <launch>
-<parameter name="use_sim_time" value="true" />
+<param name="use_sim_time" value="true" />
+<include file="$(find gravl)/launch/localization.launch"/>
 <node type="laser_scan_assembler" pkg="laser_assembler"
     name="my_assembler">
-<remap from="scan" to="laser_scan"/>
+<!--<remap from="scan" to="laser_scan"/>-->
 <param name="max_scans" type="int" value="400" />
-<param name="fixed_frame" type="string" value="my_robot_link_base" />
+<param name="fixed_frame" type="string" value="base_link" />
  </node>
 <!-- <node type ="laser2pc.py" pkg="gravl" name="laser2pc"/> -->
 </launch>
