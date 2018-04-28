@@ -6,7 +6,9 @@ from laser_assembler.srv import AssembleScans2  # Data type for converter servic
 from sensor_msgs.msg import PointCloud2         # Output Data type
 
 rospy.init_node("laser2pc")
+print("Waiting for service assemble_scans2")
 rospy.wait_for_service("assemble_scans2")
+
 assemble_scans = rospy.ServiceProxy('assemble_scans2', AssembleScans2)
 pub = rospy.Publisher ("/laser_pointcloud", PointCloud2, queue_size=1)
 
