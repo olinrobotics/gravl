@@ -11,6 +11,7 @@
 
 	<!-- Static Transform Nodes -->
 	<node name="map_to_world" pkg="tf2_ros" type="static_transform_publisher" args="0 0 0 0 0 0 /earth /map" />
+	<node name="odom_to_map" pkg="tf2_ros" type="static_transform_publisher" args="0 0 0 0 0 0 /map /odom" />
 	<node name="gps_to_base" pkg="tf" type="static_transform_publisher" args="0.03 0 2.21 0 0 0 /base_link /gps/fix 2" />
 	<!-- <node name="laser_to_base" pkg="tf" type="static_transform_publisher" args="2.02 0 1.19 0.157 0 0 /base_link /laser 50" /> -->
 	<!-- <node name="camera_to_base" pkg="tf" type="static_transform_publisher" args="2.08 0 1.04 0 0 0 /base_link /image_raw 50" /> -->
