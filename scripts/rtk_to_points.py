@@ -43,6 +43,9 @@ class RtkToPoints:
                  pose.orientation.z, pose.orientation.w])[-1]
             self.dep = np.array(pose.position)[:-1]
 
+        def addDestination(self, dest):
+            self.dests = np.vstack((self.dests, dest))
+
         def spin(self):
 
             while not rospy.is_shutdown() and self.inProgress:
@@ -71,7 +74,6 @@ class RtkToPoints:
 
                 self.pubAcker.publish(self.ackMsg)
                 self.rate.sleep()
-
 
 
 if __name__ == '__main__':
