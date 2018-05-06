@@ -51,7 +51,6 @@
   <depend>nav_msgs</depend>
   <depend>roscpp</depend>
   <depend>sensor_msgs</depend>
-  <depend>std_msgs</depend>
   <depend>tf</depend>
 
   <build_export_depend>rospy</build_export_depend>
