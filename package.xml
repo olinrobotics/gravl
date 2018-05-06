@@ -54,6 +54,8 @@
   <depend>std_msgs</depend>
   <depend>tf</depend>
 
+  <build_export_depend>rospy</build_export_depend>
+
   <exec_depend>rospy</exec_depend>
   <exec_depend>joy</exec_depend>
 
