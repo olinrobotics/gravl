@@ -187,9 +187,13 @@ class FeatureFinder():
             List of lists representing individual features
             """
         features = []
+        if self.debug: print('MSG: finding features in ' + str(len(points)) + ' points')
 
         for p1 in points:                                                       # For all feature points
             has_feature_p1 = self.has_feature(features, p1)
+
+            if has_feature_p1 > -1:                                             # If point is in feature
+                continue                                                        # Go to next point
 
             # find nearest neighbors
             p1_neighbors = [p for p in points if self.distance_3d(p1,p) < self.thresh_h]
@@ -212,23 +216,25 @@ class FeatureFinder():
 
                 elif has_feature_p1 == has_feature_p2 == -1:                    # If neither point has feature
                     features.append([p1,p2])                                    # Make new feature with p1 & p2
+                continue
 
-        print(len(features))
-        for feat in features:
+            features.append([p1])                                               # Make new feature with p1
+
+        if self.debug: print('MSG: found ' + str(len(features)) + ' features')
+
+        for i, feat in enumerate(features):
+
             if len(feat) < min_feat:                                            # if feature smaller than threshold
-                del features[feat]                                              # remove feature
-                if self.debug: print('MSG: Deleted too small feature')
+                del features[i]                                                 # remove feature
+                if self.debug: print('MSG: Deleted feature of length ' + str(len(feat)))
 
             if self.visualize:
+                print('MSG: Visualizing features')
                 feature_pc = point_cloud2.create_cloud_xyz32(
                                 header=Header(frame_id='odom'),points=feat)     # Creates pointcloud of points defining features
                 self.rviz_pub_pc.publish(feature_pc)                            # Visualize feature pointcloud
 
         return features
-
-
-
-
 
     def has_feature(self, features, point):
         """ Checks for point in feature
