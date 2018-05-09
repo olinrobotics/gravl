@@ -29,8 +29,10 @@ class FeatureFinder():
         # Status variables
         self.debug = debug
         self.visualize = visualize
-        self.threshold = 0.08                                                   # Threshold above which lidar points are features, not road
-        self.h_thresh = 1.2                                                     # Threshold above which lidar points are noise
+        self.thresh_road = 0.08                                                   # Threshold above which lidar points are features, not road
+        self.thresh_h = 1.2                                                     # Threshold above which lidar points are noise
+        self.thresh_min_feat = 10                                               # Threshold below which features are too small
+        self.thresh_rad = 0.3                                                   # Threshold above which point is in separate feature
 
         # Ros initialization
         rospy.init_node('feature_finder')                                       # Initialize node
@@ -109,7 +111,7 @@ class FeatureFinder():
         if self.debug: print("MSG: Received pointcloud")
         generator = point_cloud2.read_points(data)                              # Creates generator of pts from pointcloud
         self.analyze_scan(self.filter_lidar_scans(generator),
-                        self.get_road_template(self.transform), self.threshold) # Analyzes cleaned lidar data in generator
+                        self.get_road_template(self.transform), self.thresh_road) # Analyzes cleaned lidar data in generator
 
         # Save data as array
 
@@ -138,7 +140,7 @@ class FeatureFinder():
         road_pc = point_cloud2.create_cloud_xyz32(header=Header(frame_id='odom'),
                                                         points=road_points)     # Creates pointcloud of points defining road plane
         #if self.visualize: self.rviz_pub_pc.publish(road_pc)                    # Visualize road pointcloud
-        feature_plist = self.separate_features(feature_points)
+        feature_plist = self.separate_features(feature_points, self.thresh_min_feat, self.thresh_rad)
         #feature_locs = self.locate_features(feature_plist)
 
     def get_road_template(self, transform):
@@ -187,13 +189,13 @@ class FeatureFinder():
         features = []
 
         for p1 in points:                                                       # For all feature points
-            has_feature_p1 = has_feature(features, p1)
+            has_feature_p1 = self.has_feature(features, p1)
 
             # find nearest neighbors
-            p1_neighbors = [p for p in points if distance_3d(p1,p) < self.h_thresh]
+            p1_neighbors = [p for p in points if self.distance_3d(p1,p) < self.thresh_h]
 
             for p2 in p1_neighbors:                                             # For all neighbor points
-                has_feature_p2 = has_feature(features, p2)
+                has_feature_p2 = self.has_feature(features, p2)
                 if has_feature_p1 > -1 and has_feature_p2 > -1:                 # If both points are in features
 
                     if has_feature_p1 != has_feature_p2:                        # If features are not the same
@@ -202,27 +204,31 @@ class FeatureFinder():
                         features[has_feature_p1] = features[has_feature_p1] + features[has_feature_p2]
                         del features[has_feature_p2]
 
-                else if has_feature_p1 == -1 and has_feature_p2 > -1:           # If only p2 has feature
+                elif has_feature_p1 == -1 and has_feature_p2 > -1:              # If only p2 has feature
                     features[has_feature_p2].append(p1)                         # Add p1 to p2 feature
 
-                else if has_feature_p1 > -1 and has_feature_p2 == -1:           # If only p1 has feature
+                elif has_feature_p1 > -1 and has_feature_p2 == -1:              # If only p1 has feature
                     features[has_feature_p1].append(p2)                         # Add p2 to p1 feature
 
-                else if has_feature_p1 == has_feature_p2 == -1:                 # If neither point has feature
+                elif has_feature_p1 == has_feature_p2 == -1:                    # If neither point has feature
                     features.append([p1,p2])                                    # Make new feature with p1 & p2
 
-        For feat in features:
+        print(len(features))
+        for feat in features:
             if len(feat) < min_feat:                                            # if feature smaller than threshold
                 del features[feat]                                              # remove feature
+                if self.debug: print('MSG: Deleted too small feature')
+
+            if self.visualize:
+                feature_pc = point_cloud2.create_cloud_xyz32(
+                                header=Header(frame_id='odom'),points=feat)     # Creates pointcloud of points defining features
+                self.rviz_pub_pc.publish(feature_pc)                            # Visualize feature pointcloud
 
         return features
 
 
 
-        if self.visualize:
-            feature_pc = point_cloud2.create_cloud_xyz32(
-                                header=Header(frame_id='odom'),points=p_in_rad)   # Creates pointcloud of points defining features
-            self.rviz_pub_pc.publish(feature_pc)                                # Visualize feature pointcloud
+
 
     def has_feature(self, features, point):
         """ Checks for point in feature
@@ -276,7 +282,7 @@ class FeatureFinder():
             list of cleaned lidar points
             """
 
-        return [p for p in generator if p[2] < self.h_thresh]
+        return [p for p in generator if p[2] < self.thresh_h]
 
 
 if __name__ == '__main__':
