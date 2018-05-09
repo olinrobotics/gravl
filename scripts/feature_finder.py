@@ -171,41 +171,51 @@ class FeatureFinder():
             Array of arrays representing hills, Array of arrays representing holes
             """
 
-    def separate_features(self, points):
+    def separate_features(self, points, min_feat, radius):
         """ Separates point list of all feature points into individual features
             Uses RBNN Algorithm
 
             Args:
             self: reference to current object
             points: list of points in all features
-            mas_feat: maximum number of features per scan
+            max_feat: maximum number of features per scan
+            radius: radius for radially bounded nearest neighbor
 
             Returns:
             List of lists representing individual features
             """
-        radius = 0.3                                                           # Radius for Radially Bounded Nearest Neighbor
         features = []
 
         for p1 in points:                                                       # For all feature points
             has_feature_p1 = has_feature(features, p1)
-            # if p1 is in feature:
-                # next point
+
             # find nearest neighbors
-            # for p2 in neighbor_pts:
-                # if p1 and p2 are in features:
-                    # if features are not the same:
-                        # merge features
-                # else if p2 has feature:
-                    # p1 merges into p1 feature
-                # else if p1 has feature:
-                    # p2 merges into p1 feature
-                # else if neither has feature:
-                    # make new p1 feature
-                    # put p2 in p1 feature
-        # For all features
-            # if less points than min for feature:
-                # remove feature
-        # return feature list
+            p1_neighbors = [p for p in points if distance_3d(p1,p) < self.h_thresh]
+
+            for p2 in p1_neighbors:                                             # For all neighbor points
+                has_feature_p2 = has_feature(features, p2)
+                if has_feature_p1 > -1 and has_feature_p2 > -1:                 # If both points are in features
+
+                    if has_feature_p1 != has_feature_p2:                        # If features are not the same
+
+                        # Merge features
+                        features[has_feature_p1] = features[has_feature_p1] + features[has_feature_p2]
+                        del features[has_feature_p2]
+
+                else if has_feature_p1 == -1 and has_feature_p2 > -1:           # If only p2 has feature
+                    features[has_feature_p2].append(p1)                         # Add p1 to p2 feature
+
+                else if has_feature_p1 > -1 and has_feature_p2 == -1:           # If only p1 has feature
+                    features[has_feature_p1].append(p2)                         # Add p2 to p1 feature
+
+                else if has_feature_p1 == has_feature_p2 == -1:                 # If neither point has feature
+                    features.append([p1,p2])                                    # Make new feature with p1 & p2
+
+        For feat in features:
+            if len(feat) < min_feat:                                            # if feature smaller than threshold
+                del features[feat]                                              # remove feature
+
+        return features
 
 
 
