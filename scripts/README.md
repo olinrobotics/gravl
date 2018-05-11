@@ -38,3 +38,11 @@ At the moment, all it does is display an annotated video stream of a road, but w
 To run, start `roscore`, play the rosbags which can be found on a usb in the lab, and `rosrun tractor road_recognition`.
 The script will subscribe to the topic `/camera/image_raw`.
 The important bit of code is the callback which establishes the publisher, and the recognize_road function which at the moment returns an annotated picture, but should soon give the tractor directions.
+
+### `gpsToB.py`
+The constructors for the class are the destination coordinates of the tractor.
+This node publishes the heading for the shortest path to another point on the earth, taking into account curvature.
+
+### `turnToHeading.py`
+Subscribes to `/course` from `gpsToB.py`, which then tells the tractor how to move on course.
+
