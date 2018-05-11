@@ -65,7 +65,6 @@ class driveToPoint:
 
     def publish(self):
         # update desired heading
-        print(self.dest)
         self.getHeading()
 
         radius = 6371000 + self.altitude
