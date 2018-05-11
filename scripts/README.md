@@ -38,3 +38,10 @@ At the moment, all it does is display an annotated video stream of a road, but w
 To run, start `roscore`, play the rosbags which can be found on a usb in the lab, and `rosrun tractor road_recognition`.
 The script will subscribe to the topic `/camera/image_raw`.
 The important bit of code is the callback which establishes the publisher, and the recognize_road function which at the moment returns an annotated picture, but should soon give the tractor directions.
+
+### `driveToPoints.py`
+Run the Hemisphere node with `rosrun gravl Hemisphere` to publish `/heading`,
+run `roslaunch swiftnav_ros swiftnav_ros.launch` to get `/gps/fix`,
+and then run `rosrun gravl driveToPoints.py` to begin publishing to autodrive.
+At the moment the only way to set the coordinates are in the `if __name__=='__main__'`, but using ros params can be added later.
+The parameters of the class is a matrix of points where the first column is the x-coordinates and the second is the y-coordinates.
