@@ -12,11 +12,12 @@ from gravl.msg import Hemisphere
 
 
 class driveToPoint:
-    def __init__(self, dests=np.reshape([42.294055, -71.264568], (1, 2))):
+    def __init__(self):
         rospy.init_node('driveToPoint')
 
         # destination coordinates
-        self.dests = dests
+        self.dests = np.array(rospy.get_param(
+            "~points", [[42.294055, -71.264568]]))
         self.currentPoint = 0
         self.dest = self.dests[self.currentPoint]
 
@@ -64,6 +65,7 @@ class driveToPoint:
 
     def publish(self):
         # update desired heading
+        print(self.dest)
         self.getHeading()
 
         radius = 6371000 + self.altitude
