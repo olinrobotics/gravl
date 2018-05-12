@@ -7,7 +7,6 @@
   <maintainer email="carl.moser@students.olin.edu">carl</maintainer>
   <license>MIT</license>
 
-
   <buildtool_depend>catkin</buildtool_depend>
 
   <depend>ackermann_msgs</depend>
@@ -22,7 +21,6 @@
   <depend>sensor_msgs</depend>
   <depend>std_msgs</depend>
   <depend>tf</depend>
-
 
   <exec_depend>rospy</exec_depend>
   <exec_depend>message_runtime</exec_depend>
