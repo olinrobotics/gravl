@@ -32,7 +32,7 @@ const byte ESTOP_PIN = 2;
 // RoboClaw & Settings
 #define RC_SERIAL Serial1
 #define address 0x80
-#define ROBOCLAW_UPDATE_RATE 500
+#define ROBOCLAW_UPDATE_RATE 500 // Hz
 RoboClaw rc(&Serial1, 10000);
 
 // General Constants
@@ -69,7 +69,7 @@ unsigned long prevMillis = millis();
 void ackermannCB(const ackermann_msgs::AckermannDrive &drive){
   steerMsg = steerConvert(drive.steering_angle);
   velMsg = velConvert(drive.speed);
-  
+
 } //ackermannCB()
 
 
@@ -124,13 +124,13 @@ void loop() { // ----------L----------L----------L----------L----------L
 
   // Checks for connectivity with mid-brain and updates estopped state
   checkSerial(&nh);
-  
+
   // Sends commands to RoboClaw every ROBOCLAW_UPDATE_RATE milliseconds
   if (millis() - prevMillis > ROBOCLAW_UPDATE_RATE && !isEStopped) {
     updateRoboClaw(velMsg, steerMsg);
 
   }
-    
+
   // Updates node
   nh.spinOnce();
   delay(1);
@@ -172,11 +172,11 @@ void updateRoboClaw(int velMsg, int steerMsg) {
   //Update velMsg based on step
   stepActuator(&velMsg, &prevVelMsg, velStep);
   stepActuator(&steerMsg, &prevSteerMsg, steerStep);
-  
+
   // Update prev msgs
   prevVelMsg = velMsg;
   prevSteerMsg = steerMsg;
-  
+
   // Write velocity to RoboClaw
   rc.SpeedAccelDeccelPositionM1(address, 100000, 1000, 0, velMsg, 0);
 

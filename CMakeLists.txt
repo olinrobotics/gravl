@@ -60,6 +60,7 @@ add_message_files(
   FILES
   Hemisphere.msg
   RoboClawStats.msg
+  Plane.msg
 )
 
 ## Generate services in the 'srv' folder
@@ -163,8 +164,8 @@ add_dependencies(Hemisphere ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTE
 #  add_dependencies( gps_map ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS} )
 #  target_link_libraries( gps_map
 #    Qt5::Widgets
-#    Qt5::Qml 
-#    Qt5::Quick 
+#    Qt5::Qml
+#    Qt5::Quick
 #    Qt5::Positioning
 #    ${catkin_LIBRARIES} )
 #ENDIF()

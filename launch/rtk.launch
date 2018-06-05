@@ -1,5 +1,6 @@
 <launch>
    <node pkg="swiftnav_ros" type="swiftnav_ros_node" name="swiftnav_ros_node" output="screen">
-     <param name="port" value="/dev/piksi" />
+     <remap from="/gps/rtkfix" to="/odom" />
+     <!-- <param name="port" value="/dev/piksi" />-->
    </node>
  </launch>
