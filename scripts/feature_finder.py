@@ -43,7 +43,7 @@ class FeatureFinder():
         if self.visualize:
             self.rviz_pub = rospy.Publisher('point_viz', PointStamped,
                                                             queue_size = 10)    # point-visualize publisher
-            self.rviz_pub_pc = rospy.Publisher('pc_viz', PointCloud2,
+            self.rviz_pub_pc = rospy.Publisher('pc_vis', PointCloud2,
                                                             queue_size = 10)    # pointcloud-visualize publisher
 
         # Attribute initialization
@@ -187,58 +187,56 @@ class FeatureFinder():
             List of lists representing individual features
             """
 
-        if self.visualize:
-            print('MSG: Visualizing features')
-            feature_pc = point_cloud2.create_cloud_xyz32(
-                            header=Header(frame_id='odom'),points=points)       # Creates pointcloud of points defining features
-            self.rviz_pub_pc.publish(feature_pc)                            # Visualize feature pointcloud
-        # features = []
-        # if self.debug: print('MSG: finding features in ' + str(len(points)) + ' points')
-        #
-        # for p1 in points:                                                       # For all feature points
-        #     has_feature_p1 = self.has_feature(features, p1)
-        #
-        #     if has_feature_p1 > -1:                                             # If point is in feature
-        #         continue                                                        # Go to next point
-        #
-        #     # find nearest neighbors
-        #     p1_neighbors = [p for p in points if self.distance_3d(p1,p) < self.thresh_h]
-        #
-        #     for p2 in p1_neighbors:                                             # For all neighbor points
-        #         has_feature_p2 = self.has_feature(features, p2)
-        #         if has_feature_p1 > -1 and has_feature_p2 > -1:                 # If both points are in features
-        #
-        #             if has_feature_p1 != has_feature_p2:                        # If features are not the same
-        #
-        #                 # Merge features
-        #                 features[has_feature_p1] = features[has_feature_p1] + features[has_feature_p2]
-        #                 del features[has_feature_p2]
-        #
-        #         elif has_feature_p1 == -1 and has_feature_p2 > -1:              # If only p2 has feature
-        #             features[has_feature_p2].append(p1)                         # Add p1 to p2 feature
-        #
-        #         elif has_feature_p1 > -1 and has_feature_p2 == -1:              # If only p1 has feature
-        #             features[has_feature_p1].append(p2)                         # Add p2 to p1 feature
-        #
-        #         elif has_feature_p1 == has_feature_p2 == -1:                    # If neither point has feature
-        #             features.append([p1,p2])                                    # Make new feature with p1 & p2
-        #         continue
-        #
-        #     features.append([p1])                                               # Make new feature with p1
-        #
-        # if self.debug: print('MSG: found ' + str(len(features)) + ' features')
-        #
-        # for i, feat in enumerate(features):
-        #
-        #     if len(feat) < min_feat:                                            # if feature smaller than threshold
-        #         del features[i]                                                 # remove feature
-        #         if self.debug: print('MSG: Deleted feature of length ' + str(len(feat)))
-        #
-        #     if self.visualize:
-        #         print('MSG: Visualizing features')
-        #         feature_pc = point_cloud2.create_cloud_xyz32(
-        #                         header=Header(frame_id='odom'),points=feat)     # Creates pointcloud of points defining features
-        #         self.rviz_pub_pc.publish(feature_pc)                            # Visualize feature pointcloud
+
+
+        features = []
+        if self.debug: print('MSG: finding features in ' + str(len(points)) + ' points')
+
+        for p1 in points:                                                       # For all feature points
+            has_feature_p1 = self.has_feature(features, p1)
+
+            if has_feature_p1 > -1:                                             # If point is in feature
+                continue                                                        # Go to next point
+
+            # find nearest neighbors
+            p1_neighbors = [p for p in points if self.distance_3d(p1,p) < self.thresh_h]
+
+            for p2 in p1_neighbors:                                             # For all neighbor points
+                has_feature_p2 = self.has_feature(features, p2)
+                if has_feature_p1 > -1 and has_feature_p2 > -1:                 # If both points are in features
+
+                    if has_feature_p1 != has_feature_p2:                        # If features are not the same
+
+                        # Merge features
+                        features[has_feature_p1] = features[has_feature_p1] + features[has_feature_p2]
+                        del features[has_feature_p2]
+
+                elif has_feature_p1 == -1 and has_feature_p2 > -1:              # If only p2 has feature
+                    features[has_feature_p2].append(p1)                         # Add p1 to p2 feature
+
+                elif has_feature_p1 > -1 and has_feature_p2 == -1:              # If only p1 has feature
+                    features[has_feature_p1].append(p2)                         # Add p2 to p1 feature
+
+                elif has_feature_p1 == has_feature_p2 == -1:                    # If neither point has feature
+                    features.append([p1,p2])                                    # Make new feature with p1 & p2
+                continue
+
+            features.append([p1])                                               # Make new feature with p1
+
+        if self.debug: print('MSG: found ' + str(len(features)) + ' features')
+
+        for i, feat in enumerate(features):
+
+            if len(feat) < min_feat:                                            # if feature smaller than threshold
+                del features[i]                                                 # remove feature
+                if self.debug: print('MSG: Deleted feature ' + str(i) + ' of length ' + str(len(feat)))
+                continue
+
+            # if self.visualize:
+            #     print('MSG: Visualizing feature ' + str(i) + ' of length ' + str(len(feat)))
+            #     feature_pc = point_cloud2.create_cloud_xyz32(
+            #                     header=Header(frame_id='odom'),points=feat)     # Creates pointcloud of points defining features
+            #     self.rviz_pub_pc.publish(feature_pc)                            # Visualize feature pointcloud
 
         return features
 
