@@ -5,6 +5,7 @@
   <description>Olin's ground robotic autonomous vehicle lab repo</description>
 
   <maintainer email="carl.moser@students.olin.edu">carl</maintainer>
+
   <license>MIT</license>
 
   <buildtool_depend>catkin</buildtool_depend>
