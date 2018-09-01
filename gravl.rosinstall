@@ -1,0 +1,3 @@
+- git:
+    local-name: swiftnav_ros
+    uri: git clone https://github.com/swift-nav/swiftnav_ros
