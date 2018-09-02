@@ -18,18 +18,15 @@
   <depend>mavros_msgs</depend>
   <depend>message_generation</depend>
   <depend>nav_msgs</depend>
-  <depend>roscpp</depend>
   <depend>sensor_msgs</depend>
   <depend>std_msgs</depend>
   <depend>tf</depend>
 
-  <exec_depend>rospy</exec_depend>
+  <build_depend>roscpp</build_depend>
+
   <exec_depend>message_runtime</exec_depend>
   <exec_depend>joy</exec_depend>
-  <exec_depend>nav_msgs</exec_depend>
-  <exec_depend>roscpp</exec_depend>
   <exec_depend>rospy</exec_depend>
-  <exec_depend>sensor_msgs</exec_depend>
   <exec_depend>std_msgs</exec_depend>
   <exec_depend>tf</exec_depend>
 
