@@ -18,14 +18,21 @@
   <depend>mavros_msgs</depend>
   <depend>message_generation</depend>
   <depend>nav_msgs</depend>
-  <depend>roscpp</depend>
   <depend>sensor_msgs</depend>
   <depend>std_msgs</depend>
   <depend>tf</depend>
+  <depend>rospy</depend>
 
-  <exec_depend>rospy</exec_depend>
+  <build_depend>roscpp</build_depend>
+
   <exec_depend>message_runtime</exec_depend>
   <exec_depend>joy</exec_depend>
+  <exec_depend>phidgets-imu</exec_depend>
+  <exec_depend>nmea_navsat_driver</exec_depend>
+  <exec_depend>swiftnav_ros</exec_depend>
+  <exec_depend>rosserial</exec_depend>
+  <exec_depend>pointgrey_camera_driver</exec_depend>
+  <exec_depend>urg_node</exec_depend>
 
   <export></export>
 </package>
