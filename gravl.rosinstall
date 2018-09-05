@@ -1,10 +1,3 @@
 - git:
-    local-name: gravl
-    uri: https://github.com/olinrobotics/gravl.git
-
-# GPS module
-# Before uncommenting, install libsbp:
-# https://github.com/olinrobotics/gravl/wiki/Swift-Navigation-RTK-GPS
-# - git:
-#     local-name: swiftnav_ros
-#     uri: https://github.com/swift-nav/swiftnav_ros
+    local-name: swiftnav_ros
+    uri: https://github.com/swift-nav/swiftnav_ros
