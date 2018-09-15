@@ -21,7 +21,6 @@ RUN bash -c \
     && cmake .. \
     && make \
     && make install \
-
     && mkdir -p /home/$USER/catkin_ws/src/gravl'
 
 WORKDIR /home/$USER/catkin_ws
