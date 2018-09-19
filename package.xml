@@ -27,7 +27,7 @@
 
   <exec_depend>message_runtime</exec_depend>
   <exec_depend>joy</exec_depend>
-  <exec_depend>phidgets-imu</exec_depend>
+  <exec_depend>phidgets_imu</exec_depend>
   <exec_depend>nmea_navsat_driver</exec_depend>
   <exec_depend>swiftnav_ros</exec_depend>
   <exec_depend>rosserial</exec_depend>
