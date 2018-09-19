@@ -1,7 +1,10 @@
 sudo: required
+
 services:
-- docker
-script: docker build -t gravl .
+  - docker
+
+script:
+  docker build -t gravl .
 
 notifications:
   slack:
