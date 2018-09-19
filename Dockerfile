@@ -1,18 +1,22 @@
-ARG DISTRO=kinetic
+ARG ROS_DISTRO=kinetic
 
-FROM ros:$DISTRO
+FROM ros:$ROS_DISTRO
 
-ARG USER=kubo
+ARG DOCKER_USER=kubo
 ARG LIBSBP_V=2.3.10
 
 MAINTAINER Kawin Nikomborirak concavemail@gmail.com
 
-# Prerequisites
-# The wget to the make install is to install libsbp for swiftnav.
+RUN bash -c \
+    'useradd -lmG video $DOCKER_USER \
+    && mkdir -p /home/$DOCKER_USER/catkin_ws/src/gravl'
+
+COPY . /home/$DOCKER_USER/catkin_ws/src/gravl/
+COPY gravl.rosinstall /home/$DOCKER_USER/catkin_ws/src/.rosinstall
+
 RUN bash -c \
     'apt-get update \
     && apt-get install -y wget \
-    && useradd -lmG video $USER \
     && wget -O libsbp.tar.gz https://github.com/swift-nav/libsbp/archive/v$LIBSBP_V.tar.gz \
     && tar xvf libsbp.tar.gz \
     && cd libsbp-$LIBSBP_V/c \
@@ -21,26 +25,17 @@ RUN bash -c \
     && cmake .. \
     && make \
     && make install \
-    && mkdir -p /home/$USER/catkin_ws/src/gravl'
-
-WORKDIR /home/$USER/catkin_ws
-COPY . src/gravl/
-COPY gravl.rosinstall src/.rosinstall
-
-# Install dependencies
-RUN bash -c \
-    'wstool update -t src \
-    && chown -R $USER . \
+    && cd /home/$DOCKER_USER/catkin_ws \
+    && wstool update -t src \
     && rosdep update \
-    && rosdep install -iry --from-paths src'
+    && source /opt/ros/$ROS_DISTRO/setup.bash \
+    && rosdep install -iry --from-paths src \
+    && catkin_make -j1 \
+    && source /home/$DOCKER_USER/catkin_ws/devel/setup.bash \
+    && echo "source ~/catkin_ws/devel/setup.bash" >> /home/$DOCKER_USER/.bashrc \
+    && chown -R $DOCKER_USER /home/$DOCKER_USER'
 
-USER $USER
+WORKDIR /home/$DOCKER_USER/catkin_ws
+USER $DOCKER_USER
 
-# Catkin make
-RUN bash -c \
-    'source /opt/ros/$ROS_DISTRO/setup.bash \
-    && catkin_make \
-    && source devel/setup.bash \
-    && echo "source ~/catkin_ws/devel/setup.bash" >> ~/.bashrc'
-
-WORKDIR /home/$USER
+WORKDIR /home/$DOCKER_USER
