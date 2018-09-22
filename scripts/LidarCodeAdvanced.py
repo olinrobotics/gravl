@@ -21,7 +21,7 @@ class ObstacleDetection():
     def convertToVerticalAndHorizontal(self):
         self.totalDist = [] # Initializing arrays
         self.verticalDistance = [] # Distance from front of tractor
-        self.horizontalDistance = [] # Distance from center of tractor
+        self.horizontalDistance = [] # Distance from center of tractore
         for i in range(len(self.data.ranges)):
             self.totalDist.append(self.data.ranges[i])
             if self.totalDist[i] > 1000000:
