@@ -11,17 +11,17 @@ class ObstacleDetection():
         self.hasSensed = False
         self.pubEstop = rospy.Publisher('/softestop', Bool,  queue_size=10)
         self.laserSub = rospy.Subscriber('scan',LaserScan,self.callback) # Subscribes to the LIDAR, calls the callback function
-        self.DistanceToTheGround = 4.5 # Essentially the ground ***
-        self.lengthOfTheTractor = 1.25 # Horizontal length of the tractor ***
-        self.numberOfPointsNeededToTrigger = 15 # How many points must be seen to trigger a stop? *** 
+        self.DistanceToTheGround = 4.5 # Essentially the ground
+        self.lengthOfTheTractor = 1.25 # Horizontal length of the tractor
+        self.numberOfPointsNeededToTrigger = 15 # How many points must be seen to trigger a stop?
 
     def callback(self,data):
-        self.data = data #calling below code
+        self.data = data # calling below code
 
     def convertToVerticalAndHorizontal(self):
         self.totalDist = [] # Initializing arrays
         self.verticalDistance = [] # Distance from front of tractor
-        self.horizontalDistance = [] # Distance from center of tractore
+        self.horizontalDistance = [] # Distance from center of tractor
         for i in range(len(self.data.ranges)):
             self.totalDist.append(self.data.ranges[i])
             if self.totalDist[i] > 1000000:
