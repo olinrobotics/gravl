@@ -21,5 +21,3 @@ private:
   ros::Rate rate;
   double max_alpha_z;
 };
-
-
