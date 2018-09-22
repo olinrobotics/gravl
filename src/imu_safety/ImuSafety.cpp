@@ -1,17 +1,15 @@
 #include "ImuSafety.h"
 
-using namespace safety::imu;
-
 const double max_alpha_z = 2;
 
 ImuSafety::ImuSafety()
   : pub(n.advertise<gravl::ImuSafety>("safe_alpha", 1000))
   , sub(n.subscribe("/imu/data_raw", 1000, &ImuSafety::ImuSafety::callback, this))
-  , t0(ros::Time::now())
   , omega_z0(0)
   , rate(ros::Rate(10))
 {
   n.param<double>("maxAlphaZ", max_alpha_z, 10);
+  t0 = ros::Time::now();
 }
 
 void ImuSafety::callback(const sensor_msgs::Imu::ConstPtr& msg)
@@ -44,4 +42,5 @@ int main(int argc, char** argv)
 {
   ros::init(argc, argv, "ImuSafety");
   ImuSafety imu_safety;
+  imu_safety.spin();
 }
