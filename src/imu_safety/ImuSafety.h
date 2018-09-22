@@ -9,6 +9,7 @@ class ImuSafety
 public:
   ImuSafety();
   void spin();
+
 private:
   void callback(const sensor_msgs::Imu::ConstPtr& msg);
 
