@@ -19,6 +19,7 @@ namespace safety
       ros::Publisher pub;
       ros::Subscriber sub;
       void callback(const sensor_msgs::Imu::ConstPtr& msg);
+      ros::Time t0;
     };
   }
 }
