@@ -3,6 +3,7 @@
 
 #include "ros/ros.h"
 #include <sensor_msgs/Imu.h>
+#include "gravl/ImuSafety.h"
 
 const double max_alpha_z = 10;
 
@@ -10,16 +11,21 @@ namespace safety
 {
   namespace imu
   {
-    class imu_safety
+    class ImuSafety
     {
     public:
-      imu_safety();
+      ImuSafety();
     private:
+      void callback(const sensor_msgs::Imu::ConstPtr& msg);
+      void spin();
+
       ros::NodeHandle n;
       ros::Publisher pub;
       ros::Subscriber sub;
-      void callback(const sensor_msgs::Imu::ConstPtr& msg);
+      double omega_z0;
       ros::Time t0;
+      gravl::ImuSafety pub_val;
+      ros::Rate rate;
     };
   }
 }

@@ -60,7 +60,7 @@ add_message_files(
   FILES
   Hemisphere.msg
   RoboClawStats.msg
-  IMUSafety.msg
+  ImuSafety.msg
 )
 
 ## Generate services in the 'srv' folder
@@ -138,7 +138,7 @@ add_executable( Waypoint src/Waypoint/Waypoint.cpp )
 add_executable( Hemisphere src/Hemisphere/Hemisphere.cpp )
 add_executable( idk src/arm_drone.cpp )
 add_executable( road_detection src/road_detection.cpp )
-add_executable(imu_safety src/imu_safety/imu_safety.cpp)
+add_executable(imu_safety src/imu_safety/ImuSafety.cpp)
 
 
 ## Specify libraries to link a library or executable target against
@@ -150,7 +150,7 @@ target_link_libraries( Waypoint ${catkin_LIBRARIES} )
 target_link_libraries( Hemisphere ${catkin_LIBRARIES} ${Boost_LIBRARIES} -lrt )
 target_link_libraries( idk ${catkin_LIBRARIES} )
 target_link_libraries( road_detection ${OpenCV_LIBS} )
-target_link_libraries(imu_safety $(catkin_LIBRARIES))
+target_link_libraries(imu_safety ${catkin_LIBRARIES})
 
 
 ## Add cmake target dependencies of the executable
