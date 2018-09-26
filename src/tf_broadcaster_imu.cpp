@@ -22,7 +22,7 @@ int main(int argc, char** argv)
           tf::Transform
           (
            tf::createQuaternionFromRPY(M_PI / 2, 0 ,M_PI / 2),
-           tf::Vector3(-60, -20, 140)
+           tf::Vector3(-.6, -.2, 1.4)
            ),
           ros::Time::now(), "base_link", "base_imu"
           )
