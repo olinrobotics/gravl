@@ -20,22 +20,27 @@ class ObstacleDetection():
         rospy.init_node('Obstacle Detection', anonymous=True)
         self.hasSensed = False # If there is an obstacle sensed
         self.pubEstop = rospy.Publisher('/softestop', Bool,  queue_size=10) # Publisher that publishes to the estop
-        self.laserSub = rospy.Subscriber('scan',LaserScan,self.callback) # Subscribes to the LIDAR, calls the callback function
+        self.frontlaserSub = rospy.Subscriber('/front/scan',LaserScan,self.frontLidarCB) # Subscribes to the front LIDAR, calls the callback function
+        self.downLaserSub = rospy.Subscriber('/down/scan',LaserScan,self.backLidarCB) # Subscribes to the down Lidar, calls the cb function
         self.DistanceToTheGround = 4.5 # Essentially the ground
         self.widthTractor = 1.25 # Horizontal length of the tractor
         self.numberOfPointsNeededToTrigger = 15 # How many points must be seen to trigger a stop?
         self.update_rate = rospy.Rate(5)
 
-    def lidarCB(self,data):
-        # Collects data from the Hokuyo Lidar and stores it
-        self.data = data
+    def frontLidarCB(self,data):
+        # Collects data from the Front Hokuyo Lidar and stores it
+        self.frontData = data
+
+    def downLidarCB(self,data):
+        # Collects data from the down Hokuyo Lidar and stores it
+        self.downData = data
 
     def convertToVerticalAndHorizontal(self):
         self.totalDist = [] # Initializing arrays
         self.xDist = [] # Distance from front of tractor
         self.yDist = [] # Distance from center of tractor
-        for i in range(len(self.data.ranges)): # Puts the tuple of data into x and y Distances
-            self.totalDist.append(self.data.ranges[i])      
+        for i in range(len(self.frontData.ranges)): # Puts the tuple of data into x and y Distances
+            self.totalDist.append(self.frontData.ranges[i])      
             self.xDist.append(abs(math.cos(math.radians((i - 380.0) * (190.0 / 760.0))) * self.totalDist[i])) # Computes the distance from the object
             self.yDist.append(math.sin(math.radians((i - 380.0) * (190.0 / 760.0))) * self.totalDist[i]) # Computes the distance parallel to tractor
 
@@ -62,7 +67,7 @@ class ObstacleDetection():
 
     def run(self):
         # Runs the code
-        while not rospy.is_shutdown() and (self.data == None):
+        while not rospy.is_shutdown() and (self.frontData == None):
             self.convertToVerticalAndHorizontal()
             self.getNumberOfObstacles()
             self.sendMessages()
