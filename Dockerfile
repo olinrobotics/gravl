@@ -16,6 +16,7 @@ COPY gravl.rosinstall /home/$DOCKER_USER/catkin_ws/src/.rosinstall
 
 RUN bash -c \
     'apt-get update \
+    && apt-get upgrade -y \
     && apt-get install -y wget \
     && wget -O libsbp.tar.gz https://github.com/swift-nav/libsbp/archive/v$LIBSBP_V.tar.gz \
     && tar xvf libsbp.tar.gz \
