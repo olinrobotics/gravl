@@ -23,6 +23,7 @@ class ObstacleDetection():
         self.frontlaserSub = rospy.Subscriber('/front/scan',LaserScan,self.frontLidarCB) # Subscribes to the front LIDAR, calls the callback function
         self.downLaserSub = rospy.Subscriber('/down/scan',LaserScan,self.backLidarCB) # Subscribes to the down Lidar, calls the cb function
         self.DistanceToTheGround = 4.5 # Essentially the ground
+        self.DownToGround = 1.3
         self.widthTractor = 1.25 # Horizontal length of the tractor
         self.numberOfPointsNeededToTrigger = 15 # How many points must be seen to trigger a stop?
         self.update_rate = rospy.Rate(5)
@@ -32,17 +33,19 @@ class ObstacleDetection():
         self.frontData = data
 
     def downLidarCB(self,data):
-        # Collects data from the down Hokuyo Lidar and stores it
+        # Collects data from the Down Hokuyo Lidar and stores it
         self.downData = data
 
-    def convertToVerticalAndHorizontal(self):
+    def convertToXDistAndYDist(self):
         self.totalDist = [] # Initializing arrays
         self.xDist = [] # Distance from front of tractor
         self.yDist = [] # Distance from center of tractor
+        dataPoints = len(self.frontData.ranges)
+        angleSweep = 190.0
         for i in range(len(self.frontData.ranges)): # Puts the tuple of data into x and y Distances
             self.totalDist.append(self.frontData.ranges[i])      
-            self.xDist.append(abs(math.cos(math.radians((i - 380.0) * (190.0 / 760.0))) * self.totalDist[i])) # Computes the distance from the object
-            self.yDist.append(math.sin(math.radians((i - 380.0) * (190.0 / 760.0))) * self.totalDist[i]) # Computes the distance parallel to tractor
+            self.xDist.append(abs(math.cos(math.radians((i - dataPoints / 2) * (angleSweep / dataPoints))) * self.totalDist[i])) # Computes the distance from the object
+            self.yDist.append(math.sin(math.radians((i - dataPoints / 2) * (angleSweep / dataPoints))) * self.totalDist[i]) # Computes the distance parallel to tractor
 
     def getNumberOfObstacles(self):
         # Calculates the number of points that pose a threat to the tractor
@@ -65,10 +68,41 @@ class ObstacleDetection():
             pub0.publish(False)
             self.hasSensed = False
 
+    def convertToYDistAndZDist(self):
+        self.totalDist = [] # Initializing arrays
+        self.xDist = [] # Distance from front of tractor
+        self.yDist = [] # Distance from center of tractor
+        dataPoints = len(self.frontData.ranges)
+        angleSweep = 270
+        for i in range(len(self.frontData.ranges)): # Puts the tuple of data into x and y Distances
+            self.totalDist.append(self.frontData.ranges[i])      
+            self.zDist.append(abs(math.cos(math.radians((i - dataPoints / 2) * (angleSweep / dataPoints))) * self.totalDist[i])) # Computes the distance from the object
+            self.yDist.append(math.sin(math.radians((i - dataPoints / 2) * (angleSweep / dataPoints))) * self.totalDist[i]) # Computes the distance parallel to tractor
+
+    def getNumberOfObstacles(self):
+        # Calculates the number of points that pose a threat to the tractor
+        self.obstaclePoints = 0 # Counts how many points are not the ground
+        self.triggerPoints = 0 # Counts number of points breaking threshold 
+        for i in range(len(self.totalDist)): # Sweep through the distances
+            if(self.totalDist[i] < self.DownToGround): # Is there an object that is not the ground?
+                self.obstaclePoints += 1 # Add a point into the number of obstacle points
+                if(abs(self.yDist[i]) < (self.widthTractor / 2.0)): #Will the obstacle hit the tractor?
+                    self.triggerPoints += 1 # Add a point the the number of triggers
+
+    def sendMessages(self):
+        # If the number of trigger points is greater than the threshold, send a singal message to the tractor
+        if(triggerPoints > numberOfPointsNeededToTrigger and not self.hasSensed): # if there is an obstacle that will hit the tractor
+            # stop the tractor
+            pub0.publish(True)
+            self.hasSensed = True
+        if(triggerPoints <= numberOfPointsNeededToTrigger and self.hasSensed):
+            # don't stop the tractor
+            pub0.publish(False)
+            self.hasSensed = False
     def run(self):
         # Runs the code
-        while not rospy.is_shutdown() and (self.frontData == None):
-            self.convertToVerticalAndHorizontal()
+        while not rospy.is_shutdown() and (self.frontData == None or self.backData == None):
+            self.convertToXDistAndYDist()
             self.getNumberOfObstacles()
             self.sendMessages()
             self.update_rate.sleep()
