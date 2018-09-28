@@ -5,13 +5,12 @@ Publishes to /cmd_vel
 
 Assumes all inputs are normalized between -1 and 1
 
-Last Edited: 9/26/18
-Author: Amy Phung
+@edited: 9/28/18
+@author: Amy Phung
 """
 
 import rospy
 from geometry_msgs.msg import Twist
-from std_msgs.msg import String
 from ackermann_msgs.msg import AckermannDrive
 from math import pi
 
@@ -29,7 +28,6 @@ def callback(data, callback_args):
     # Unpack variables from callback_args - callback args is a list for future support of more parmeters
     pub = callback_args[0]
 
-    rospy.loginfo(rospy.get_caller_id() + "I heard %s", data)
     [linear_vel, steering_angle] = convertToAckermann(data.linear.x, data.angular.z)
     publish(pub, linear_vel, steering_angle)
 
@@ -87,7 +85,7 @@ def convertToAckermann(linear_vel, angular_vel):
     elif angular_vel < -max_steer_vel:
         angular_vel = -max_steer_vel
 
-    steering_angle = ((max_steer_vel - angular_vel)/max_steer_vel) * max_angle
+    steering_angle = angular_vel
 
     if abs(steering_angle) > 0 and linear_vel == 0:
         linear_vel = min_steer_vel
