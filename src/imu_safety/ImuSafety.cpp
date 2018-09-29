@@ -2,7 +2,7 @@
 #include <tf/tf.h>
 
 ImuSafety::ImuSafety()
-  : pub(n.advertise<gravl::ImuSafety>("safe_alpha", 1000))
+  : pub(n.advertise<gravl::ImuSafety>("imu_safe", 1000))
   , sub(n.subscribe("/imu/data", 1000, &ImuSafety::ImuSafety::callback, this))
   , rate(ros::Rate(10))
 {
