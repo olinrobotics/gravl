@@ -13,9 +13,9 @@ void ImuSafety::callback(const sensor_msgs::Imu::ConstPtr& msg)
 {
   const auto orientation = msg->orientation;
   const tf::Quaternion q(orientation.x, orientation.y, orientation.z, orientation.w);
-  double dummy_pitch, dummy_roll;
+  double dummy_var;
   pub_val.danger = false;
-  ((tf::Matrix3x3) q).getRPY(pub_val.theta, dummy_pitch, dummy_roll);
+  ((tf::Matrix3x3) q).getRPY(pub_val.theta, dummy_var, dummy_var);
   pub_val.danger = abs(pub_val.theta) > 0.1745;
 }
 
