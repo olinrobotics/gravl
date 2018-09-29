@@ -2,7 +2,7 @@
 #include <tf/tf.h>
 
 ImuSafety::ImuSafety()
-  : pub(n.advertise<geometry_msgs::Vector3>("safe_alpha", 1000))
+  : pub(n.advertise<gravl::ImuSafety>("safe_alpha", 1000))
   , sub(n.subscribe("/imu/data", 1000, &ImuSafety::ImuSafety::callback, this))
   , rate(ros::Rate(10))
 {
@@ -11,9 +11,11 @@ ImuSafety::ImuSafety()
 
 void ImuSafety::callback(const sensor_msgs::Imu::ConstPtr& msg)
 {
-  auto o = msg->orientation;
-  tf::Quaternion q(o.x, o.y, o.z, o.w);
+  auto orientation = msg->orientation;
+  tf::Quaternion q(orientation.x, orientation.y, orientation.z, orientation.w);
   double dummy_pitch, dummy_roll;
+  pub_val.theta = 0;
+  pub_val.danger = false;
   ((tf::Matrix3x3) q).getRPY(pub_val.theta, dummy_pitch, dummy_roll);
   pub_val.danger = abs(pub_val.theta) > 0.1745;
 }
