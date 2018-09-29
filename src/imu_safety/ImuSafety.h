@@ -21,8 +21,8 @@ private:
 
   gravl::ImuSafety pub_val;
   ros::NodeHandle n;
-  ros::Publisher pub;
-  ros::Subscriber sub;
+  const ros::Publisher pub;
+  const ros::Subscriber sub;
   ros::Rate rate;
 
   /* The maximum tractor roll that is considered 'safe'. */

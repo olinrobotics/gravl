@@ -6,13 +6,13 @@ ImuSafety::ImuSafety()
   , sub(n.subscribe("/imu/data", 1000, &ImuSafety::ImuSafety::callback, this))
   , rate(ros::Rate(10))
 {
-  n.param<double>("maxThetaZ", max_roll, 10);
+  n.param<double>("maxRoll", max_roll, 10);
 }
 
 void ImuSafety::callback(const sensor_msgs::Imu::ConstPtr& msg)
 {
-  auto orientation = msg->orientation;
-  tf::Quaternion q(orientation.x, orientation.y, orientation.z, orientation.w);
+  const auto orientation = msg->orientation;
+  const tf::Quaternion q(orientation.x, orientation.y, orientation.z, orientation.w);
   double dummy_pitch, dummy_roll;
   pub_val.theta = 0;
   pub_val.danger = false;
