@@ -147,16 +147,17 @@ target_link_libraries( Teleop ${catkin_LIBRARIES} )
 target_link_libraries( DriveState ${catkin_LIBRARIES} )
 target_link_libraries( Driver ${catkin_LIBRARIES} )
 target_link_libraries( Waypoint ${catkin_LIBRARIES} )
-target_link_libraries( Hemisphere ${catkin_LIBRARIES} ${Boost_LIBRARIES} -lrt )
+target_link_libraries( Hemisphere ${catkin_LIBRARIES} ${Boost_LIBRARIES})
 target_link_libraries( idk ${catkin_LIBRARIES} )
 target_link_libraries( road_detection ${OpenCV_LIBS} )
-target_link_libraries(imu_safety ${catkin_LIBRARIES})
+target_link_libraries(imu_safety ${catkin_LIBRARIES} -lrt )
 
 
 ## Add cmake target dependencies of the executable
 ## same as for the library above
 # add_dependencies(${PROJECT_NAME}_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 add_dependencies(Hemisphere ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+add_dependencies(imu_safety ${catkin_EXPORTED_TARGETS})
 
 
 #IF(Qt5Widgets_FOUND)
