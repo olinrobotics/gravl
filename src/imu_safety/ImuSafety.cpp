@@ -1,31 +1,21 @@
 #include "ImuSafety.h"
-
-const double max_alpha_z = 2;
+#include <tf/tf.h>
 
 ImuSafety::ImuSafety()
-  : pub(n.advertise<gravl::ImuSafety>("safe_alpha", 1000))
-  , sub(n.subscribe("/imu/data_raw", 1000, &ImuSafety::ImuSafety::callback, this))
-  , omega_z0(0)
+  : pub(n.advertise<geometry_msgs::Vector3>("safe_alpha", 1000))
+  , sub(n.subscribe("/imu/data", 1000, &ImuSafety::ImuSafety::callback, this))
   , rate(ros::Rate(10))
 {
-  n.param<double>("maxAlphaZ", max_alpha_z, 10);
-  t0 = ros::Time::now();
+  n.param<double>("maxThetaZ", max_roll, 10);
 }
 
 void ImuSafety::callback(const sensor_msgs::Imu::ConstPtr& msg)
 {
-  const auto t = msg->header.stamp;
-  const auto omega_z = msg->angular_velocity.z;
-
-  const auto dt = (t - t0).toSec();
-  const auto d_omega_z = omega_z - omega_z0;
-  const auto alpha_z = d_omega_z / dt;
-
-  pub_val.alpha = alpha_z;
-  pub_val.danger = alpha_z < max_alpha_z;
-
-  t0 = t;
-  omega_z0 = omega_z;
+  auto o = msg->orientation;
+  tf::Quaternion q(o.x, o.y, o.z, o.w);
+  double dummy_pitch, dummy_roll;
+  ((tf::Matrix3x3) q).getRPY(pub_val.theta, dummy_pitch, dummy_roll);
+  pub_val.danger = abs(pub_val.theta) > 0.1745;
 }
 
 void ImuSafety::spin()

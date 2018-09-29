@@ -1,2 +1,2 @@
 bool danger
-float64 alpha
+float64 theta
