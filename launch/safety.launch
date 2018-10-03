@@ -1,0 +1,4 @@
+<launch>
+  <include file="$(find phidgets_imu)/launch/imu.launch"/>
+  <node pkg="gravl" type="imu_safety" name="imu_safety"/>
+</launch>
