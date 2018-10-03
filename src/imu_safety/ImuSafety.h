@@ -1,13 +1,18 @@
+/*
+ * @file ImuSafety.h
+ * @author Kawin Nikomborirak
+ * @date 2018-10-03
+ *
+ * Subscribes to /imu/data and publishes a roll of the tractor and
+ * whether or not the roll is dangerous.
+ */
+
 #pragma once
 
 #include <ros/ros.h>
 #include <sensor_msgs/Imu.h>
 #include <gravl/ImuSafety.h>
 
-/*
- * Subscribes to /imu/data and publishes a roll of the tractor and
- * whether or not the roll is dangerous.
- */
 class ImuSafety
 {
 public:

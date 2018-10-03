@@ -6,7 +6,8 @@ ImuSafety::ImuSafety()
   , sub(n.subscribe("/imu/data", 1000, &ImuSafety::ImuSafety::callback, this))
   , rate(ros::Rate(10))
 {
-  n.param<double>("maxRoll", max_roll, 10);
+  // Default to 10 degrees
+  n.param<double>("maxRoll", max_roll, .1745);
 }
 
 void ImuSafety::callback(const sensor_msgs::Imu::ConstPtr& msg)
@@ -16,7 +17,7 @@ void ImuSafety::callback(const sensor_msgs::Imu::ConstPtr& msg)
   double dummy_var;
   pub_val.danger = false;
   ((tf::Matrix3x3) q).getRPY(pub_val.theta, dummy_var, dummy_var);
-  pub_val.danger = abs(pub_val.theta) > 0.1745;
+  pub_val.danger = abs(pub_val.theta) > max_roll;
 }
 
 void ImuSafety::spin()
