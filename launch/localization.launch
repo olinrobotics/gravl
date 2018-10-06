@@ -1,5 +1,5 @@
 <launch>
-<<<<<<<<!-- rosrun tf view_frames -->
+        <!-- rosrun tf view_frames -->
 	<node pkg="robot_localization" type="ekf_localization_node" name="tractor_groundtruth">
 		<rosparam command="load" file="$(find gravl)/config/tractor_groundtruth.yaml"/>
   	</node>
