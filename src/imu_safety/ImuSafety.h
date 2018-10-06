@@ -12,6 +12,7 @@
 #include <ros/ros.h>
 #include <sensor_msgs/Imu.h>
 #include <gravl/ImuSafety.h>
+#include <tf/transform_listener.h>
 
 class ImuSafety
 {
@@ -26,6 +27,8 @@ private:
 
   gravl::ImuSafety pub_val;
   ros::NodeHandle n;
+  tf::TransformListener tl;
+  tf::StampedTransform transform;
   const ros::Publisher pub;
   const ros::Subscriber sub;
   ros::Rate rate;

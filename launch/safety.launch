@@ -1,4 +1,6 @@
 <launch>
+  <include file="$(find gravl)/launch/localization.launch"/>
   <include file="$(find phidgets_imu)/launch/imu.launch"/>
+  <node pkg="phidgets_imu" type="phidgets_imu_node" name="imu_safety"/>
   <node pkg="gravl" type="imu_safety" name="imu_safety"/>
 </launch>
