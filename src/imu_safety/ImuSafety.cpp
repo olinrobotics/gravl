@@ -12,11 +12,12 @@ ImuSafety::ImuSafety()
 
 void ImuSafety::callback(const sensor_msgs::Imu::ConstPtr& msg)
 {
-  const auto orientation = msg->orientation;
-  const tf::Quaternion q(orientation.x, orientation.y, orientation.z, orientation.w);
+  tf::Quaternion q_orig;
+  quaternionMsgToTF(msg->orientation, q_orig);
+  const auto orientation = transform.getRotation() * q_orig;
   double dummy_var;
   pub_val.danger = false;
-  ((tf::Matrix3x3) q).getRPY(pub_val.theta, dummy_var, dummy_var);
+  ((tf::Matrix3x3) orientation).getRPY(pub_val.theta, dummy_var, dummy_var);
   pub_val.danger = abs(pub_val.theta) > max_roll;
 }
 
@@ -24,6 +25,17 @@ void ImuSafety::spin()
 {
   while (ros::ok())
     {
+      try
+        {
+          tl.lookupTransform("/base_link", "/base_imu", ros::Time(0), transform);
+        }
+      catch (tf::TransformException ex)
+        {
+          ROS_ERROR("%s", ex.what());
+          ros::Duration(1).sleep();
+          continue;
+        }
+
       pub.publish(pub_val);
       ros::spinOnce();
       rate.sleep();
