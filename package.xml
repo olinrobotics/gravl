@@ -33,6 +33,7 @@
   <exec_depend>rosserial</exec_depend>
   <exec_depend>pointgrey_camera_driver</exec_depend>
   <exec_depend>urg_node</exec_depend>
+  <exec_depend>robot_localization</exec_depend>
 
   <export></export>
 </package>
