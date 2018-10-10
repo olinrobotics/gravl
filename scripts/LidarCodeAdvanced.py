@@ -21,7 +21,7 @@ from ackermann_msgs.msg import AckermannDrive
 
 class ObstacleDetection():
 
-    def __init__(self,senseRange):
+    def __init__(self):
         # Variables explained in Github Wiki: https://github.com/olinrobotics/gravl/wiki/Vehicle-Safety
         rospy.init_node('ObstacleDetection', anonymous=True)
         self.hasSensedFront = False # If there is an obstacle sensed
@@ -34,9 +34,10 @@ class ObstacleDetection():
         self.downData = None
         self.ackermannData = None
         self.DownToGround = 1.2 # Distance from down lidar to the ground
-        self.senseRange = senseRange
-        self.mode = rospy.get_param('mode',"line")
+        self.senseRange = float(rospy.get_param('~senseRange','5.0'))
+        self.mode = rospy.get_param('~mode',"circle")
         self.widthTractor = 1.25 # Horizontal length of the tractor
+        self.fbWheelDist = 1.524 # Measures the distance from the front wheels to the back wheels
         self.threshold = 5 # How many points must be seen to trigger a stop?
         self.update_rate = rospy.Rate(5)
         self.vis_pubFront = rospy.Publisher('/LidarFront_pt', Marker, queue_size=2)
@@ -78,12 +79,26 @@ class ObstacleDetection():
         else:
             wheelAngle = self.ackermannData.steering_angle
         self.obstaclePointsFront = 0 # Counts how many points are not the ground
-        self.triggerPointsFront = 0 # Counts number of points breaking threshold         
-        for i in range(len(self.totalDistFront)): # Sweep through the distances
-            if(sqrt(self.xDistFront[i]**2 + self.yDistFront[i]**2) < self.senseRange): # Is there an object that is not the ground?
-                self.obstaclePointsFront += 1 # Add a point into the number of obstacle points
-                if((sin(wheelAngle) * self.xDistFront[i] - self.widthTractor / 2.0) < self.yDistFront[i] < sin(wheelAngle) * self.xDistFront[i] + self.widthTractor / 2.0): #Will the obstacle hit the tractor?
-                    self.triggerPointsFront += 1 # Add a point the the number of triggers
+        self.triggerPointsFront = 0 # Counts number of points breaking threshold  
+        if self.mode == "line" or wheelAngle == 0:       
+            for i in range(len(self.totalDistFront)): # Sweep through the distances
+                if(sqrt(self.xDistFront[i]**2 + self.yDistFront[i]**2) < self.senseRange): # Is there an object that is not the ground?
+                    self.obstaclePointsFront += 1 # Add a point into the number of obstacle points
+                    if((sin(wheelAngle) * self.xDistFront[i] - self.widthTractor / 2.0) < self.yDistFront[i] < sin(wheelAngle) * self.xDistFront[i] + self.widthTractor / 2.0): #Will the obstacle hit the tractor?
+                        self.triggerPointsFront += 1 # Add a point the the number of triggers
+        elif self.mode == "circle":
+            r = self.fbWheelDist / sin(wheelAngle)
+            if(wheelAngle > 0):
+                rInner = self.fbWheelDist / sin(wheelAngle) - self.widthTractor / 2
+                rOuter = self.fbWheelDist / sin(wheelAngle) + self.widthTractor / 2
+            elif(wheelAngle < 0):
+                rInner = self.fbWheelDist / sin(wheelAngle) + self.widthTractor / 2
+                rOuter = self.fbWheelDist / sin(wheelAngle) - self.widthTractor / 2
+            for i in range(len(self.totalDistFront)):
+                if sqrt(self.xDistFront[i]**2 + self.yDistFront[i]**2 < self.senseRange):
+                    self.obstaclePointsFront += 1
+                    if (rInner**2 < self.xDistFront[i]**2 + (self.yDistFront[i]-r)**2 < rOuter**2):
+                        self.triggerPointsFront += 1
         if visualize:
             lidarPoints = Marker() # Marker to visualize used lidar pts
             lidarPoints.header.frame_id = "laser" # Publishes it to the laser link, idk if it should be changed
@@ -133,7 +148,7 @@ class ObstacleDetection():
             lidarPoints.header.stamp = rospy.Time.now()
             lidarPoints.type = 8 # makes it a list of points
             lidarPoints.scale = Vector3(0.02,0.02,0.02) # scale is about 2 cm
-            lidarPoints.color = ColorRGBA(0,0,1,1) # Color is blue
+            lidarPoints.color = ColorRGBA(0,0,1,1) # Color is Boolue
             for i in range(len(self.totalDistDown)):
                 lidarPoints.points.append(Point(0,self.yDistDown[i],-self.zDistDown[i]))
             self.vis_pubDown.publish(lidarPoints)
@@ -169,6 +184,42 @@ class ObstacleDetection():
                 tractorLines.points.append(Point(0,-self.widthTractor / 2,0))
                 tractorLines.points.append(Point(self.senseRange * cos(wheelAngle),-self.widthTractor / 2 + sin(wheelAngle) * self.senseRange,0))
             self.vis_pubLines.publish(tractorLines)
+        elif self.mode == "circle":
+            tractorLines = Marker()
+            tractorLines.header.frame_id = "laser"
+            tractorLines.header.stamp = rospy.Time.now()
+            tractorLines.scale = Vector3(0.02, 0.01, 0.01)
+            tractorLines.color = ColorRGBA(1,1,1,1)
+            if self.ackermannData == None or self.ackermannData.steering_angle == 0.0:
+                tractorLines.type = 5
+                tractorLines.points.append(Point(100,self.widthTractor / 2,0))
+                tractorLines.points.append(Point(-100,self.widthTractor / 2,0))
+                tractorLines.points.append(Point(-100,-self.widthTractor / 2,0))
+                tractorLines.points.append(Point(100,-self.widthTractor / 2,0))
+            else:
+                wheelAngle = self.ackermannData.steering_angle
+                print(wheelAngle)
+                tractorLines.type = 4       
+                x = 0
+                y = 0
+                t = 0
+                r = self.fbWheelDist / sin(wheelAngle)
+                while x**2 + y**2 < self.senseRange**2 and t < pi / 2:
+                    rOuter = self.fbWheelDist / sin(wheelAngle) + self.widthTractor / 2
+                    x = abs(rOuter * sin(t))
+                    y = rOuter * cos(t) - r
+                    if x**2 + y**2 < self.senseRange **2:
+                        tractorLines.points.append(Point(x,y,0))
+                    t += 0.01
+                while t >= -0.01:
+                    rInner = self.fbWheelDist / sin(wheelAngle) - self.widthTractor / 2
+                    x = abs(rInner * sin(t))
+                    y = rInner * cos(t) - r
+                    if(x**2 + y**2 < self.senseRange**2):
+                        tractorLines.points.append(Point(x,y,0))
+                    t -= 0.01
+            self.vis_pubLines.publish(tractorLines)
+
     def run(self,visualize = False):
         # Runs the code
         while not rospy.is_shutdown() and self.frontData == None and self.downData == None:
@@ -202,5 +253,5 @@ class ObstacleDetection():
             self.update_rate.sleep()
 
 if __name__ == '__main__':
-    obs = ObstacleDetection(float(rospy.get_param('senseRange','5.0')))
+    obs = ObstacleDetection()
     obs.run(True)
