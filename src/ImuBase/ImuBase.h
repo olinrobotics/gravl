@@ -11,7 +11,7 @@
 
 #include <ros/ros.h>
 #include <sensor_msgs/Imu.h>
-#include <tf/transform_listener.h>
+#include <tf2_ros/transform_listener.h>
 
 class ImuBase
 {
@@ -26,8 +26,9 @@ private:
 
   sensor_msgs::Imu pub_val;
   ros::NodeHandle n;
-  tf::TransformListener tl;
-  tf::StampedTransform transform;
+  tf2_ros::Buffer tfBuffer;
+  tf2_ros::TransformListener tl;
+  geometry_msgs::TransformStamped transform;
   const ros::Publisher pub;
   const ros::Subscriber sub;
   ros::Rate rate;

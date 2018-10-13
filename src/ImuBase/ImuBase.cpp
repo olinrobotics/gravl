@@ -1,21 +1,19 @@
 #include "ImuBase.h"
-#include <tf/tf.h>
+#include <tf2_geometry_msgs/tf2_geometry_msgs.h>
 
 ImuBase::ImuBase()
-  : pub(n.advertise<sensor_msgs::Imu>("imu_safe", 1000))
+  : pub(n.advertise<sensor_msgs::Imu>("imu_base", 1000))
   , sub(n.subscribe("/imu/data", 1000, &ImuBase::ImuBase::callback, this))
   , rate(ros::Rate(10))
-{}
+  , tl(tfBuffer)
+{
+}
 
 void ImuBase::callback(const sensor_msgs::Imu::ConstPtr& msg)
 {
-  tf::Quaternion q_orig;
-  quaternionMsgToTF(msg->orientation, q_orig);
-  const auto orientation = transform.getRotation() * q_orig;
-  double dummy_var;
-  pub_val.danger = false;
-  ((tf::Matrix3x3) orientation).getRPY(pub_val.theta, dummy_var, dummy_var);
-  pub_val.danger = abs(pub_val.theta) > max_roll;
+  tf2::doTransform(msg->orientation, pub_val.orientation, transform);
+  tf2::doTransform(msg->angular_velocity, pub_val.angular_velocity, transform);
+  tf2::doTransform(msg->linear_acceleration, pub_val.linear_acceleration, transform);
 }
 
 void ImuBase::spin()
@@ -24,9 +22,9 @@ void ImuBase::spin()
     {
       try
         {
-          tl.lookupTransform("/base_link", "/base_imu", ros::Time(0), transform);
+          transform = tfBuffer.lookupTransform("base_link", "base_imu", ros::Time(0));
         }
-      catch (tf::TransformException ex)
+      catch (tf2::TransformException &ex)
         {
           ROS_ERROR("%s", ex.what());
           ros::Duration(1).sleep();
@@ -42,6 +40,6 @@ void ImuBase::spin()
 int main(int argc, char** argv)
 {
   ros::init(argc, argv, "ImuBase");
-  ImuBase imu_safety;
-  imu_safety.spin();
+  ImuBase imu_base;
+  imu_base.spin();
 }
