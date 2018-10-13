@@ -29,8 +29,8 @@ class ObstacleDetection():
         self.pubEstop = rospy.Publisher('/softestop', Bool,  queue_size=10) # Publisher that publishes to the estop
         self.frontlaserSub = rospy.Subscriber('/front/scan',LaserScan,self.frontLidarCB) # Subscribes to the front LIDAR, calls the callback function
         self.downLaserSub = rospy.Subscriber('/down/scan',LaserScan,self.downLidarCB) # Subscribes to the down Lidar, calls the cb function
-        self.ackermannSub = rospy.Subscriber('/cmd_vel',AckermannDrive,self.ackermannCB)
-        self.frontData = None   
+        self.ackermannSub = rospy.Subscriber('/cmd_vel',AckermannDrive,self.ackermannCB) # Subscribes to the tractors velocity commands
+        self.frontData = None
         self.downData = None
         self.ackermannData = None
         self.DownToGround = 1.2 # Distance from down lidar to the ground
@@ -38,8 +38,9 @@ class ObstacleDetection():
         self.mode = rospy.get_param('~mode',"circle")
         self.widthTractor = 1.25 # Horizontal length of the tractor
         self.fbWheelDist = 1.524 # Measures the distance from the front wheels to the back wheels
+        self.angleOfIncline = 0.194724 # ?Empirically Discovered. Fix if necessary
         self.threshold = 5 # How many points must be seen to trigger a stop?
-        self.update_rate = rospy.Rate(5)
+        self.update_rate = rospy.Rate(5) # Sets the update rate to 5
         self.vis_pubFront = rospy.Publisher('/LidarFront_pt', Marker, queue_size=2)
         self.vis_pubDown = rospy.Publisher('/LidarLineDown_pt', Marker, queue_size=2)
         self.vis_pubLines = rospy.Publisher('/TractorLine_pt',Marker,queue_size=2)
@@ -54,6 +55,7 @@ class ObstacleDetection():
         self.downData = data
 
     def ackermannCB(self,data):
+        # Collects data from the Wheels and stores it
         self.ackermannData = data
 
     def convertToXDistAndYDistFront(self):
@@ -63,42 +65,41 @@ class ObstacleDetection():
         self.zDistFront = [] # Distance from the tractor to the point, (usually the ground)
         dataPoints = len(self.frontData.ranges)
         angleSweep = 190.0
-        angleOfIncline = 0.194724 # ?Empirically Discovered. Fix if necessary
         for i in range(len(self.frontData.ranges)): # Puts the tuple of data into x and y Distances
             self.totalDistFront.append(self.frontData.ranges[i])
             angleRad = radians((i - dataPoints / 2) * (angleSweep / dataPoints))      
-            self.xDistFront.append(abs(cos(angleOfIncline) * cos(angleRad) * self.totalDistFront[i])) # Computes the distance from the object
+            self.xDistFront.append(abs(cos(self.angleOfIncline) * cos(angleRad) * self.totalDistFront[i])) # Computes the distance from the object
             self.yDistFront.append(sin(angleRad) * self.totalDistFront[i]) # Computes the distance parallel to tractor
-            self.zDistFront.append(sin(angleOfIncline) * cos(angleRad) * self.totalDistFront[i])
-            #rospy.loginfo(str(angleRad) + ": " + str(self.zDistFront[i]))
+            self.zDistFront.append(sin(self.angleOfIncline) * cos(angleRad) * self.totalDistFront[i])
 
     def getNumberOfObstaclesFront(self,visualize):
         # Calculates the number of points that pose a threat to the tractor
-        if self.ackermannData == None:
+        if self.ackermannData == None: # If the wheel data cannot be found, assume the tractor is pointing forward
             wheelAngle = 0
         else:
             wheelAngle = self.ackermannData.steering_angle
         self.obstaclePointsFront = 0 # Counts how many points are not the ground
         self.triggerPointsFront = 0 # Counts number of points breaking threshold  
-        if self.mode == "line" or wheelAngle == 0:       
+        if self.mode == "line" or wheelAngle == 0: # If the mode is set to check a straight line in front of the tractor      
             for i in range(len(self.totalDistFront)): # Sweep through the distances
                 if(sqrt(self.xDistFront[i]**2 + self.yDistFront[i]**2) < self.senseRange): # Is there an object that is not the ground?
                     self.obstaclePointsFront += 1 # Add a point into the number of obstacle points
                     if((sin(wheelAngle) * self.xDistFront[i] - self.widthTractor / 2.0) < self.yDistFront[i] < sin(wheelAngle) * self.xDistFront[i] + self.widthTractor / 2.0): #Will the obstacle hit the tractor?
                         self.triggerPointsFront += 1 # Add a point the the number of triggers
-        elif self.mode == "circle":
-            r = self.fbWheelDist / sin(wheelAngle)
-            if(wheelAngle > 0):
-                rInner = self.fbWheelDist / sin(wheelAngle) - self.widthTractor / 2
+        elif self.mode == "circle": # If the mode is set to check a curved path in front of the tractor
+            r = self.fbWheelDist / sin(wheelAngle) # sets the radius of the path of the tractor. Equation is a / sin(theta)
+            if(wheelAngle > 0): # if the wheel angle is to the left, the inner radius is the left one, elsewise, the right radius is inner
+                rInner = self.fbWheelDist / sin(wheelAngle) - self.widthTractor / 2 # radius slightly different from the one above
                 rOuter = self.fbWheelDist / sin(wheelAngle) + self.widthTractor / 2
             elif(wheelAngle < 0):
                 rInner = self.fbWheelDist / sin(wheelAngle) + self.widthTractor / 2
                 rOuter = self.fbWheelDist / sin(wheelAngle) - self.widthTractor / 2
             for i in range(len(self.totalDistFront)):
-                if sqrt(self.xDistFront[i]**2 + self.yDistFront[i]**2 < self.senseRange):
+                if sqrt(self.xDistFront[i]**2 + self.yDistFront[i]**2) < self.senseRange: # checks if the point is within the sense range
                     self.obstaclePointsFront += 1
-                    if (rInner**2 < self.xDistFront[i]**2 + (self.yDistFront[i]-r)**2 < rOuter**2):
+                    if (rInner**2 < self.xDistFront[i]**2 + (self.yDistFront[i]+r)**2 < rOuter**2): # checks if the point is in the path of the tractor
                         self.triggerPointsFront += 1
+
         if visualize:
             lidarPoints = Marker() # Marker to visualize used lidar pts
             lidarPoints.header.frame_id = "laser" # Publishes it to the laser link, idk if it should be changed
@@ -165,48 +166,40 @@ class ObstacleDetection():
             self.hasSensedDown = False
 
     def publishTractorLines(self):
-        if self.mode == "line":
-            tractorLines = Marker()
-            tractorLines.header.frame_id = "laser"
-            tractorLines.header.stamp = rospy.Time.now()
-            tractorLines.type = 5
-            tractorLines.scale = Vector3(0.02, 0.01, 0.01)
-            tractorLines.color = ColorRGBA(1,1,1,1)
+        # publishes the path of the tractor going through space, purely for visualization.
+        tractorLines = Marker() # marks the path that the tractor will take
+        tractorLines.header.frame_id = "laser"
+        tractorLines.header.stamp = rospy.Time.now()
+        tractorLines.scale = Vector3(0.02, 0.01, 0.01)
+        tractorLines.color = ColorRGBA(1,1,1,1) # white
+        if self.mode == "line": # checks the mode the tractor is in
+            tractorLines.type = 5 # makes the markers a line that is on every 2 points, (line from 0-1, 2-3, 4-5, etc.)
             if self.ackermannData == None:
-                tractorLines.points.append(Point(100,self.widthTractor / 2,0))
-                tractorLines.points.append(Point(-100,self.widthTractor / 2,0))
-                tractorLines.points.append(Point(-100,-self.widthTractor / 2,0))
-                tractorLines.points.append(Point(100,-self.widthTractor / 2,0))
+                wheelAngle = 0 # if teh tractor isn't getting data, it will make a path straight forward
             else:
                 wheelAngle = self.ackermannData.steering_angle
-                tractorLines.points.append(Point(self.senseRange * cos(wheelAngle),self.widthTractor / 2 + sin(wheelAngle) * self.senseRange,0))
-                tractorLines.points.append(Point(0,self.widthTractor / 2,0))
-                tractorLines.points.append(Point(0,-self.widthTractor / 2,0))
-                tractorLines.points.append(Point(self.senseRange * cos(wheelAngle),-self.widthTractor / 2 + sin(wheelAngle) * self.senseRange,0))
+            tractorLines.points.append(Point(self.senseRange * cos(wheelAngle),self.widthTractor / 2 + sin(wheelAngle) * self.senseRange,0)) # makes a straight line in the direction of the wheels
+            tractorLines.points.append(Point(0,self.widthTractor / 2,0))
+            tractorLines.points.append(Point(0,-self.widthTractor / 2,0))
+            tractorLines.points.append(Point(self.senseRange * cos(wheelAngle),-self.widthTractor / 2 + sin(wheelAngle) * self.senseRange,0))
             self.vis_pubLines.publish(tractorLines)
         elif self.mode == "circle":
-            tractorLines = Marker()
-            tractorLines.header.frame_id = "laser"
-            tractorLines.header.stamp = rospy.Time.now()
-            tractorLines.scale = Vector3(0.02, 0.01, 0.01)
-            tractorLines.color = ColorRGBA(1,1,1,1)
-            if self.ackermannData == None or self.ackermannData.steering_angle == 0.0:
-                tractorLines.type = 5
+            if self.ackermannData == None or self.ackermannData.steering_angle == 0.0: # does the same as above
+                tractorLines.type = 5 # makes the markers a line that is on every 2 points, (line from 0-1, 2-3, 4-5, etc.)
                 tractorLines.points.append(Point(100,self.widthTractor / 2,0))
                 tractorLines.points.append(Point(-100,self.widthTractor / 2,0))
                 tractorLines.points.append(Point(-100,-self.widthTractor / 2,0))
                 tractorLines.points.append(Point(100,-self.widthTractor / 2,0))
             else:
                 wheelAngle = self.ackermannData.steering_angle
-                print(wheelAngle)
-                tractorLines.type = 4       
-                x = 0
-                y = 0
-                t = 0
+                tractorLines.type = 4 # makes the markers a line that is on every point, (line from 0-1, 1-2, 2-3, 3-4, 4-5, etc.)
+                x = 0.0 # initializes x, y, t
+                y = 0.0
+                t = 0.0
                 r = self.fbWheelDist / sin(wheelAngle)
-                while x**2 + y**2 < self.senseRange**2 and t < pi / 2:
+                while x**2 + y**2 < self.senseRange**2 and t < pi / 2: # stops at the sense range or if the angle gets above 90 degrees
                     rOuter = self.fbWheelDist / sin(wheelAngle) + self.widthTractor / 2
-                    x = abs(rOuter * sin(t))
+                    x = abs(rOuter * sin(t)) # parametric equation for a circle
                     y = rOuter * cos(t) - r
                     if x**2 + y**2 < self.senseRange **2:
                         tractorLines.points.append(Point(x,y,0))
