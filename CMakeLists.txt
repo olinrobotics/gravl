@@ -20,6 +20,8 @@ find_package(catkin REQUIRED COMPONENTS
   mavros_msgs
   nav_msgs
   tf
+  tf2
+  tf2_geometry_msgs
   cv_bridge
 )
 
@@ -139,7 +141,7 @@ add_executable( Hemisphere src/Hemisphere/Hemisphere.cpp )
 add_executable( idk src/arm_drone.cpp )
 add_executable( road_detection src/road_detection.cpp )
 add_executable(imu_safety src/imu_safety/ImuSafety.cpp)
-
+add_executable(imu_base src/ImuBase/ImuBase.cpp)
 
 ## Specify libraries to link a library or executable target against
 target_link_libraries( Camera ${OpenCV_LIBS} ${catkin_LIBRARIES} )
@@ -151,6 +153,7 @@ target_link_libraries( Hemisphere ${catkin_LIBRARIES} ${Boost_LIBRARIES} -lrt )
 target_link_libraries( idk ${catkin_LIBRARIES} )
 target_link_libraries( road_detection ${OpenCV_LIBS} )
 target_link_libraries(imu_safety ${catkin_LIBRARIES})
+target_link_libraries(imu_base ${catkin_LIBRARIES})
 
 
 ## Add cmake target dependencies of the executable
