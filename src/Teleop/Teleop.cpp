@@ -11,6 +11,8 @@
 
 
 #include "Teleop.h"
+#include <ros/console.h>
+#include <iostream>
 
 /*
  * Constructor - advertises and subscribes topics
@@ -18,13 +20,26 @@
 Teleop::Teleop()
 : estop(false)
 , isAutonomous(false)
-, button0(false)
-, button6(false)
+, estopButtonFlag(false)
+, autoButtonFlag(false)
+, n("~")
+, autoButton(0)
+, estopButton(1)
 {
+
   joystick = n.subscribe("/joy", 10, &Teleop::joyCB, this);
   teledrive = n.advertise<ackermann_msgs::AckermannDrive>("teledrive", 1000);
   softestop = n.advertise<std_msgs::Bool>("softestop", 1000);
   autonomous = n.advertise<std_msgs::Bool>("auto", 1000);
+  n.param<std::string>("controllerType", controllerType, "gamepad");
+  if (controllerType == "gamepad"){
+    autoButton = 0;
+    estopButton = 1;
+  }
+  if (controllerType == "joystick"){
+    autoButton = 6;
+    estopButton = 0;
+  }
 }
 
 /*
@@ -32,100 +47,49 @@ Teleop::Teleop()
  */
 void Teleop::joyCB(const sensor_msgs::Joy::ConstPtr &joy){
     //check for estop
-  if (someparameterthingy == 'basecontroller'){
-    if(joy->buttons[1] && !estop && !button0){
-      auto_pub(false);
-      stop_pub(true);
-      button0 = true;
-      return;
-    }
-    if(!joy->buttons[1] && !estop && button0){
-      isAutonomous = false;
-      estop = true;
-      button0 = false;
-    }
-    //check for un-estop
-    if(joy->buttons[1] && estop && !button0){
-      stop_pub(false);
-      button0 = true;
-    }
-    if(!joy->buttons[1] && estop && button0){
-      estop = false;
-      button0 = false;
-    }
-
-    //check if currently estopped
-    if(!stop_msg.data){
-      if(joy->buttons[0] && !isAutonomous && !button6){
-        auto_pub(true);
-        isAutonomous = true;
-        button6 = true;
-      }
-      if(!joy->buttons[0] && !isAutonomous && button6){
-        isAutonomous = false;
-        button6 = false;
-      }
-      if(joy->buttons[0] && isAutonomous && !button6){
-        auto_pub(false);
-        button6 = true;
-      }
-      if(!joy->buttons[0] && isAutonomous && button6){
-        isAutonomous = false;
-        button6 = false;
-      }
-      if (!isAutonomous){
-        drive_msg.steering_angle = 45*joy->axes[3];
-        drive_msg.speed = 2*joy->axes[1];
-        teledrive.publish(drive_msg);
-      }
-    }
+  if(joy->buttons[estopButton] && !estop && !estopButtonFlag){
+    auto_pub(false);
+    stop_pub(true);
+    estopButtonFlag = true;
+    return;
   }
-  if (someparameterthingy == 'basecontroller'){
-    if(joy->buttons[0] && !estop && !button0){
-      auto_pub(false);
-      stop_pub(true);
-      button0 = true;
-      return;
-    }
-    if(!joy->buttons[0] && !estop && button0){
-      isAutonomous = false;
-      estop = true;
-      button0 = false;
-    }
-    //check for un-estop
-    if(joy->buttons[0] && estop && !button0){
-      stop_pub(false);
-      button0 = true;
-    }
-    if(!joy->buttons[0] && estop && button0){
-      estop = false;
-      button0 = false;
-    }
+  if(!joy->buttons[estopButton] && !estop && estopButtonFlag){
+    isAutonomous = false;
+    estop = true;
+    estopButtonFlag = false;
+  }
+  //check for un-estop
+  if(joy->buttons[estopButton] && estop && !estopButtonFlag){
+    stop_pub(false);
+    estopButtonFlag = true;
+  }
+  if(!joy->buttons[estopButton] && estop && estopButtonFlag){
+    estop = false;
+    estopButtonFlag = false;
+  }
 
-    //check if currently estopped
-    if(!stop_msg.data){
-      if(joy->buttons[6] && !isAutonomous && !button6){
-        auto_pub(true);
-        isAutonomous = true;
-        button6 = true;
-      }
-      if(!joy->buttons[6] && !isAutonomous && button6){
-        isAutonomous = false;
-        button6 = false;
-      }
-      if(joy->buttons[6] && isAutonomous && !button6){
-        auto_pub(false);
-        button6 = true;
-      }
-      if(!joy->buttons[6] && isAutonomous && button6){
-        isAutonomous = false;
-        button6 = false;
-      }
-      if (!isAutonomous){
-        drive_msg.steering_angle = 45*joy->axes[3];
-        drive_msg.speed = 2*joy->axes[1];
-        teledrive.publish(drive_msg);
-      }
+  //check if currently estopped
+  if(!stop_msg.data){
+    if(joy->buttons[autoButton] && !isAutonomous && !autoButtonFlag){
+      auto_pub(true);
+      autoButtonFlag = true;
+    }
+    if(!joy->buttons[autoButton] && !isAutonomous && autoButtonFlag){
+      isAutonomous = true;
+      autoButtonFlag = false;
+    }
+    if(joy->buttons[autoButton] && isAutonomous && !autoButtonFlag){
+      auto_pub(false);
+      autoButtonFlag = true;
+    }
+    if(!joy->buttons[autoButton] && isAutonomous && autoButtonFlag){
+      isAutonomous = false;
+      autoButtonFlag = false;
+    }
+    if (!isAutonomous){
+      drive_msg.steering_angle = 45*joy->axes[0];
+      drive_msg.speed = 2*joy->axes[1];
+      teledrive.publish(drive_msg);
     }
   }
 }

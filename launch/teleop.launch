@@ -1,5 +1,8 @@
 <launch>
   <!-- This brings up teleop -->
-  <node pkg="joy" type="joy_node" name="joystick"/>
-  <node pkg="gravl" type="Teleop" name="joystick_teleop"/>
+  <arg name="controllerType" default="gamepad" />
+  <node pkg="joy" type="joy_node" name="joytick"/>
+  <node pkg="gravl" type="Teleop" name="joystick_teleop" >
+  	<param name="~controllerType" value="$(arg controllerType)"/>
+  </node>
 </launch>
