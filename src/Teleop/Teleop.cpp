@@ -11,8 +11,6 @@
 
 
 #include "Teleop.h"
-#include <ros/console.h>
-#include <iostream>
 
 /*
  * Constructor - advertises and subscribes topics
