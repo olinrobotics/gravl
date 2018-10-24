@@ -44,13 +44,14 @@ Teleop::Teleop()
  * The callback for the gamepad input
  */
 void Teleop::joyCB(const sensor_msgs::Joy::ConstPtr &joy){
-    //check for estop
+  //check for estop
   if(joy->buttons[estopButton] && !estop && !estopButtonFlag){
     auto_pub(false);
     stop_pub(true);
     estopButtonFlag = true;
     return;
   }
+  //check for button release
   if(!joy->buttons[estopButton] && !estop && estopButtonFlag){
     isAutonomous = false;
     estop = true;
@@ -61,6 +62,7 @@ void Teleop::joyCB(const sensor_msgs::Joy::ConstPtr &joy){
     stop_pub(false);
     estopButtonFlag = true;
   }
+  //check for button release
   if(!joy->buttons[estopButton] && estop && estopButtonFlag){
     estop = false;
     estopButtonFlag = false;
@@ -68,22 +70,27 @@ void Teleop::joyCB(const sensor_msgs::Joy::ConstPtr &joy){
 
   //check if currently estopped
   if(!stop_msg.data){
+    //check for autonomous
     if(joy->buttons[autoButton] && !isAutonomous && !autoButtonFlag){
       auto_pub(true);
       autoButtonFlag = true;
     }
+    //check for button release
     if(!joy->buttons[autoButton] && !isAutonomous && autoButtonFlag){
       isAutonomous = true;
       autoButtonFlag = false;
     }
+    //check for unautonomous
     if(joy->buttons[autoButton] && isAutonomous && !autoButtonFlag){
       auto_pub(false);
       autoButtonFlag = true;
     }
+    //check for button release
     if(!joy->buttons[autoButton] && isAutonomous && autoButtonFlag){
       isAutonomous = false;
       autoButtonFlag = false;
     }
+    //check if autonomous is running
     if (!isAutonomous){
       drive_msg.steering_angle = 45*joy->axes[0];
       drive_msg.speed = 2*joy->axes[1];
