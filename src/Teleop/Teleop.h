@@ -22,6 +22,10 @@ private:
   void joyCB(const sensor_msgs::Joy::ConstPtr &joy);
   void stop_pub(bool stop);
   void auto_pub(bool aut);
+  bool estop;
+  bool isAutonomous;
+  bool button0;
+  bool button6;
 
 };
 
