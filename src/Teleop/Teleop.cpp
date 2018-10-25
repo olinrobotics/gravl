@@ -15,11 +15,29 @@
 /*
  * Constructor - advertises and subscribes topics
  */
-Teleop::Teleop(){
+Teleop::Teleop()
+: estop(false)
+, isAutonomous(false)
+, estopButtonFlag(false)
+, autoButtonFlag(false)
+, n("~")
+, autoButton(0)
+, estopButton(1)
+{
+
   joystick = n.subscribe("/joy", 10, &Teleop::joyCB, this);
   teledrive = n.advertise<ackermann_msgs::AckermannDrive>("teledrive", 1000);
   softestop = n.advertise<std_msgs::Bool>("softestop", 1000);
   autonomous = n.advertise<std_msgs::Bool>("auto", 1000);
+  n.param<std::string>("controllerType", controllerType, "gamepad");
+  if (controllerType == "gamepad"){
+    autoButton = 0;
+    estopButton = 1;
+  }
+  if (controllerType == "joystick"){
+    autoButton = 6;
+    estopButton = 0;
+  }
 }
 
 /*
@@ -27,26 +45,54 @@ Teleop::Teleop(){
  */
 void Teleop::joyCB(const sensor_msgs::Joy::ConstPtr &joy){
   //check for estop
-  if(joy->buttons[1]){
+  if(joy->buttons[estopButton] && !estop && !estopButtonFlag){
     auto_pub(false);
     stop_pub(true);
+    estopButtonFlag = true;
     return;
   }
+  //check for button release
+  if(!joy->buttons[estopButton] && !estop && estopButtonFlag){
+    isAutonomous = false;
+    estop = true;
+    estopButtonFlag = false;
+  }
   //check for un-estop
-  if(joy->buttons[0]){
+  if(joy->buttons[estopButton] && estop && !estopButtonFlag){
     stop_pub(false);
+    estopButtonFlag = true;
+  }
+  //check for button release
+  if(!joy->buttons[estopButton] && estop && estopButtonFlag){
+    estop = false;
+    estopButtonFlag = false;
   }
 
   //check if currently estopped
   if(!stop_msg.data){
-    if(joy->buttons[5]){
+    //check for autonomous
+    if(joy->buttons[autoButton] && !isAutonomous && !autoButtonFlag){
       auto_pub(true);
+      autoButtonFlag = true;
     }
-    else if(joy->buttons[4]){
+    //check for button release
+    if(!joy->buttons[autoButton] && !isAutonomous && autoButtonFlag){
+      isAutonomous = true;
+      autoButtonFlag = false;
+    }
+    //check for unautonomous
+    if(joy->buttons[autoButton] && isAutonomous && !autoButtonFlag){
       auto_pub(false);
+      autoButtonFlag = true;
     }
-    else{
-      drive_msg.steering_angle = 45*joy->axes[3];
+    //check for button release
+    if(!joy->buttons[autoButton] && isAutonomous && autoButtonFlag){
+      isAutonomous = false;
+      autoButtonFlag = false;
+    }
+    //check if autonomous is running
+    if (!isAutonomous){
+      drive_msg.steering_angle = 45*joy->axes[0];
       drive_msg.speed = 2*joy->axes[1];
       teledrive.publish(drive_msg);
     }
