@@ -1,3 +1,13 @@
+/**********************************************************************
+ * KUBO Hindbrain Header (Teensy 3.5)
+ * @file hind_brain.h
+ * @author: Connor Novak
+ * @email: connor.novak@students.olin.edu
+ * @version: 1.1
+ * 
+ * @brief: Hindbrain libraries, constants, and tuning parameters
+ **********************************************************************/
+
 #ifndef HIND_BRAIN_H
 #define HIND_BRAIN_H
 
@@ -13,7 +23,31 @@
   const byte AUTO_LED_PIN = 3;
   const byte ESTOP_PIN = 2;
 
-  // Ranges
-  
+  // Roboclaw Constants
+  #define RC1_ADDRESS 0x80
+  #define RC2_ADDRESS 0x80
+  // Timeout below equivalent to 10 ms
+  #define RC_TIMEOUT 10000
+
+  // General Constants
+  #define DEBUG True
+
+  // Velocity Motor Ranges
+  const int VEL_CMD_MIN = 2048;       // Roboclaw cmd for max speed
+  const int VEL_CMD_MAX = 190;        // Roboclaw cmd for min speed
+  const int VEL_MSG_MIN = -1;         // Ackermann msg min speed
+  const int VEL_MSG_MAX = 1;          // Ackermann msg max speed
+
+  // Steering Motor Ranges
+  const int STEER_CMD_MIN = 1200;     // Roboclaw cmd for max left turn
+  const int STEER_CMD_MAX = 600;      // Roboclaw cmd for max right turn
+  const int STEER_MSG_MIN = -45;      // Ackermann msg min steering angle
+  const int STEER_MSG_MAX = 45;       // Ackermann msg max steering angle
+
+  // function prototypes
+  void ackermannCB(const ackermann_msgs::AckermannDrive&);
+  void stopEngine();
+  void eStop();
+  void eStart();
 
 #endif
