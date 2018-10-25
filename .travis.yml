@@ -1,0 +1,11 @@
+sudo: required
+
+services:
+  - docker
+
+script:
+  docker build -t gravl .
+
+notifications:
+  slack:
+    secure: WWDVIbPCm6qus8Tk1F3Q1f7ItLHcmFqQMPeCZC0JDIHRyozreBntOWaEu65WIqb51AJNj2hWJ9omX25hkkFDGlXmZqseJJZvKHIGY2v75HNyRgh4Ae/cUFoHs9EDOKwk/a9vlhw91yCyslpBOHhn3atHDWke0VQBjM3wgtcPFQ5vS9LEkeRPeWr1e8FHvwuq/lc+8de+2ka4mJAMnGEu4GUf+erwTWXjt+nknx/1P8HULdbPDzvnggUjACEuBks5AtwLPq2gx9xcnObn2NluIvXVqWAOoT4KJ2/ouvMAUm5oyXSL7ls4Gg0Fufj3Z1pZ6DJWDeH9gKhx84kiG/B28Kc1j3+Gu9MTbihsqia7NTejjVEqWjsmIVPdMWPXqO02qGyOaBAQ5M+/wHxI+/2uo+lVwgrIurfCaXYQInVtpLpgw9woDE1bd9qo5LVBUrJMn2eWjXfdG1OT8JGSj302EsBDxCm544XZIkUcnngi95QTM2kpfL0di/AfT1SJc6vdaTgoKoKHJO9EK0Jq1b6ZBNtTHcsDmCAWZRc/yxL590968B8mMmfg0bgomhgwGeu4sxzb/0DVGko6jt2HH2v9O3pO62lK5faGOKbYu/Gcq59XqtdJL9uwYCqaNGVr2GXdJA6TO76Qzh5gnT+UDMe9v50bO3kUlSsy/vnszKntx0Y=
