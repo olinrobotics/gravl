@@ -3,7 +3,7 @@
  * @file hind_brain.ino
  * @author: Connor Novak
  * @email: connor.novak@students.olin.edu
- * @version: 1.3
+ * @version: 1.4
  *
  * Basic OAK_compatible control of velocity actuator and
  * steering actuator through ackermann steering messages
@@ -11,29 +11,19 @@
  * message over /auto, estop capability over /softestop
  **********************************************************************/
 
-// Include Libraries
-#include "RoboClaw.h"                       // Used for motor controller interface
-#include <Arduino.h>                        // Used for Arduino functions
-#include "ros.h"                            // Used for rosserial communication
-#include "ackermann_msgs/AckermannDrive.h"  // Used for rosserial steering message
-#include "estop.h"                          // Used to implement estop class
-#include "soft_switch.h"                    // Used to implement auto switch
+ #include "hind_brain.h"
 
 // Declare switch & estop
 Estop *e;
 OAKSoftSwitch *l;
 
-// Def/Init Constants ----------C----------C----------C
-
-// Physical Pins
-const byte AUTO_LED_PIN = 3;
-const byte ESTOP_PIN = 2;
+// Def/Init Constants
 
 // RoboClaw & Settings
-#define RC_SERIAL Serial1
-#define address 0x80
+auto rc1_serial = &Serial1;
+#define ADDRESS 0x80
 #define ROBOCLAW_UPDATE_RATE 500
-RoboClaw rc(&Serial1, 10000);
+RoboClaw rc(rc1_serial, 10000);
 
 // General Constants
 #define DEBUG TRUE
@@ -59,32 +49,17 @@ int prevSteerMsg;
 signed int steerMsg = (STEER_HIGH + STEER_LOW) / 2; // Straight steer in middle
 unsigned long prevMillis = millis();
 
+// function prototypes
+void ackermannCB(const ackermann_msgs::AckermannDrive&);
+void eStop();
+void eStart();
 
-/*
- * FUNCTION: ackermannCB()
- * DESC: Called upon msg receipt from /drive; saves data to global vars
- * ARGS: ros ackermanndrive message
- * RTNS: none
- */
-void ackermannCB(const ackermann_msgs::AckermannDrive &drive){
-  steerMsg = steerConvert(drive.steering_angle);
-  velMsg = velConvert(drive.speed);
-  
-} //ackermannCB()
-
-
-// Declare ROS node & subscriber
+// ROS nodes, publishers, subscribers
 ros::NodeHandle nh;
 ros::Subscriber<ackermann_msgs::AckermannDrive> sub("drive", &ackermannCB);
 
 
-/*
- * FUNCTION: setup()
- * DESC: runs once on startup
- * ARGS: none
- * RTNS: none
- */
-void setup() { // ----------S----------S----------S----------S----------S
+void setup() {
 
   //Open serial communication with roboclaw
   rc.begin(38400);
@@ -106,64 +81,51 @@ void setup() { // ----------S----------S----------S----------S----------S
   // TODO Operator verify that actuators are in default positions
 
   // Set actuators to default positions
-  rc.SpeedAccelDeccelPositionM1(address, 0, 300, 0, velMsg, 0);
+  rc.SpeedAccelDeccelPositionM1(ADDRESS, 0, 300, 0, velMsg, 0);
   prevVelMsg = velMsg;
-  rc.SpeedAccelDeccelPositionM2(address, 0, 500, 0, steerMsg, 0);
+  rc.SpeedAccelDeccelPositionM2(ADDRESS, 0, 500, 0, steerMsg, 0);
   prevSteerMsg = steerMsg;
 
-} //setup()
+} // setup()
 
 
-/*
- * FUNCTION: loop()
- * DESC:  loops constantly
- * ARGS: none
- * RTNS: none
-*/
-void loop() { // ----------L----------L----------L----------L----------L
+void loop() {
 
   // Checks for connectivity with mid-brain and updates estopped state
   checkSerial(&nh);
-  
+
   // Sends commands to RoboClaw every ROBOCLAW_UPDATE_RATE milliseconds
   if (millis() - prevMillis > ROBOCLAW_UPDATE_RATE && !isEStopped) {
     updateRoboClaw(velMsg, steerMsg);
-
   }
-    
+
   // Updates node
   nh.spinOnce();
   delay(1);
 
-} //loop()
+} // loop()
 
 
-// ----------F----------F----------F----------F----------F----------F----------F
+void ackermannCB(const ackermann_msgs::AckermannDrive &drive) {
+  // Callback for ackermann messages; saves data to global vars
+  steerMsg = steerConvert(drive.steering_angle);
+  velMsg = velConvert(drive.speed);
 
-/*
- * FUNCTION: checkSerial()
- * DESC: Estops if node isn't connected
- * ARGS: nodehandle to check for connectivity
- * RTNS: none
- */
- void checkSerial(ros::NodeHandle *nh) {
+}  //ackermannCB()
 
-  // If node isn't connected and tractor isn't estopped, estop
+
+void checkSerial(ros::NodeHandle *nh) {
+  // Given node, estops if node is not connected
+
   if(!nh->connected()) {
-    if(!isEStopped) {
-      eStop();
-    }
+    if(!isEStopped) {eStop();}
   }
- } //checkSerial()
+}  //checkSerial()
 
 
-/*
- * FUNCTION: updateRoboClaw()
- * DESC: Sends current velocity and steering vals to RoboClaw; called at ROBOCLAW_UPDATE_RATE
- * ARGS: integer velocity, integer steering angle
- * RTNS: none
-*/
 void updateRoboClaw(int velMsg, int steerMsg) {
+  // Given velocity and steering message, sends vals to RoboClaw
+  // TODO: update to take roboclaw as arg
 
   //Calculate step sizes based on fidelity
   int steerStep = (STEER_HIGH - STEER_LOW) / STEER_FIDELITY;
@@ -172,17 +134,17 @@ void updateRoboClaw(int velMsg, int steerMsg) {
   //Update velMsg based on step
   stepActuator(&velMsg, &prevVelMsg, velStep);
   stepActuator(&steerMsg, &prevSteerMsg, steerStep);
-  
+
   // Update prev msgs
   prevVelMsg = velMsg;
   prevSteerMsg = steerMsg;
-  
+
   // Write velocity to RoboClaw
-  rc.SpeedAccelDeccelPositionM1(address, 100000, 1000, 0, velMsg, 0);
+  rc.SpeedAccelDeccelPositionM1(ADDRESS, 100000, 1000, 0, velMsg, 0);
 
   // Write steering to RoboClaw if tractor is moving, else returns debug msg
   if (velMsg < VEL_HIGH) {
-    rc.SpeedAccelDeccelPositionM2(address, 0, 1000, 0, steerMsg, 0);
+    rc.SpeedAccelDeccelPositionM2(ADDRESS, 0, 1000, 0, steerMsg, 0);
   }
   else {
     #ifdef DEBUG
@@ -201,16 +163,11 @@ void updateRoboClaw(int velMsg, int steerMsg) {
     nh.loginfo(j);
   #endif //DEBUG
 
-} //updateRoboClaw()
+} // updateRoboClaw()
 
 
-/*
- * FUNCTION: steerConvert()
- * DESC: Converts ackermann steering angle to motor encoder value for RoboClaw
- * ARGS: float ackermann steering angle
- * RTNS: converted encoder steering angle
- */
 int steerConvert(float ack_steer){
+  //  Given ackermann steering message, returns corresponding RoboClaw command
 
   // Convert from range of input signal to range of output signal, then shift signal
   ack_steer = ack_steer * ((STEER_HIGH - STEER_LOW) / STEER_CONTROL_RANGE) + (STEER_HIGH + STEER_LOW) / 2;
@@ -229,14 +186,9 @@ int steerConvert(float ack_steer){
   return ack_steer;
 } //steerConvert
 
-
-/*
- * FUNCTION: velConvert()
- * DESC: Converts ackermann velocity to motor encoder value for RoboClaw
- * ARGS: float ackermann velocity
- * RTRNS: converted ackermann velocity
- */
+callback
 int velConvert(float ack_vel){
+  // given ackermann velocity, returns corresponding RoboClaw command
 
   // filter to remove tractor reversal commands (platform wont back up)
   if (ack_vel < 0) {
@@ -250,13 +202,6 @@ int velConvert(float ack_vel){
 } //velConvert()
 
 
-/*
- * FUNCTION: stepActuator()
- * DESC: Meters commands sent to motors to ensure quick response and low latency
- * ARGS: current motor message, previous motor message, step size to check
- * RTNS: none
- */
-
 void stepActuator(int *msg, int *prevMsg, int step) {
 
   // Checks if stepping is necessary (input signal wants to increase by more than the given step size)
@@ -268,7 +213,12 @@ void stepActuator(int *msg, int *prevMsg, int step) {
     #endif //DEBUG
 
     // If signal increasing, step up
-    if (*msg > *prevMsg) {
+    if (*msg > *prevMsg){
+  // Callback for ackermann messages; saves data to global vars
+  steerMsg = steerConvert(drive.steering_angle);
+  velMsg = velConvert(drive.speed);
+
+} //ackermannCB() > *prevMsg) {
       *msg = *prevMsg + step;
     }
 
@@ -282,16 +232,11 @@ void stepActuator(int *msg, int *prevMsg, int step) {
       *msg = *prevMsg;
     }
   }
-} //stepActuator()
+} // stepActuator()
 
 
-/*
- *  FUNCTION eStop()
- *  DESC: Estops tractor, sends error message, flips estop state
- *  ARGS: none
- *  RTRNS: none
- */
 void eStop() {
+  // Estops tractor
 
   isEStopped = true;
 
@@ -306,16 +251,12 @@ void eStop() {
   digitalWrite(ESTOP_PIN, LOW);
 
 
-} //eStop()
+} // eStop()
 
 
-/*
- * FUNCTION eStart()
- * DESC: Changes estopped state upon tractor restart
- * ARGS: none
- * RTNS: none
- */
- void eStart() {
+void eStart() {
+  // Disactivates isEStopped state
+
   isEStopped = false;
 
   // Logs verification msg
@@ -323,4 +264,4 @@ void eStop() {
   snprintf(i, sizeof(i), "MSG: EStop Disactivated");
   nh.loginfo(i);
 
- } //eStart()
+} // eStart()
