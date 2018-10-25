@@ -1,12 +1,11 @@
-/**********************************************************************
- * KUBO Hindbrain Header (Teensy 3.5)
- * @file hind_brain.h
- * @author: Connor Novak
- * @email: connor.novak@students.olin.edu
- * @version: 1.1
- * 
- * @brief: Hindbrain libraries, constants, and tuning parameters
- **********************************************************************/
+/**
+  hind_brain.h
+  Purpose: Hindbrain libraries, constants, tuning parameters
+
+  @author Connor Novak
+  @email connor.novak@students.olin.edu
+  @version 1.1 10/24/2018
+*/
 
 #ifndef HIND_BRAIN_H
 #define HIND_BRAIN_H
@@ -45,6 +44,7 @@
   const int STEER_MSG_MAX = 45;       // Ackermann msg max steering angle
 
   // function prototypes
+  
   void ackermannCB(const ackermann_msgs::AckermannDrive&);
   void stopEngine();
   void eStop();

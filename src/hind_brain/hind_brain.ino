@@ -1,15 +1,12 @@
-/**********************************************************************
- * KUBO Hindbrain Code (Teensy 3.5)
- * @file hind_brain.ino
- * @author: Connor Novak
- * @email: connor.novak@students.olin.edu
- * @version: 1.4
- *
- * @brief: Basic OAK_compatible control of velocity actuator and
- * steering actuator through ackermann steering messages
- * over /drive, autonomous activation through boolean
- * message over /auto, estop capability over /softestop
- **********************************************************************/
+/**
+  hind_brain.ino
+  Purpose: Provides firmware interface from software to hardware, runs
+  realtime control/safety loop
+
+  @author Connor Novak
+  @email connor.novak@students.olin.edu
+  @version 1.4 10/24/2018
+*/
 
 // Header file
 #include "hind_brain.h"
@@ -36,7 +33,9 @@ char buf[7];
 
 // ROS nodes, publishers, subscribers
 ros::NodeHandle nh;
+ackermann_msgs::AckermannDrive curr_drive_pose;
 ros::Subscriber<ackermann_msgs::AckermannDrive> sub("drive", &ackermannCB);
+ros::Publisher pub_drive("/curr_drive", &curr_drive_pose);
 
 void setup() {
 
@@ -53,10 +52,11 @@ void setup() {
   //Open serial communication with roboclaw
   rc1.begin(38400);
 
-  // Set up ROS node and initialize subscriber
+  // Set up ROS node, subscribers, publishers
   nh.getHardware()->setBaud(115200);
   nh.initNode();
   nh.subscribe(sub);
+  nh.advertise(pub_drive);
 
   // TODO Operator verify that all pins are removed
 
@@ -74,6 +74,9 @@ void loop() {
 
   // Send updated motor commands to roboclaws
   updateRoboClaw(velMsg, steerMsg);
+
+  // Update current published pose
+  updateCurrDrive();
 
   // Updates node
   nh.spinOnce();
@@ -121,6 +124,18 @@ void updateRoboClaw(int velMsg, int steerMsg) {
   #endif //DEBUG
 
 } // updateRoboClaw()
+
+
+void updateCurrDrive() {
+  // Read encoder values, convert to ackermann drive, publish
+
+  uint32_t encoder1, encoder2;
+  rc1.ReadEncoders(RC1_ADDRESS, encoder1, encoder2);
+  curr_drive_pose.speed = map(encoder1, VEL_CMD_MIN, VEL_CMD_MAX, VEL_MSG_MIN, VEL_MSG_MAX);
+  curr_drive_pose.steering_angle = map(encoder2, STEER_CMD_MIN, STEER_CMD_MAX, STEER_MSG_MIN, STEER_MSG_MAX);
+  pub_drive.publish(&curr_drive_pose);
+
+} // updateCurrDrive()
 
 
 int steerAckToCmd(float ack_steer){
