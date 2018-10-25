@@ -110,8 +110,7 @@ void updateRoboClaw(int velMsg, int steerMsg) {
   rc1.SpeedAccelDeccelPositionM1(RC1_ADDRESS, 100000, 1000, 0, velMsg, 0);
 
   // Write steering to RoboClaw if tractor is moving, else returns debug msg
-  // TODO: Make read actual velocity, not commanded velocity
-  if (velMsg < VEL_CMD_MAX/2) {rc1.SpeedAccelDeccelPositionM2(RC1_ADDRESS, 0, 1000, 0, steerMsg, 0);}
+  if (velAckToCmd(curr_drive_pose.speed) < VEL_CMD_MAX/2) {rc1.SpeedAccelDeccelPositionM2(RC1_ADDRESS, 0, 1000, 0, steerMsg, 0);}
   else {nh.logwarn("Tractor not moving, steering message rejected");}
 
   timer = millis();  // Reset timer
