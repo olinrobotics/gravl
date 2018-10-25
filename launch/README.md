@@ -1,5 +1,5 @@
 # Overview
-This folder holds the launch files for Kubo, the lab's autonomous tractor
+Folder for GRAVL launch files
 
 ## Launch Files
 ### `bringup_min.launch`
@@ -14,6 +14,10 @@ Launches basic tractor functionality
 - rtk (GPS)
 - teleop
 - lidar (main)
+
+### `hindbrain.launch`
+Launches hindbrain ROS node
+- serial (teensy)
 
 ### `ir.launch`
 Launches usb_cam1 node for infrared camera
@@ -37,10 +41,16 @@ Launches static and kinetic tf frames for Kubo localization
 - hemisphere -> base
 - RTK GPS -> base
 
+### `rtk.launch`
+TODO
+
 ### `teleop.launch`
 Launches nodes for reading and publishing joystick commands
 - joystick (joy_node)
 - joystick_teleop
 
 ### `telewaypoint.launch`
-Launches 
+TODO
+
+### `waypoint.launch`
+TODO
