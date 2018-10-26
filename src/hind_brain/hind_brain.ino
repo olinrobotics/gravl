@@ -34,7 +34,7 @@ char buf[7];
 // ROS nodes, publishers, subscribers
 ros::NodeHandle nh;
 ackermann_msgs::AckermannDrive curr_drive_pose;
-ros::Subscriber<ackermann_msgs::AckermannDrive> sub("drive", &ackermannCB);
+ros::Subscriber<ackermann_msgs::AckermannDrive> sub("/cmd_ack", &ackermannCB);
 ros::Publisher pub_drive("/curr_drive", &curr_drive_pose);
 
 void setup() {
@@ -110,8 +110,8 @@ void updateRoboClaw(int velMsg, int steerMsg) {
   rc1.SpeedAccelDeccelPositionM1(RC1_ADDRESS, 100000, 1000, 0, velMsg, 0);
 
   // Write steering to RoboClaw if tractor is moving, else returns debug msg
-  if (velAckToCmd(curr_drive_pose.speed) < VEL_CMD_MAX/2) {rc1.SpeedAccelDeccelPositionM2(RC1_ADDRESS, 0, 1000, 0, steerMsg, 0);}
-  else {nh.logwarn("Tractor not moving, steering message rejected");}
+  // if (velAckToCmd(curr_drive_pose.speed) < VEL_CMD_MAX/2) {rc1.SpeedAccelDeccelPositionM2(RC1_ADDRESS, 0, 1000, 0, steerMsg, 0);}
+  // else {nh.logwarn("Tractor not moving, steering message rejected");}
 
   timer = millis();  // Reset timer
 
@@ -130,8 +130,8 @@ void updateCurrDrive() {
 
   uint32_t encoder1, encoder2;
   rc1.ReadEncoders(RC1_ADDRESS, encoder1, encoder2);
-  curr_drive_pose.speed = map(encoder1, VEL_CMD_MIN, VEL_CMD_MAX, VEL_MSG_MIN, VEL_MSG_MAX);
-  curr_drive_pose.steering_angle = map(encoder2, STEER_CMD_MIN, STEER_CMD_MAX, STEER_MSG_MIN, STEER_MSG_MAX);
+  curr_drive_pose.speed = mapPrecise(encoder1, VEL_CMD_MIN, VEL_CMD_MAX, VEL_MSG_MIN, VEL_MSG_MAX);
+  curr_drive_pose.steering_angle = mapPrecise(encoder2, STEER_CMD_MIN, STEER_CMD_MAX, STEER_MSG_MIN, STEER_MSG_MAX);
   pub_drive.publish(&curr_drive_pose);
 
 } // updateCurrDrive()
@@ -160,9 +160,9 @@ int velAckToCmd(float ack_vel){
   // Convert from range of input signal to range of output signal
   ack_vel = map(ack_vel, VEL_MSG_MIN, VEL_MSG_MAX, VEL_CMD_MIN, VEL_CMD_MAX);
 
-  // Safety limits for signal
-  if (ack_vel > VEL_CMD_MAX) {ack_vel = VEL_CMD_MAX;}
-  else if(ack_vel < VEL_CMD_MIN) {ack_vel = VEL_CMD_MIN;}
+  // Safety limits for signal; feels switched bc high vals = low speed
+  if (ack_vel < VEL_CMD_MAX) {ack_vel = VEL_CMD_MAX;}
+  else if(ack_vel > VEL_CMD_MIN) {ack_vel = VEL_CMD_MIN;}
 
   return ack_vel;
 } //velMsgToCmd()
@@ -200,3 +200,9 @@ void eStart() {
   nh.loginfo(i);
 
 } // eStart()
+
+float mapPrecise(float x, float inMin, float inMax, float outMin, float outMax) {
+  // Emulates Arduino map() function, but uses floats for precision
+  return (x - inMin) * (outMax - outMin) / (inMax - inMin) + outMin;
+
+} // mapPrecise()
