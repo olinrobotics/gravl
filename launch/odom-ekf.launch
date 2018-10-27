@@ -1,8 +1,10 @@
 <launch>
-  <node pkg="robot_localization" type="odom_ekf_node" name="odom_ekf_node">
-    <rosparam command="load" file="$(find robot_localization)/params/ekf_template.yaml" />
-    <remap from="gps/fix" to=""/>
-    <remap from="gps/rtkfix" to=""/>
-    <remap from="data/imu" to=""/>
+  <node pkg="robot_localization" type="navsat_transform_node" name="navsat_transform_node" clear_params="true">
+    <rosparam command="load" file="$(find robot_localization)/params/navsat_transform_template.yaml" />
+
+      <remap from="imu/data" to="imu_base"/>
+      <!-- <remap from="odometry/filtered" to="/gps/rtkfix"/> -->
+      <!-- <remap from="gps/fix" to="/g"/> -->
+
   </node>
 </launch>
