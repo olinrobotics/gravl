@@ -1,6 +1,7 @@
 <!--
-Tractor minimal ROSlaunch file
-@brief: Runs basic minimal tractor, adds gps and map-based referencing; odometry
+Tractor full ROSlaunch file
+@brief: Runs tractor with environment reference, rtk gps,
+and sensor mapping abilities
 @version: 2.0
 -->
 
