@@ -58,6 +58,19 @@ void setup() {
   nh.subscribe(sub);
   nh.advertise(pub_drive);
 
+  // Wait for connection
+  while(true){
+    if(nh.connected()) {break;}
+    nh.spinOnce();
+    delay(1);
+  }
+
+  // Send message of connectivity
+  // TODO: make wait until motors reach default positions
+  delay(500);
+  nh.loginfo("Hindbrain connected; Setting motor positions to neutral.");
+  delay(500);
+
   // TODO Operator verify that all pins are removed
 
   // Set actuators to default positions
@@ -66,14 +79,17 @@ void setup() {
 
 } // setup()
 
-
 void loop() {
 
   // Checks for connectivity with mid-brain
   checkSerial(&nh);
 
   // Send updated motor commands to roboclaws
-  updateRoboClaw(velMsg, steerMsg);
+  if (!isEStopped) {
+    updateRoboClaw(velMsg, steerMsg);
+  } else {
+    stopRoboClaw(&rc1);
+  }
 
   // Update current published pose
   updateCurrDrive();
@@ -84,7 +100,6 @@ void loop() {
 
 } // loop()
 
-
 void ackermannCB(const ackermann_msgs::AckermannDrive &drive) {
   // Callback for ackermann messages; saves data to global vars
   steerMsg = steerAckToCmd(drive.steering_angle);
@@ -92,15 +107,16 @@ void ackermannCB(const ackermann_msgs::AckermannDrive &drive) {
 
 }  //ackermannCB()
 
-
 void checkSerial(ros::NodeHandle *nh) {
   // Given node, estops if node is not connected
-
+  // https://answers.ros.org/question/124481/rosserial-arduino-how-to-check-on-device-if-in-sync-with-host/
   if(!nh->connected()) {
-    if(!isEStopped) {eStop();}
+    if(!isEStopped) {
+      nh->logerror("Lost connectivity . . .");
+      eStop();
+    }
   }
 }  //checkSerial()
-
 
 void updateRoboClaw(int velMsg, int steerMsg) {
   // Given velocity and steering message, sends vals to RoboClaw
@@ -124,6 +140,16 @@ void updateRoboClaw(int velMsg, int steerMsg) {
 
 } // updateRoboClaw()
 
+void stopRoboClaw(RoboClaw *rc) {
+  // Given roboclaw to stop, publishes messages such that Roboclaw is safe
+
+  // Send velocity pedal to stop position
+  rc->SpeedAccelDeccelPositionM1(RC1_ADDRESS, 100000, 1000, 0, VEL_CMD_MIN, 0);
+
+  // Stop steering motor
+  rc->SpeedM2(RC1_ADDRESS, 0);
+
+} // stopRoboClaw
 
 void updateCurrDrive() {
   // Read encoder values, convert to ackermann drive, publish
@@ -135,7 +161,6 @@ void updateCurrDrive() {
   pub_drive.publish(&curr_drive_pose);
 
 } // updateCurrDrive()
-
 
 int steerAckToCmd(float ack_steer){
   //  Given ackermann steering message, returns corresponding RoboClaw command
@@ -149,7 +174,6 @@ int steerAckToCmd(float ack_steer){
 
   return ack_steer;
 } //steerMsgToCmd
-
 
 int velAckToCmd(float ack_vel){
   // given ackermann velocity, returns corresponding RoboClaw command
@@ -167,7 +191,6 @@ int velAckToCmd(float ack_vel){
   return ack_vel;
 } //velMsgToCmd()
 
-
 void stopEngine() {
   // Toggles engine stop relay
 
@@ -177,17 +200,14 @@ void stopEngine() {
 
 } // stopEngine()
 
-
 void eStop() {
   // Estops tractor
 
   isEStopped = true;
   nh.logerror("Tractor has E-Stopped");
+  stopRoboClaw(&rc1);
   stopEngine();
-
-
 } // eStop()
-
 
 void eStart() {
   // Disactivates isEStopped state

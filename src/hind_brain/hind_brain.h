@@ -32,8 +32,8 @@
   #define DEBUG True
 
   // Velocity Motor Ranges
-  const int VEL_CMD_MIN = 2030;       // Roboclaw cmd for max speed
-  const int VEL_CMD_MAX = 190;        // Roboclaw cmd for min speed
+  const int VEL_CMD_MIN = 1400;       // Roboclaw cmd for max speed
+  const int VEL_CMD_MAX = 0;        // Roboclaw cmd for min speed
   const int VEL_MSG_MIN = 0;         // Ackermann msg min speed
   const int VEL_MSG_MAX = 1;          // Ackermann msg max speed
 
