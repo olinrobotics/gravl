@@ -1,8 +1,28 @@
+<!--
+Tractor minimal ROSlaunch file
+@brief: Runs tractor with basic safety, teleop, lidar. No map-level reference of
+position or sensor data
+@version: 2.0
+-->
+
 <launch>
-  <!-- This brings up the minimum for the tractor -->
-  <include file="$(find gravl)/launch/localization.launch"/>
+
+  <!-- Teleop -->
+  <include file="$(find gravl)/launch/teleop.launch"/>
+  <!-- Laser -->
+  <include file="$(find tractor)/launch/lidar.launch"/>
+  <!-- Imu -->
+  <!-- TODO -->
+  <!-- State Controller -->
+  <!-- TODO -->
+  <!-- Hindbrain -->
   <node pkg="rosserial_python" type="serial_node.py" name="serial">
-    <param name="port" value="/dev/teensie"/>
+    <param name="port" value="/dev/teensy"/>
     <param name="baud" value="115200"/>
   </node>
+  <!-- Safety Node -->
+  <!-- TODO -->
+  <!-- Static Transforms -->
+  <include file="$(find gravl)/launch/localization.launch"/>
+
 </launch>

@@ -1,13 +1,19 @@
-<launch>
-  <!-- This brings up the minimum for the tractor -->
-  <include file="$(find gravl)/launch/localization.launch"/>
-  <node pkg="rosserial_python" type="serial_node.py" name="serial">
-    <param name="port" value="/dev/teensy"/>
-    <param name="baud" value="115200"/>
-  </node>
+<!--
+Tractor minimal ROSlaunch file
+@brief: Runs basic minimal tractor, adds gps and map-based referencing; odometry
+@version: 2.0
+-->
 
+<launch>
+  <!-- Tractor Minimal -->
+  <include file="$(find gravl)/launch/bringup_min.launch"/>
+  <!-- RTK GPS -->
   <include file="$(find tractor)/launch/rtk.launch"/>
-  <include file="$(find tractor)/launch/teleop.launch"/>
-  <include file="$(find tractor)/launch/lidar.launch"/>
+  <!-- EKF -->
+  <!-- TODO -->
+  <!-- Camera -->
+  <!-- TODO -->
+  <!-- Ground-Scanning Lidar -->
+  <!-- TODO -->
 
 </launch>
