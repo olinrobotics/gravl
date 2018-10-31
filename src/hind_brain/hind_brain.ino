@@ -26,15 +26,14 @@ boolean isEStopped = false;
 boolean isAuto = false;
 
 // Global Variables
-unsigned int velMsg = VEL_CMD_MIN;                  // Initialize velocity to 0
-signed int steerMsg = (STEER_CMD_MAX + STEER_CMD_MIN) / 2; // Initialize steering to straight
-unsigned long timer = millis();
+unsigned int velMsg = VEL_CMD_MIN;        // Initialize velocity to 0
+signed int steerMsg = STEER_CMD_CENTER;   // Initialize steering to straight
 char buf[7];
 
 // ROS nodes, publishers, subscribers
 ros::NodeHandle nh;
 ackermann_msgs::AckermannDrive curr_drive_pose;
-ros::Subscriber<ackermann_msgs::AckermannDrive> sub("/cmd_ack", &ackermannCB);
+ros::Subscriber<ackermann_msgs::AckermannDrive> sub("/teledrive", &ackermannCB);
 ros::Publisher pub_drive("/curr_drive", &curr_drive_pose);
 
 void setup() {
@@ -105,7 +104,7 @@ void ackermannCB(const ackermann_msgs::AckermannDrive &drive) {
   steerMsg = steerAckToCmd(drive.steering_angle);
   velMsg = velAckToCmd(drive.speed);
 
-}  //ackermannCB()
+} // ackermannCB()
 
 void checkSerial(ros::NodeHandle *nh) {
   // Given node, estops if node is not connected
@@ -116,20 +115,19 @@ void checkSerial(ros::NodeHandle *nh) {
       eStop();
     }
   }
-}  //checkSerial()
+} // checkSerial()
 
 void updateRoboClaw(int velMsg, int steerMsg) {
   // Given velocity and steering message, sends vals to RoboClaw
   // TODO: update to take roboclaw as arg
 
   // Write velocity to RoboClaw
-  rc1.SpeedAccelDeccelPositionM1(RC1_ADDRESS, 100000, 1000, 0, velMsg, 0);
+  rc1.SpeedAccelDeccelPositionM1(RC1_ADDRESS, 100000, 1000, 0, velMsg, 1);
 
   // Write steering to RoboClaw if tractor is moving, else returns debug msg
-  // if (velAckToCmd(curr_drive_pose.speed) < VEL_CMD_MAX/2) {rc1.SpeedAccelDeccelPositionM2(RC1_ADDRESS, 0, 1000, 0, steerMsg, 0);}
-  // else {nh.logwarn("Tractor not moving, steering message rejected");}
-
-  timer = millis();  // Reset timer
+  // TODO: add sensor for motor on or not; this is what actually matters.
+  if (velAckToCmd(curr_drive_pose.speed) > VEL_CMD_MAX/3) {rc1.SpeedAccelDeccelPositionM2(RC1_ADDRESS, 0, 1000, 0, steerMsg, 1);}
+  else {nh.logwarn("Tractor not moving, steering message rejected");}
 
   // roslog msgs if debugging
   #ifdef DEBUG
@@ -165,12 +163,20 @@ void updateCurrDrive() {
 int steerAckToCmd(float ack_steer){
   //  Given ackermann steering message, returns corresponding RoboClaw command
 
-  // Convert from range of input signal to range of output signal, then shift signal
-  ack_steer = map(ack_steer, STEER_MSG_MIN, STEER_MSG_MAX, STEER_CMD_MIN, STEER_CMD_MAX);
+  // Convert from input message to output command
+  if (ack_steer > STEER_MSG_CENTER) {ack_steer = map(ack_steer, STEER_MSG_CENTER, STEER_MSG_MAX, STEER_CMD_CENTER, STEER_CMD_MAX);}
+  else if (ack_steer < STEER_MSG_CENTER) {ack_steer = map(ack_steer, STEER_MSG_MIN, STEER_MSG_CENTER, STEER_CMD_MIN, STEER_CMD_CENTER);}
+  else { ack_steer = STEER_CMD_CENTER;}
 
   // Safety limits for signal
-  if (ack_steer > STEER_CMD_MAX) {ack_steer = STEER_CMD_MAX;}
-  else if (ack_steer < STEER_CMD_MIN) {ack_steer = STEER_CMD_MIN;}
+  if (ack_steer > STEER_CMD_MAX) {
+    ack_steer = STEER_CMD_MAX;
+    nh.logwarn("ERR: understeering");
+  }
+  else if (ack_steer < STEER_CMD_MIN) {
+    ack_steer = STEER_CMD_MIN;
+    nh.logwarn("ERR: understeering");
+  }
 
   return ack_steer;
 } //steerMsgToCmd
