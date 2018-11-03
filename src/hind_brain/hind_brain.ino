@@ -126,7 +126,7 @@ void updateRoboClaw(int velMsg, int steerMsg) {
 
   // Write steering to RoboClaw if tractor is moving, else returns debug msg
   // TODO: add sensor for motor on or not; this is what actually matters.
-  if (velAckToCmd(curr_drive_pose.speed) > VEL_CMD_MAX/3) {rc1.SpeedAccelDeccelPositionM2(RC1_ADDRESS, 0, 1000, 0, steerMsg, 1);}
+  if (velMsg < VEL_CMD_MIN - 100) {rc1.SpeedAccelDeccelPositionM2(RC1_ADDRESS, 0, 1000, 0, steerMsg, 1);}
   else {nh.logwarn("Tractor not moving, steering message rejected");}
 
   // roslog msgs if debugging
@@ -151,11 +151,12 @@ void stopRoboClaw(RoboClaw *rc) {
 
 void updateCurrDrive() {
   // Read encoder values, convert to ackermann drive, publish
+  // TODO Fix mapping for steering
 
   uint32_t encoder1, encoder2;
   rc1.ReadEncoders(RC1_ADDRESS, encoder1, encoder2);
   curr_drive_pose.speed = mapPrecise(encoder1, VEL_CMD_MIN, VEL_CMD_MAX, VEL_MSG_MIN, VEL_MSG_MAX);
-  curr_drive_pose.steering_angle = mapPrecise(encoder2, STEER_CMD_MIN, STEER_CMD_MAX, STEER_MSG_MIN, STEER_MSG_MAX);
+  curr_drive_pose.steering_angle = mapPrecise(encoder2, STEER_CMD_RIGHT, STEER_CMD_LEFT, STEER_MSG_RIGHT, STEER_MSG_LEFT);
   pub_drive.publish(&curr_drive_pose);
 
 } // updateCurrDrive()
@@ -164,18 +165,18 @@ int steerAckToCmd(float ack_steer){
   //  Given ackermann steering message, returns corresponding RoboClaw command
 
   // Convert from input message to output command
-  if (ack_steer > STEER_MSG_CENTER) {ack_steer = map(ack_steer, STEER_MSG_CENTER, STEER_MSG_MAX, STEER_CMD_CENTER, STEER_CMD_MAX);}
-  else if (ack_steer < STEER_MSG_CENTER) {ack_steer = map(ack_steer, STEER_MSG_MIN, STEER_MSG_CENTER, STEER_CMD_MIN, STEER_CMD_CENTER);}
+  if (ack_steer > STEER_MSG_CENTER) {ack_steer = map(ack_steer, STEER_MSG_CENTER, STEER_MSG_LEFT, STEER_CMD_CENTER, STEER_CMD_LEFT);}
+  else if (ack_steer < STEER_MSG_CENTER) {ack_steer = map(ack_steer, STEER_MSG_RIGHT, STEER_MSG_CENTER, STEER_CMD_RIGHT, STEER_CMD_CENTER);}
   else { ack_steer = STEER_CMD_CENTER;}
 
   // Safety limits for signal
-  if (ack_steer > STEER_CMD_MAX) {
-    ack_steer = STEER_CMD_MAX;
-    nh.logwarn("ERR: understeering");
+  if (ack_steer < STEER_CMD_LEFT) {
+    ack_steer = STEER_CMD_LEFT;
+    nh.logwarn("ERR: oversteering left");
   }
-  else if (ack_steer < STEER_CMD_MIN) {
-    ack_steer = STEER_CMD_MIN;
-    nh.logwarn("ERR: understeering");
+  else if (ack_steer > STEER_CMD_RIGHT) {
+    ack_steer = STEER_CMD_RIGHT;
+    nh.logwarn("ERR: oversteering right");
   }
 
   return ack_steer;

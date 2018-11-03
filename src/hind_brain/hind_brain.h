@@ -38,12 +38,12 @@
   const int VEL_MSG_MAX = 2;          // Ackermann msg max speed
 
   // Steering Motor Ranges
-  const int STEER_CMD_MIN = 500;        // Roboclaw cmd for max left turn
+  const int STEER_CMD_LEFT = 500;        // Roboclaw cmd for max left turn
   const int STEER_CMD_CENTER = 975;     // Roboclaw cmd for straight
-  const int STEER_CMD_MAX = 1275;      // Roboclaw cmd for max right turn
-  const int STEER_MSG_MIN = -30;      // Ackermann msg min steering angle
+  const int STEER_CMD_RIGHT = 1275;      // Roboclaw cmd for max right turn
+  const int STEER_MSG_LEFT = 45;      // Ackermann msg min steering angle
   const int STEER_MSG_CENTER = 0;     // Ackermann msg center steering angle
-  const int STEER_MSG_MAX = 45;       // Ackermann msg max steering angle
+  const int STEER_MSG_RIGHT = -30;       // Ackermann msg max steering angle
 
   // function prototypes
 
