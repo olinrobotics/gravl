@@ -5,6 +5,7 @@
 #include <sensor_msgs/Joy.h>
 #include <ackermann_msgs/AckermannDrive.h>
 #include <std_msgs/Bool.h>
+#include <string.h>
 
 class Teleop{
 public:
@@ -22,6 +23,13 @@ private:
   void joyCB(const sensor_msgs::Joy::ConstPtr &joy);
   void stop_pub(bool stop);
   void auto_pub(bool aut);
+  std::string controllerType;
+  bool estop;
+  bool isAutonomous;
+  int autoButton;
+  int estopButton;
+  bool estopButtonFlag;
+  bool autoButtonFlag;
 
 };
 
