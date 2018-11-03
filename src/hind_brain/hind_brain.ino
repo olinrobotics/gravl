@@ -5,7 +5,7 @@
 
   @author Connor Novak
   @email connor.novak@students.olin.edu
-  @version 1.4 10/24/2018
+  @version 1.4 18/10/24
 */
 
 // Header file
