@@ -26,9 +26,9 @@ Teleop::Teleop()
 {
 
   joystick = n.subscribe("/joy", 10, &Teleop::joyCB, this);
-  teledrive = n.advertise<ackermann_msgs::AckermannDrive>("teledrive", 1000);
-  softestop = n.advertise<std_msgs::Bool>("softestop", 1000);
-  autonomous = n.advertise<std_msgs::Bool>("auto", 1000);
+  teledrive = n.advertise<ackermann_msgs::AckermannDrive>("/teledrive", 1);
+  softestop = n.advertise<std_msgs::Bool>("/softestop", 1);
+  autonomous = n.advertise<std_msgs::Bool>("/auto", 1);
   n.param<std::string>("controllerType", controllerType, "gamepad");
   if (controllerType == "gamepad"){
     autoButton = 0;
