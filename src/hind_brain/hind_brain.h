@@ -4,7 +4,7 @@
 
   @author Connor Novak
   @email connor.novak@students.olin.edu
-  @version 1.1 18/10/24
+  @version 0.0 18/10/24
 */
 
 #ifndef HIND_BRAIN_H
