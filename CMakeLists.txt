@@ -63,6 +63,7 @@ add_message_files(
   Hemisphere.msg
   RoboClawStats.msg
   ImuSafety.msg
+  DiffDrive.msg
 )
 
 ## Generate services in the 'srv' folder
@@ -142,6 +143,7 @@ add_executable( idk src/arm_drone.cpp )
 add_executable( road_detection src/road_detection.cpp )
 add_executable(imu_safety src/imu_safety/ImuSafety.cpp)
 add_executable(imu_base src/ImuBase/ImuBase.cpp)
+add_executable(enc_odom src/EncOdom/EncOdom.cpp)
 
 ## Specify libraries to link a library or executable target against
 target_link_libraries( Camera ${OpenCV_LIBS} ${catkin_LIBRARIES} )
@@ -154,6 +156,7 @@ target_link_libraries( idk ${catkin_LIBRARIES} )
 target_link_libraries( road_detection ${OpenCV_LIBS} )
 target_link_libraries(imu_safety ${catkin_LIBRARIES})
 target_link_libraries(imu_base ${catkin_LIBRARIES})
+target_link_libraries(enc_odom ${catkin_LIBRARIES})
 
 
 ## Add cmake target dependencies of the executable
@@ -161,6 +164,7 @@ target_link_libraries(imu_base ${catkin_LIBRARIES})
 # add_dependencies(${PROJECT_NAME}_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 add_dependencies(Hemisphere ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 add_dependencies(imu_safety ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+add_dependencies(enc_odom ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
 
 #IF(Qt5Widgets_FOUND)
