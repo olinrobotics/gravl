@@ -16,12 +16,10 @@ void EncOdom::callback(const gravl::DiffDrive::ConstPtr& msg)
   const auto tangentialVel = (msg->rvel + msg->lvel) / 2;
   const auto dt = (now - then).toSec();
 
-  tf2::Quaternion deltaAngle;
-  deltaAngle.setRPY(angularVel * dt, 0, 0);
   tf2::Quaternion oldOrientation;
   tf2::convert(transformStamped.transform.rotation, oldOrientation);
-  const auto newOrientation = oldOrientation * deltaAngle;
-  tf2::convert(oldOrientation * deltaAngle, transformStamped.transform.rotation);
+  const auto newOrientation = oldOrientation * tf2::Vector3(0, 0, angularVel * dt);
+  tf2::convert(newOrientation, transformStamped.transform.rotation);
 
   const auto delta_position = tf2::quatRotate(newOrientation, tf2::Vector3(0, 0, tangentialVel * dt));
   tf2::convert(delta_position, transformStamped.transform.translation);
