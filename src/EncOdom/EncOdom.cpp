@@ -6,7 +6,7 @@ EncOdom::EncOdom()
   , then(ros::Time::now())
 {
   transformStamped.header.frame_id = "odom";
-  transformStamped.child_frame_id = "base_link";
+  transformStamped.child_frame_id = "enc_link";
 }
 
 void EncOdom::callback(const gravl::DiffDrive::ConstPtr& msg)
@@ -21,8 +21,10 @@ void EncOdom::callback(const gravl::DiffDrive::ConstPtr& msg)
   const auto newOrientation = oldOrientation * tf2::Vector3(0, 0, angularVel * dt);
   tf2::convert(newOrientation, transformStamped.transform.rotation);
 
-  const auto delta_position = tf2::quatRotate(newOrientation, tf2::Vector3(0, 0, tangentialVel * dt));
-  tf2::convert(delta_position, transformStamped.transform.translation);
+  tf2::Vector3 oldTranslation;
+  tf2::convert(transformStamped.transform.translation, oldTranslation);
+  const auto deltaPosition = tf2::quatRotate(newOrientation, tf2::Vector3(0, 0, tangentialVel * dt));
+  tf2::convert(oldTranslation + deltaPosition, transformStamped.transform.translation);
 
   br.sendTransform(transformStamped);
   then = now;
