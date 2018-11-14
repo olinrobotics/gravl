@@ -1,35 +1,46 @@
+/*
+ * @file MainState.cpp
+ * @author Connor Novak
+ * @date 2018-11-13
+ *
+ * Subscribes to /cmd_behavior, publishes msgs to /cmd_vel based on tractor's
+ * current state.
+ */
+
 #include "MainState.h"
 
-MainState()
-  : pub(n.advertise<sensor_msgs::Imu>("imu_base", 1000))
-  , sub(n.subscribe("/cmd_behavior", 10, &MainState::MainState::callback, this))
-  , rate(ros::Rate(10))
-  , tl(tfBuffer)
-{
+MainState::MainState() {
+
+  // State Handling
+  state_sub = n.subscribe("joy_state", 1, &MainState::MainState::stateCB, this);
+  activate_sub = n.subscribe("joy_active", 1, &MainState::MainState::activateCB, this);
+  behavior_sub = n.subscribe("cmd_behavior", 10, &MainState::MainState::behaviorCB, this);
+  state_pub = n.advertise<std_msgs::UInt8>("curr_state", 1);
+  curr_state = 1;
+  is_activated = false;
+
 }
 
-void MainState::behavior_cb(const sensor_msgs::Imu::ConstPtr& msg)
-{
-  tf2::doTransform(msg->orientation, pub_val.orientation, transform);
-  tf2::doTransform(msg->angular_velocity, pub_val.angular_velocity, transform);
-  tf2::doTransform(msg->linear_acceleration, pub_val.linear_acceleration, transform);
+void MainState::stateCB(const std_msgs::UInt8& msg) {
+  // Callback for joy_state, updates and publishes curr_state
+    curr_state = msg.data;
+    ROS_INFO("Activating State %i", curr_state);
+    state_pub.publish(msg);
 }
 
-void MainState::estop_cb()
-
-void MainState::spin()
-{
-  while (ros::ok())
-    {
-
-      ros::spinOnce();
-      rate.sleep();
-    }
+void MainState::activateCB(const std_msgs::Bool& msg) {
+  // Callback for joy_active, updates activated state
+  is_activated = msg.data;
+  if (is_activated) {ROS_INFO("Activating Tractor");}
+  else {ROS_INFO("Disactivating Tractor");}
 }
 
-int main(int argc, char** argv)
-{
+void MainState::behaviorCB(const gravl::TwistLabeled& msg) {
+  ROS_INFO("Message from node %i", msg.label);
+}
+int main(int argc, char** argv) {
+
   ros::init(argc, argv, "MainState");
   MainState mainstate;
-  MainState.spin();
+  ros::spin();
 }
