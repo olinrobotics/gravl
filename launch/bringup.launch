@@ -9,7 +9,7 @@ and sensor mapping abilities
   <!-- Tractor Minimal -->
   <include file="$(find gravl)/launch/bringup_min.launch"/>
   <!-- RTK GPS -->
-  <include file="$(find tractor)/launch/rtk.launch"/>
+  <include file="$(find gravl)/launch/rtk.launch"/>
   <!-- EKF -->
   <!-- TODO -->
   <!-- Camera -->
