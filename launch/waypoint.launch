@@ -1,7 +1,5 @@
 <launch>
   <!-- This brings up waypoint following -->
-  <node pkg="swiftnav_ros" type="swiftnav_ros_node" name="swiftnav_ros_node" output="screen">
-    <param name="port" value="/dev/piksi" />
-  </node>
+  <include file="$(find gravl)/launch/rtk.launch" />
   <node pkg="gravl" type="gps.py" name="converter"/>
 </launch>
