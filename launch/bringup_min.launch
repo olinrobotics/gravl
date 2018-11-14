@@ -13,7 +13,7 @@ position or sensor data
   <!-- Imu -->
   <!-- TODO -->
   <!-- State Controller -->
-  <node  pkg="gravl" type="State" name="State"/>
+  <node  pkg="gravl" type="DriveState" name="DriveState"/>
   <!-- Hindbrain -->
   <node pkg="rosserial_python" type="serial_node.py" name="serial">
     <param name="port" value="/dev/teensy"/>
