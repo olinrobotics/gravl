@@ -142,6 +142,7 @@ add_executable( idk src/arm_drone.cpp )
 add_executable( road_detection src/road_detection.cpp )
 add_executable(imu_safety src/imu_safety/ImuSafety.cpp)
 add_executable(imu_base src/ImuBase/ImuBase.cpp)
+add_executable(Watchdog src/Watchdog/Watchdog.cpp)
 
 ## Specify libraries to link a library or executable target against
 target_link_libraries( Camera ${OpenCV_LIBS} ${catkin_LIBRARIES} )
@@ -154,6 +155,7 @@ target_link_libraries( idk ${catkin_LIBRARIES} )
 target_link_libraries( road_detection ${OpenCV_LIBS} )
 target_link_libraries(imu_safety ${catkin_LIBRARIES})
 target_link_libraries(imu_base ${catkin_LIBRARIES})
+target_link_libraries(Watchdog ${catkin_LIBRARIES})
 
 
 ## Add cmake target dependencies of the executable
@@ -170,8 +172,8 @@ add_dependencies(imu_safety ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTE
 #  add_dependencies( gps_map ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS} )
 #  target_link_libraries( gps_map
 #    Qt5::Widgets
-#    Qt5::Qml 
-#    Qt5::Quick 
+#    Qt5::Qml
+#    Qt5::Quick
 #    Qt5::Positioning
 #    ${catkin_LIBRARIES} )
 #ENDIF()
