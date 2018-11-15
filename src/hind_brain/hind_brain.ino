@@ -29,6 +29,8 @@ boolean isAuto = false;
 unsigned int velMsg = VEL_CMD_MIN;        // Initialize velocity to 0
 signed int steerMsg = STEER_CMD_CENTER;   // Initialize steering to straight
 char buf[7];
+long watchdog_timer = millis();
+
 
 // ROS nodes, publishers, subscribers
 ros::NodeHandle nh;
@@ -106,10 +108,14 @@ void ackermannCB(const ackermann_msgs::AckermannDrive &drive) {
 
 } // ackermannCB()
 
+void watchdogCB(const std_msgs::Empty &msg) {
+  watchdog_timer = millis();
+} // watchdogCB()
+
 void checkSerial(ros::NodeHandle *nh) {
-  // Given node, estops if node is not connected
+  // Given node, estops if watchdog has timed out
   // https://answers.ros.org/question/124481/rosserial-arduino-how-to-check-on-device-if-in-sync-with-host/
-  if(!nh->connected()) {
+  if(millis() - watchdog_timer > WATCHDOG_TIMEOUT) {
     if(!isEStopped) {
       nh->logerror("Lost connectivity . . .");
       eStop();
