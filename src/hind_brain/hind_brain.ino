@@ -23,7 +23,7 @@ RoboClaw rc2(rc2_serial, RC_TIMEOUT);
 
 // States
 boolean isEStopped = false;
-boolean isAuto = false;
+boolean isActivated = false;
 
 // Global Variables
 unsigned int velMsg = VEL_CMD_MIN;        // Initialize velocity to 0
@@ -58,16 +58,12 @@ void setup() {
   nh.advertise(pub_drive);
 
   // Wait for connection
-  while(true){
-    if(nh.connected()) {break;}
-    nh.spinOnce();
-    delay(1);
-  }
+  waitForConnection(false);
 
-  // Send message of connectivity
+  // Send warning message
   // TODO: make wait until motors reach default positions
   delay(500);
-  nh.loginfo("Hindbrain connected; Setting motor positions to neutral.");
+  nh.logwarn("Setting motor positions to neutral.");
   delay(500);
 
   // TODO Operator verify that all pins are removed
@@ -112,7 +108,7 @@ void checkSerial(ros::NodeHandle *nh) {
   if(!nh->connected()) {
     if(!isEStopped) {
       nh->logerror("Lost connectivity . . .");
-      eStop();
+      waitForConnection(true);
     }
   }
 } // checkSerial()
@@ -233,3 +229,26 @@ float mapPrecise(float x, float inMin, float inMax, float outMin, float outMax) 
   return (x - inMin) * (outMax - outMin) / (inMax - inMin) + outMin;
 
 } // mapPrecise()
+
+void waitForConnection(bool estop=true) {
+  /*! \brief Blocks main loop and waits for serial connection.
+  *
+  * Takes optional boolean argument representing whether or not to estop the
+  * tractor on entering into the function. Defaults to true. function holds a
+  * "while true" loop that checks both for node connectivity and high-frequency
+  * watchdog topic publishing before allowing the robt to be driven again.
+  */
+
+  if (estop) {eStop();}
+
+  // Wait to reconnect (TODO: add watchdog check here)
+  while(true){
+    if(nh.connected()) {break;}
+    nh.spinOnce();
+    delay(1);
+  }
+
+  nh.loginfo("Hindbrain connected");
+  return;
+
+}
