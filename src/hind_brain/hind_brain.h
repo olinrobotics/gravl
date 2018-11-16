@@ -50,6 +50,7 @@ const int STEER_MSG_RIGHT = -30;       // Ackermann msg max steering angle
 // function prototypes
 
 void ackermannCB(const ackermann_msgs::AckermannDrive&);
+void watchdogCB(const std_msgs::Empty&);
 void stopEngine();
 void eStop();
 void eStart();
