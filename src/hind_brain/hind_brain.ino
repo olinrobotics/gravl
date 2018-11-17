@@ -29,11 +29,14 @@ boolean isActivated = false;
 unsigned int velMsg = VEL_CMD_MIN;        // Initialize velocity to 0
 signed int steerMsg = STEER_CMD_CENTER;   // Initialize steering to straight
 char buf[7];
+long watchdog_timer;
+
 
 // ROS nodes, publishers, subscribers
 ros::NodeHandle nh;
 ackermann_msgs::AckermannDrive curr_drive_pose;
 ros::Subscriber<ackermann_msgs::AckermannDrive> sub("/teledrive", &ackermannCB);
+ros::Subscriber<std_msgs::Empty> ping("/safety_clock", &watchdogCB);
 ros::Publisher pub_drive("/curr_drive", &curr_drive_pose);
 
 void setup() {
@@ -55,6 +58,7 @@ void setup() {
   nh.getHardware()->setBaud(115200);
   nh.initNode();
   nh.subscribe(sub);
+  nh.subscribe(ping);
   nh.advertise(pub_drive);
 
   // Wait for connection
@@ -72,6 +76,7 @@ void setup() {
   rc1.SpeedAccelDeccelPositionM1(RC1_ADDRESS, 0, 300, 0, velMsg, 1);
   rc1.SpeedAccelDeccelPositionM2(RC1_ADDRESS, 0, 500, 0, steerMsg, 1);
 
+  watchdog_timer = millis();
 } // setup()
 
 void loop() {
@@ -102,10 +107,15 @@ void ackermannCB(const ackermann_msgs::AckermannDrive &drive) {
 
 } // ackermannCB()
 
+void watchdogCB(const std_msgs::Empty &msg) {
+  watchdog_timer = millis();
+} // watchdogCB()
+
 void checkSerial(ros::NodeHandle *nh) {
-  // Given node, estops if node is not connected
+  // Given node, estops if watchdog has timed out
   // https://answers.ros.org/question/124481/rosserial-arduino-how-to-check-on-device-if-in-sync-with-host/
-  if(!nh->connected()) {
+
+  if(millis() - watchdog_timer > WATCHDOG_TIMEOUT) {
     if(!isEStopped) {
       nh->logerror("Lost connectivity . . .");
       waitForConnection(true);
@@ -243,7 +253,7 @@ void waitForConnection(bool estop=true) {
 
   // Wait to reconnect (TODO: add watchdog check here)
   while(true){
-    if(nh.connected()) {break;}
+    if(nh.connected() && (millis() - watchdog_timer < WATCHDOG_TIMEOUT)) {break;}
     nh.spinOnce();
     delay(1);
   }
