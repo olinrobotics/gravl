@@ -25,6 +25,8 @@ private:
   void activateCB(const std_msgs::Bool& msg);
   void behaviorCB(const gravl::TwistLabeled& msg);
 
+  void spin();
+
   // Getters and Setters
   //TODO:
 };

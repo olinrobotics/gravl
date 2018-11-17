@@ -38,6 +38,16 @@ void MainState::activateCB(const std_msgs::Bool& msg) {
 void MainState::behaviorCB(const gravl::TwistLabeled& msg) {
   ROS_INFO("Message from node %i", msg.label);
 }
+
+void MainState::spin() {
+  /*! \brief Rins main update loop.
+  *
+  * Spin runs the main update functions for the state controller -
+  * mainly, that of updating the state topic and sendimg control messages
+  * to the hindbrain.
+  */
+}
+
 int main(int argc, char** argv) {
 
   ros::init(argc, argv, "MainState");
