@@ -9,11 +9,11 @@ position or sensor data
   <!-- Teleop -->
   <include file="$(find gravl)/launch/teleop.launch"/>
   <!-- Laser -->
-  <include file="$(find tractor)/launch/lidar.launch"/>
+  <include file="$(find gravl)/launch/lidar.launch"/>
   <!-- Imu -->
   <!-- TODO -->
   <!-- State Controller -->
-  <!-- TODO -->
+  <node  pkg="gravl" type="DriveState" name="DriveState"/>
   <!-- Hindbrain -->
   <node pkg="rosserial_python" type="serial_node.py" name="serial">
     <param name="port" value="/dev/teensy"/>
