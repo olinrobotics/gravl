@@ -9,23 +9,22 @@
 
 #include "MainState.h"
 
-MainState::MainState() {
-
-  // State Handling
-  state_sub = n.subscribe("joy_state", 1, &MainState::MainState::stateCB, this);
-  activate_sub = n.subscribe("joy_active", 1, &MainState::MainState::activateCB, this);
-  behavior_sub = n.subscribe("cmd_behavior", 10, &MainState::MainState::behaviorCB, this);
-  state_pub = n.advertise<std_msgs::UInt8>("curr_state", 1);
-  curr_state = 1;
-  is_activated = false;
-
-}
+MainState::MainState()
+ : rate(ros::Rate(2))
+ , state_sub(n.subscribe("joy_state", 1, &MainState::MainState::stateCB, this))
+ , activate_sub(n.subscribe("joy_active", 1, &MainState::MainState::activateCB, this))
+ , behavior_sub(n.subscribe("cmd_behavior", 10, &MainState::MainState::behaviorCB, this))
+ , state_pub(n.advertise<std_msgs::UInt8>("curr_state", 1))
+ , curr_state()
+ , is_activated(false)
+ {
+   curr_state.data = 1;
+   updateBehaviors();
+ }
 
 void MainState::stateCB(const std_msgs::UInt8& msg) {
   // Callback for joy_state, updates and publishes curr_state
-    curr_state = msg.data;
-    ROS_INFO("Activating State %i", curr_state);
-    state_pub.publish(msg);
+    if (msg.data != curr_state.data) {setState(msg);}
 }
 
 void MainState::activateCB(const std_msgs::Bool& msg) {
@@ -36,16 +35,43 @@ void MainState::activateCB(const std_msgs::Bool& msg) {
 }
 
 void MainState::behaviorCB(const gravl::TwistLabeled& msg) {
+/*
+  if (is_activated) {
+    if (msg.header.stamp != behavior_list[msg.label].header.stamp) {
+      return;
+    }
+  }*/
+
   ROS_INFO("Message from node %i", msg.label);
 }
 
-void MainState::spin() {
-  /*! \brief Rins main update loop.
+void MainState::setState(std_msgs::UInt8 state) {
+  /*! \brief Updates state with new state.
   *
-  * Spin runs the main update functions for the state controller -
-  * mainly, that of updating the state topic and sendimg control messages
-  * to the hindbrain.
+  * setState updates the current state with a given state, publishes an info
+  * message, and publishes the new state to the topic /curr_state
   */
+
+  curr_state = state;
+  ROS_INFO("Activating State %i", curr_state.data);
+  state_pub.publish(state);
+}
+
+void MainState::updateBehaviors() {
+  /*! \brief Updates behavior parameters
+  *
+  * updateBehaviors checks the behavior namespace on the parameter server and
+  * populates behavior_list with the behaviors listed there.
+  */
+
+  int i = 0;
+  if(n.getParam("/behaviors", behavior_list)) {
+    std::map<std::string, std::string>::iterator iterator = behavior_list.begin();
+    while (iterator != behavior_list.end()){
+      std::cout << iterator->first << "::" << iterator->second << std::endl;
+      iterator++;
+    }
+  }
 }
 
 int main(int argc, char** argv) {
