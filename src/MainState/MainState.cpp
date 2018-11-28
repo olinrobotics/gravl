@@ -17,10 +17,10 @@ MainState::MainState()
  , state_pub(n.advertise<std_msgs::UInt8>("curr_state", 1))
  , curr_state()
  , is_activated(false)
- {
-   curr_state.data = 1;
-   updateBehaviors();
- }
+{
+ curr_state.data = 1;
+ updateBehaviors();
+}
 
 void MainState::stateCB(const std_msgs::UInt8& msg) {
   // Callback for joy_state, updates and publishes curr_state
@@ -63,16 +63,22 @@ void MainState::updateBehaviors() {
   * updateBehaviors checks the behavior namespace on the parameter server and
   * populates behavior_list with the behaviors listed there.
   */
+  Behavior temp_behavior(2);
+  temp_behavior.getId();
+}
 
-  int i = 0;
-  if(n.getParam("/behaviors", behavior_list)) {
-    std::map<std::string, std::string>::iterator iterator = behavior_list.begin();
-    while (iterator != behavior_list.end()){
+/*  int i = 0;
+  std::map<std::string, std::string> temp_list;
+
+  if(n.getParam("/behaviors", temp_list)) {
+    std::map<std::string, std::string>::iterator iterator = temp_list.begin();
+    while (iterator != temp_list.end()){
       std::cout << iterator->first << "::" << iterator->second << std::endl;
       iterator++;
     }
   }
-}
+} */
+
 
 int main(int argc, char** argv) {
 

@@ -24,7 +24,7 @@ private:
   std_msgs::UInt8 curr_state;
   bool is_activated;
   ros::Rate rate;
-  std::map<std::string, std::string> behavior_list;
+  Behavior behavior_list[];
 
   // Callback functions
   void stateCB(const std_msgs::UInt8& msg);

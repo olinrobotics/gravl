@@ -1,21 +1,18 @@
 #ifndef BEHAVIOR_H
 #define BEHAVIOR_H
 
-#include <ros/ros.h>
-#include "gravl/TwistLabeled.h"
 
 class Behavior {
-public:
-  explicit Behavior(int id);
-  bool checkTwist(gravl::TwistLabeled);
+  public:
+    Behavior(const char* n, const int l);
+    Behavior(int l);
 
-// Getters and Setters
-  gravl::TwistLabeled getMessage();
+  // Getters and Setters
+    int getId();
 
-private:
-  int id;
-  char name;
-  gravl::TwistLabeled message;
+  private:
+    int id;
+    const char* name;
 
 };
 

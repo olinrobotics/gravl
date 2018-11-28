@@ -8,8 +8,16 @@
 
 #include "Behavior.h"
 
-Behavior::Behavior(int label){}
+Behavior::Behavior(const char* n, const int l) {
+   Behavior::name = n;
+   Behavior::id = l;
+ }
 
-  std_msgs::Twist getMessage() {
-    return message;
-  }
+ Behavior::Behavior(int l) {
+   name = "hello";
+   id = l;
+ }
+
+int Behavior::getId() {
+  return id;
+}

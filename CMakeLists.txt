@@ -136,7 +136,7 @@ include_directories(
 add_executable( Camera src/Camera/Camera.cpp )
 add_executable( Teleop src/Teleop/Teleop.cpp )
 add_executable( DriveState src/DriveState/DriveState.cpp )
-add_executable( MainState src/MainState/MainState.cpp )
+add_executable( MainState src/MainState/MainState.cpp src/MainState/Behavior.cpp)
 add_executable( Driver src/Driver/Driver.cpp )
 add_executable( Waypoint src/Waypoint/Waypoint.cpp )
 add_executable( Hemisphere src/Hemisphere/Hemisphere.cpp )
