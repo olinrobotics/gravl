@@ -21,6 +21,8 @@
   <depend>sensor_msgs</depend>
   <depend>std_msgs</depend>
   <depend>tf</depend>
+  <depend>tf2</depend>
+  <depend>tf2_geometry_msgs</depend>
   <depend>rospy</depend>
 
   <build_depend>roscpp</build_depend>
@@ -33,6 +35,7 @@
   <exec_depend>rosserial</exec_depend>
   <exec_depend>pointgrey_camera_driver</exec_depend>
   <exec_depend>urg_node</exec_depend>
+  <exec_depend>robot_localization</exec_depend>
 
   <export></export>
 </package>
