@@ -2,11 +2,11 @@
 """
 Subscribes to a twist message and converts it to an ackermann message.
 Subscribes to /twist_vel
-Publishes to /cmd_vel
+Publishes to /drive
 
 Assumes all inputs are normalized between -1 and 1
 
-@edited: 9/28/18
+@edited: 11/28/2018
 @author: Amy Phung
 """
 
@@ -23,7 +23,7 @@ class ConvertToAckermann():
         # Define ROS constructs
         rospy.init_node("convert_to_ackermann")
         self.twist_sub = rospy.Subscriber("/twist_vel", Twist, self.twist_cb)
-        self.ack_pub = rospy.Publisher("/drive", AckermannDrive, queue_size=10)
+        self.ack_pub = rospy.Publisher("/drive", AckermannDrive, queue_size=1)
         self.update_rate = rospy.Rate(10)
 
     def twist_cb(self,msg):
@@ -51,11 +51,10 @@ class ConvertToAckermann():
 
     def run(self):
         # Takes no args, executes timed loop for node
-        while (self.twist_data == None) and not rospy.is_shutdown():
-            print('MSG: No twist data published')
-            self.update_rate.sleep()
-
         while not rospy.is_shutdown():
+            if self.twist_data == None:
+                rospy.loginfo('MSG: No twist data published')
+                continue
             linear = self.twist_data.linear.x
             angular = self.twist_data.angular.z
 
