@@ -1,14 +1,15 @@
-/******************************************************************************
- * Teleop
+/*
+ * Joystick Command Node
  * @file Teleop.cpp
  * @author Carl Moser
  * @email carl.moser@students.olin.edu
- * @version     1.0
+ * @maintainer Kubo
+ * @email olingravl@gmail.com
+ * @version 1.1.0
  *
- * Takes the input from a Logitech f310 gamepad and publishes to various topics
- *
- ******************************************************************************/
-
+ * Takes input from controller specified by controllerType param, outputs to
+ * main state controller - handles movement messages and state change commands
+ */
 
 #include "Teleop.h"
 
@@ -17,25 +18,25 @@
  */
 Teleop::Teleop()
 : estop(false)
-, isAutonomous(false)
+, joystick_sub(n.subscribe("/joy", 10, &Teleop::joyCB, this))
+, softestop_pub(n.advertise<std_msgs::Bool>("/softestop", 1))
+, activate_pub(n.advertise<std_msgs::Bool>("/joy_activate", 1))
+, drivemsg_pub(n.advertise<gravl::TwistLabeled>("/cmd_behavior", 1))
+, isActivated(false)
 , estopButtonFlag(false)
-, autoButtonFlag(false)
+, activateButtonFlag(false)
 , n("~")
-, autoButton(0)
+, activateButton(0)
 , estopButton(1)
 {
-
-  joystick = n.subscribe("/joy", 10, &Teleop::joyCB, this);
-  teledrive = n.advertise<ackermann_msgs::AckermannDrive>("/teledrive", 1);
-  softestop = n.advertise<std_msgs::Bool>("/softestop", 1);
-  autonomous = n.advertise<std_msgs::Bool>("/auto", 1);
+  drive_msg.label = 0; // TODO: Actually get label
   n.param<std::string>("controllerType", controllerType, "gamepad");
   if (controllerType == "gamepad"){
-    autoButton = 0;
+    activateButton = 0;
     estopButton = 1;
   }
   if (controllerType == "joystick"){
-    autoButton = 6;
+    activateButton = 6;
     estopButton = 0;
   }
 }
@@ -46,20 +47,20 @@ Teleop::Teleop()
 void Teleop::joyCB(const sensor_msgs::Joy::ConstPtr &joy){
   //check for estop
   if(joy->buttons[estopButton] && !estop && !estopButtonFlag){
-    auto_pub(false);
-    stop_pub(true);
+    activate(false);
+    softestop(true);
     estopButtonFlag = true;
     return;
   }
   //check for button release
   if(!joy->buttons[estopButton] && !estop && estopButtonFlag){
-    isAutonomous = false;
+    isActivated = false;
     estop = true;
     estopButtonFlag = false;
   }
   //check for un-estop
   if(joy->buttons[estopButton] && estop && !estopButtonFlag){
-    stop_pub(false);
+    softestop(false);
     estopButtonFlag = true;
   }
   //check for button release
@@ -70,31 +71,31 @@ void Teleop::joyCB(const sensor_msgs::Joy::ConstPtr &joy){
 
   //check if currently estopped
   if(!stop_msg.data){
-    //check for autonomous
-    if(joy->buttons[autoButton] && !isAutonomous && !autoButtonFlag){
-      auto_pub(true);
-      autoButtonFlag = true;
+    //check for activated
+    if(joy->buttons[activateButton] && !isActivated && !activateButtonFlag){
+      activate(true);
+      activateButtonFlag = true;
     }
     //check for button release
-    if(!joy->buttons[autoButton] && !isAutonomous && autoButtonFlag){
-      isAutonomous = true;
-      autoButtonFlag = false;
+    if(!joy->buttons[activateButton] && !isActivated && activateButtonFlag){
+      isActivated = true;
+      activateButtonFlag = false;
     }
     //check for unautonomous
-    if(joy->buttons[autoButton] && isAutonomous && !autoButtonFlag){
-      auto_pub(false);
-      autoButtonFlag = true;
+    if(joy->buttons[activateButton] && isActivated && !activateButtonFlag){
+      activate(false);
+      activateButtonFlag = true;
     }
     //check for button release
-    if(!joy->buttons[autoButton] && isAutonomous && autoButtonFlag){
-      isAutonomous = false;
-      autoButtonFlag = false;
+    if(!joy->buttons[activateButton] && isActivated && activateButtonFlag){
+      isActivated = false;
+      activateButtonFlag = false;
     }
-    //check if autonomous is running
-    if (!isAutonomous){
-      drive_msg.steering_angle = 45*joy->axes[0];
-      drive_msg.speed = 2*joy->axes[1];
-      teledrive.publish(drive_msg);
+    //check if tractor is activated
+    if (isActivated){
+      drive_msg.twist.angular.z = joy->axes[0];
+      drive_msg.twist.linear.x =  joy->axes[1];
+      drivemsg_pub.publish(drive_msg);
     }
   }
 }
@@ -103,22 +104,21 @@ void Teleop::joyCB(const sensor_msgs::Joy::ConstPtr &joy){
  * Publishes to the softestop topic
  * @param[in] stop State of the softestop to publish
  */
-void Teleop::stop_pub(bool stop){
+void Teleop::softestop(bool stop){
   stop_msg.data = stop;
-  softestop.publish(stop_msg);
+  softestop_pub.publish(stop_msg);
 }
 
 /*
  * Publishes to the auto topic
- * @param[in] aut State of the autonomous functions to publishs
+ * @param[in] act State of the activate function to publish
  */
-void Teleop::auto_pub(bool aut){
-  autonomous_msg.data = aut;
-  autonomous.publish(autonomous_msg);
+void Teleop::activate(bool act){
+  activate_msg.data = act;
+  activate_pub.publish(activate_msg);
 }
 
-int main(int argc, char **argv)
-{
+int main(int argc, char **argv){
 	ros::init(argc, argv, "teleop");
   Teleop t;
   ros::spin();

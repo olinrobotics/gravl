@@ -3,7 +3,7 @@
 
 #include <ros/ros.h>
 #include <sensor_msgs/Joy.h>
-#include <ackermann_msgs/AckermannDrive.h>
+#include <gravl/TwistLabeled.h>
 #include <std_msgs/Bool.h>
 #include <string.h>
 
@@ -12,24 +12,24 @@ public:
   explicit Teleop();
 private:
   ros::NodeHandle n;
-  ros::Subscriber joystick;
-  ros::Publisher teledrive;
-  ros::Publisher softestop;
-  ros::Publisher autonomous;
+  ros::Subscriber joystick_sub;
+  ros::Publisher drivemsg_pub;
+  ros::Publisher softestop_pub;
+  ros::Publisher activate_pub;
   std_msgs::Bool stop_msg;
-  std_msgs::Bool autonomous_msg;
-  ackermann_msgs::AckermannDrive drive_msg;
+  std_msgs::Bool activate_msg;
+  gravl::TwistLabeled drive_msg;
 
   void joyCB(const sensor_msgs::Joy::ConstPtr &joy);
-  void stop_pub(bool stop);
-  void auto_pub(bool aut);
+  void softestop(bool stop);
+  void activate(bool aut);
   std::string controllerType;
   bool estop;
-  bool isAutonomous;
-  int autoButton;
+  bool isActivated;
+  int activateButton;
   int estopButton;
   bool estopButtonFlag;
-  bool autoButtonFlag;
+  bool activateButtonFlag;
 
 };
 
