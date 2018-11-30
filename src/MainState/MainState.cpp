@@ -13,10 +13,10 @@
 
 MainState::MainState()
  : rate(ros::Rate(2))
- , state_sub(n.subscribe("joy_state", 1, &MainState::MainState::stateCB, this))
- , activate_sub(n.subscribe("joy_active", 1, &MainState::MainState::activateCB, this))
- , behavior_sub(n.subscribe("cmd_behavior", 10, &MainState::MainState::behaviorCB, this))
- , state_pub(n.advertise<std_msgs::UInt8>("curr_state", 1))
+ , state_sub(n.subscribe("scin_state", 1, &MainState::MainState::stateCB, this))
+ , activate_sub(n.subscribe("scin_activate", 1, &MainState::MainState::activateCB, this))
+ , behavior_sub(n.subscribe("scin_behavior", 10, &MainState::MainState::behaviorCB, this))
+ , state_pub(n.advertise<std_msgs::UInt8>("scout_state", 1))
  , curr_state()
  , is_activated(false) {
    curr_state.data = 1;

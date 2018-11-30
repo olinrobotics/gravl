@@ -5,6 +5,7 @@
 #include <sensor_msgs/Joy.h>
 #include <gravl/TwistLabeled.h>
 #include <std_msgs/Bool.h>
+#include <std_msgs/UInt8.h>
 #include <string.h>
 
 class Teleop{
@@ -16,8 +17,10 @@ private:
   ros::Publisher drivemsg_pub;
   ros::Publisher softestop_pub;
   ros::Publisher activate_pub;
+  ros::Publisher state_pub;
   std_msgs::Bool stop_msg;
   std_msgs::Bool activate_msg;
+  std_msgs::UInt8 state_msg;
   gravl::TwistLabeled drive_msg;
 
   void joyCB(const sensor_msgs::Joy::ConstPtr &joy);
