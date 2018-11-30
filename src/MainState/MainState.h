@@ -29,7 +29,7 @@ private:
   void behaviorCB(const gravl::TwistLabeled& msg);
   void setState(std_msgs::UInt8 state);
   void updateBehaviors();
-  int getBehavior(int label);
+  int getBehavior(int label, int* index);
 };
 
 #endif //MAIN_STATE_H

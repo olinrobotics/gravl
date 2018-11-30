@@ -25,7 +25,10 @@ MainState::MainState()
 
 void MainState::stateCB(const std_msgs::UInt8& msg) {
   // Callback for joy_state, updates and publishes curr_state
-    if (msg.data != curr_state.data) {setState(msg);}
+    if (msg.data != curr_state.data) {
+      ROS_INFO("Changing State to State %i", msg.data);
+      setState(msg);
+    }
 }
 
 void MainState::activateCB(const std_msgs::Bool& msg) {
@@ -37,16 +40,14 @@ void MainState::activateCB(const std_msgs::Bool& msg) {
 
 void MainState::behaviorCB(const gravl::TwistLabeled& msg) {
 /*
+*/
   if (is_activated) {
-    if (msg.header.stamp != behavior_list[msg.label].header.stamp) {
-      return;
+    int index;
+    if (getBehavior(msg.label, &index)) {
+        ROS_ERROR("Could not find behavior - is parameter space set up?");
+        return;
     }
-  }*/
-  if (is_activated) {
-    ROS_INFO("Message from node %i", msg.label);
-    auto index = getBehavior(msg.label);
     behavior_vector[index].setMessage(msg);
-
     if (msg.label == curr_state.data) {
       state_pub.publish(msg);
     }
@@ -93,18 +94,19 @@ void MainState::updateBehaviors() {
   }
 }
 
-int MainState::getBehavior(int label) {
+int MainState::getBehavior(int label, int* index) {
   /*! \brief gets index of behavior with given label
   *
   * getBehavior loops through
   */
 
   for(int i=0;i<behavior_vector.size();i++){
-    if (behavior_vector[i].getId() == label) {
-      return i;
+    if (behavior_vector[i].getId() == label){
+      *index = i;
+      return 0;
     }
   }
-  return -1;
+  return 1;
 }
 
 int main(int argc, char** argv) {
