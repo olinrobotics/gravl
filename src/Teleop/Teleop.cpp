@@ -26,19 +26,23 @@ Teleop::Teleop()
 , isActivated(false)
 , estopButtonFlag(false)
 , activateButtonFlag(false)
+, behaviorAxisFlag(false)
 , n("~")
 , activateButton(0)
 , estopButton(1)
+, behaviorAxis(7)
 {
   drive_msg.label = 0; // TODO: Actually get label
   n.param<std::string>("controllerType", controllerType, "gamepad");
   if (controllerType == "gamepad"){
     activateButton = 0;
     estopButton = 1;
+    behaviorAxis = 7;
   }
   if (controllerType == "joystick"){
     activateButton = 6;
     estopButton = 0;
+    behaviorAxis = 7;
   }
 }
 
@@ -72,6 +76,17 @@ void Teleop::joyCB(const sensor_msgs::Joy::ConstPtr &joy){
 
   //check if currently estopped
   if(!stop_msg.data){
+    //check for statechange
+    if(joy->axes[behaviorAxis] && !behaviorAxisFlag){
+      incrementState(joy->axes[behaviorAxis]);
+      behaviorAxisFlag = true;
+    }
+    //check for axis release
+    if(joy->axes[behaviorAxis] && behaviorAxisFlag){
+      incrementState(joy->axes[behaviorAxis]);
+      behaviorAxisFlag = false;
+    }
+
     //check for activated
     if(joy->buttons[activateButton] && !isActivated && !activateButtonFlag){
       activate(true);
@@ -117,6 +132,32 @@ void Teleop::softestop(bool stop){
 void Teleop::activate(bool act){
   activate_msg.data = act;
   activate_pub.publish(activate_msg);
+}
+
+/*
+ * Publishes to the scin_state topic
+ * @param[in] behavior state to publish
+ */
+ void Teleop::state(int state){
+   state_msg.data = state;
+   state_pub.publish(state_msg);
+ }
+
+/*
+ * Changes state msg
+ * @param[in] joystick command representing direction (incr/decr)
+ */
+void Teleop::incrementState(float dir) {
+  int s = state_msg.data;
+  if(dir < 0) {
+    s = state_msg.data + 1;
+    if (s > 2) s = 0;
+  }
+  if(dir > 0) {
+    s = state_msg.data - 1;
+    if (s < 0) s = 2;
+  }
+  state(s);
 }
 
 int main(int argc, char **argv){

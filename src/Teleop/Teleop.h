@@ -26,13 +26,17 @@ private:
   void joyCB(const sensor_msgs::Joy::ConstPtr &joy);
   void softestop(bool stop);
   void activate(bool aut);
+  void state(int state);
+  void incrementState(float dir);
   std::string controllerType;
   bool estop;
   bool isActivated;
   int activateButton;
   int estopButton;
+  int behaviorAxis;
   bool estopButtonFlag;
   bool activateButtonFlag;
+  bool behaviorAxisFlag;
 
 };
 

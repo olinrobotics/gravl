@@ -90,7 +90,6 @@ void MainState::updateBehaviors() {
       behavior_vector.push_back(b);
       iterator++;
     }
-
   }
 }
 
