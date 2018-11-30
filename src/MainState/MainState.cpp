@@ -8,6 +8,8 @@
  */
 
 #include "MainState.h"
+#include <ros/console.h>  // Used for logging
+#include <vector>
 
 MainState::MainState()
  : rate(ros::Rate(2))
@@ -16,10 +18,9 @@ MainState::MainState()
  , behavior_sub(n.subscribe("cmd_behavior", 10, &MainState::MainState::behaviorCB, this))
  , state_pub(n.advertise<std_msgs::UInt8>("curr_state", 1))
  , curr_state()
- , is_activated(false)
-{
- curr_state.data = 1;
- updateBehaviors();
+ , is_activated(false) {
+   curr_state.data = 1;
+   updateBehaviors();
 }
 
 void MainState::stateCB(const std_msgs::UInt8& msg) {
@@ -41,8 +42,16 @@ void MainState::behaviorCB(const gravl::TwistLabeled& msg) {
       return;
     }
   }*/
+  if (is_activated) {
+    ROS_INFO("Message from node %i", msg.label);
+    auto index = getBehavior(msg.label);
+    behavior_vector[index].setMessage(msg);
 
-  ROS_INFO("Message from node %i", msg.label);
+    if (msg.label == curr_state) {
+      state_pub.publish(msg);
+    }
+    
+  } else {ROS_INFO_THROTTLE(5, "Tractor not activated");}
 }
 
 void MainState::setState(std_msgs::UInt8 state) {
@@ -62,23 +71,41 @@ void MainState::updateBehaviors() {
   *
   * updateBehaviors checks the behavior namespace on the parameter server and
   * populates behavior_list with the behaviors listed there.
+  * TODO: Ensure no duplicates in behavior vector
   */
-  Behavior temp_behavior(2);
-  temp_behavior.getId();
-}
 
-/*  int i = 0;
+  int i = 0;
   std::map<std::string, std::string> temp_list;
 
   if(n.getParam("/behaviors", temp_list)) {
+
+    // Use iterator to populate behavior list with parameter-defined behaviors
     std::map<std::string, std::string>::iterator iterator = temp_list.begin();
     while (iterator != temp_list.end()){
-      std::cout << iterator->first << "::" << iterator->second << std::endl;
+      auto name = (iterator->first).c_str();
+      int id = stoi(iterator->second);
+      ROS_INFO("Found node %s, id %i", name, id);
+      Behavior b(name, id);
+      behavior_vector.push_back(b);
       iterator++;
     }
-  }
-} */
 
+  }
+}
+
+int MainState::getBehavior(int label) {
+  /*! \brief gets index of behavior with given label
+  *
+  * getBehavior loops through
+  */
+
+  for(int i=0;i<behavior_vector.size();i++){
+    if (behavior_vector[i].getId() == label) {
+      return i;
+    }
+  }
+  return -1;
+}
 
 int main(int argc, char** argv) {
 

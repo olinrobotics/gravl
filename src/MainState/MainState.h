@@ -1,14 +1,13 @@
 #ifndef MAIN_STATE_H
 #define MAIN_STATE_H
 
-#include <list>
 #include <ros/ros.h>
 #include <gravl/TwistLabeled.h>
 #include <geometry_msgs/Twist.h>
 #include <std_msgs/Bool.h>
 #include <std_msgs/UInt8.h>
 #include "Behavior.h"
-#include <iostream>
+#include <vector>
 
 class MainState{
 public:
@@ -24,7 +23,7 @@ private:
   std_msgs::UInt8 curr_state;
   bool is_activated;
   ros::Rate rate;
-  Behavior behavior_list[];
+  std::vector<Behavior> behavior_vector;
 
   // Callback functions
   void stateCB(const std_msgs::UInt8& msg);
@@ -33,6 +32,7 @@ private:
 
   void setState(std_msgs::UInt8 state);
   void updateBehaviors();
+  int getBehavior(int label);
   //TODO:
 };
 
