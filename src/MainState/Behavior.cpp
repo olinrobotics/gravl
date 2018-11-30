@@ -8,16 +8,20 @@
 
 #include "Behavior.h"
 
-Behavior::Behavior(const char* n, const int l) {
-   Behavior::name = n;
-   Behavior::id = l;
- }
-
- Behavior::Behavior(int l) {
-   name = "hello";
-   id = l;
+Behavior::Behavior(const char* name, const int label)
+ : name(name), id(label) {
+   //message = gravl::TwistLabeled();
+   //message.label = label;
  }
 
 int Behavior::getId() {
   return id;
+}
+
+gravl::TwistLabeled Behavior::getMessage() {
+  return message;
+}
+
+void Behavior::setMessage(gravl::TwistLabeled msg) {
+  message = msg;
 }
