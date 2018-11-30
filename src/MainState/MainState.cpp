@@ -47,10 +47,10 @@ void MainState::behaviorCB(const gravl::TwistLabeled& msg) {
     auto index = getBehavior(msg.label);
     behavior_vector[index].setMessage(msg);
 
-    if (msg.label == curr_state) {
+    if (msg.label == curr_state.data) {
       state_pub.publish(msg);
     }
-    
+
   } else {ROS_INFO_THROTTLE(5, "Tractor not activated");}
 }
 
