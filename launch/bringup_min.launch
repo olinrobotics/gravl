@@ -13,12 +13,9 @@ position or sensor data
   <!-- Imu -->
   <!-- TODO -->
   <!-- State Controller -->
-  <node  pkg="gravl" type="DriveState" name="DriveState"/>
+  <include file="$(find gravl)/launch/mainstate.launch"/>
   <!-- Hindbrain -->
-  <node pkg="rosserial_python" type="serial_node.py" name="serial">
-    <param name="port" value="/dev/teensy"/>
-    <param name="baud" value="115200"/>
-  </node>
+  <include file="$(find gravl)/launch/hindbrain.launch"/>
   <!-- Safety Node -->
   <!-- TODO -->
   <!-- Static Transforms -->
