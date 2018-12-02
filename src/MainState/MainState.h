@@ -18,6 +18,7 @@ private:
   ros::Subscriber activate_sub;
   ros::Subscriber behavior_sub;
   ros::Publisher state_pub;
+  ros::Publisher command_pub;
   ros::Rate rate;
   std_msgs::UInt8 curr_state;
 

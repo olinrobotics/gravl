@@ -9,14 +9,16 @@
 
 #include "MainState.h"
 #include <ros/console.h>  // Used for logging
+#include <geometry_msgs/Twist.h>
 #include <vector>
 
 MainState::MainState()
  : rate(ros::Rate(2))
- , state_sub(n.subscribe("scin_state", 1, &MainState::MainState::stateCB, this))
- , activate_sub(n.subscribe("scin_activate", 1, &MainState::MainState::activateCB, this))
- , behavior_sub(n.subscribe("scin_behavior", 10, &MainState::MainState::behaviorCB, this))
- , state_pub(n.advertise<std_msgs::UInt8>("scout_state", 1))
+ , state_sub(n.subscribe("/state_controller/cmd_state", 1, &MainState::MainState::stateCB, this))
+ , activate_sub(n.subscribe("/state_controller/cmd_activate", 1, &MainState::MainState::activateCB, this))
+ , behavior_sub(n.subscribe("/state_controller/cmd_behavior", 10, &MainState::MainState::behaviorCB, this))
+ , state_pub(n.advertise<std_msgs::UInt8>("state", 1))
+ , command_pub(n.advertise<geometry_msgs::Twist>("cmd_twist", 1))
  , curr_state()
  , is_activated(false) {
    curr_state.data = 1;
@@ -49,7 +51,7 @@ void MainState::behaviorCB(const gravl::TwistLabeled& msg) {
     }
     behavior_vector[index].setMessage(msg);
     if (msg.label == curr_state.data) {
-      state_pub.publish(msg);
+      command_pub.publish(msg.twist);
     }
 
   } else {ROS_INFO_THROTTLE(5, "Tractor not activated");}

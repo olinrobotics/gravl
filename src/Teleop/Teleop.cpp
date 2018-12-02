@@ -15,14 +15,15 @@
 
 /*
  * Constructor - advertises and subscribes topics
+ * TODO: Handle namespaces better
  */
 Teleop::Teleop()
 : estop(false)
 , joystick_sub(n.subscribe("/joy", 10, &Teleop::joyCB, this))
 , softestop_pub(n.advertise<std_msgs::Bool>("/softestop", 1))
-, activate_pub(n.advertise<std_msgs::Bool>("/scin_activate", 1))
-, drivemsg_pub(n.advertise<gravl::TwistLabeled>("/scin_behavior", 1))
-, state_pub(n.advertise<std_msgs::UInt8>("/scin_state", 1))
+, activate_pub(n.advertise<std_msgs::Bool>("/state_controller/cmd_activate", 1))
+, drivemsg_pub(n.advertise<gravl::TwistLabeled>("/state_controller/cmd_behavior", 1))
+, state_pub(n.advertise<std_msgs::UInt8>("/state_controller/cmd_state", 1))
 , isActivated(false)
 , estopButtonFlag(false)
 , activateButtonFlag(false)
