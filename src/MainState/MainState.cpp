@@ -27,10 +27,7 @@ MainState::MainState()
 
 void MainState::stateCB(const std_msgs::UInt8& msg) {
   // Callback for joy_state, updates and publishes curr_state
-    if (msg.data != curr_state.data) {
-      ROS_INFO("Changing State to State %i", msg.data);
-      setState(msg);
-    }
+    if (msg.data != curr_state.data) setState(msg);
 }
 
 void MainState::activateCB(const std_msgs::Bool& msg) {
@@ -44,17 +41,25 @@ void MainState::behaviorCB(const gravl::TwistLabeled& msg) {
 /*
 */
   if (is_activated) {
+
+    // Get current behavior index
     int index;
     if (getBehavior(msg.label, &index)) {
         ROS_ERROR("Could not find behavior - is parameter space set up?");
         return;
     }
+
+    // Estop overwrites Teleop overwrites Bn
+    if (behavior_vector[index].getId() == 0)                              setState(behavior_vector[index].getId());
+    else if (behavior_vector[index].getId() == 1 && curr_state.data != 0) setState(behavior_vector[index].getId());
+
+    // Update behavior, publish message
     behavior_vector[index].setMessage(msg);
     if (msg.label == curr_state.data) {
       command_pub.publish(msg.twist);
     }
 
-  } else {ROS_INFO_THROTTLE(5, "Tractor not activated");}
+  } else ROS_INFO_THROTTLE(5, "Tractor not activated");
 }
 
 void MainState::setState(std_msgs::UInt8 state) {
@@ -64,9 +69,25 @@ void MainState::setState(std_msgs::UInt8 state) {
   * message, and publishes the new state to the topic /curr_state
   */
 
-  curr_state = state;
-  ROS_INFO("Activating State %i", curr_state.data);
-  state_pub.publish(state);
+  if (curr_state.data != state.data) {
+    curr_state = state;
+    ROS_INFO("Activating State %i", curr_state.data);
+    state_pub.publish(curr_state);
+  }
+}
+
+void MainState::setState(int state) {
+  /*! \brief Updates state with new state.
+  *
+  * setState updates the current state with a given state, publishes an info
+  * message, and publishes the new state to the topic /curr_state
+  */
+
+  if (curr_state.data != state) {
+    curr_state.data = state;
+    ROS_INFO("Activating State %i", state);
+    state_pub.publish(curr_state);
+  }
 }
 
 void MainState::updateBehaviors() {

@@ -33,7 +33,7 @@ Teleop::Teleop()
 , estopButton(1)
 , behaviorAxis(7)
 {
-  drive_msg.label = 0; // TODO: Actually get label
+  drive_msg.label = 1; // TODO: Actually get label
   n.param<std::string>("controllerType", controllerType, "gamepad");
   if (controllerType == "gamepad"){
     activateButton = 0;
@@ -110,9 +110,14 @@ void Teleop::joyCB(const sensor_msgs::Joy::ConstPtr &joy){
     }
     //check if tractor is activated
     if (isActivated){
-      drive_msg.twist.angular.z = joy->axes[0];
-      drive_msg.twist.linear.x =  joy->axes[1];
-      drivemsg_pub.publish(drive_msg);
+
+      // Don't send duplicate messages
+      if (drive_msg.twist.angular.z != joy->axes[0]
+       || drive_msg.twist.linear.x != joy->axes[1]) {
+        drive_msg.twist.angular.z = joy->axes[0];
+        drive_msg.twist.linear.x =  joy->axes[1];
+        drivemsg_pub.publish(drive_msg);
+      }
     }
   }
 }

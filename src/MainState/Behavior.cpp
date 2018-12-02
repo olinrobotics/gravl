@@ -23,5 +23,6 @@ gravl::TwistLabeled Behavior::getMessage() {
 }
 
 void Behavior::setMessage(gravl::TwistLabeled msg) {
+  //TODO: Check that label is equal to id
   message = msg;
 }
