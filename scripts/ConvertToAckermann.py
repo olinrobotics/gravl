@@ -1,12 +1,12 @@
 #!/usr/bin/env python
 """
 Subscribes to a twist message and converts it to an ackermann message.
-Subscribes to /twist_vel
-Publishes to /drive
+Subscribes to /cmd_twist
+Publishes to /cmd_vel
 
 Assumes all inputs are normalized between -1 and 1
 
-@edited: 11/28/2018
+@edited: 12/02/2018
 @author: Amy Phung
 """
 
