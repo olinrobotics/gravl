@@ -1,3 +1,11 @@
+/*
+ * @file Teleop.h
+ * @brief function prototypes for teleop node
+ *
+ * @author Carl Moser
+ * @email carl.moser@students.olin.edu
+ */
+
 #ifndef TELEOP_H
 #define TELEOP_H
 
@@ -14,9 +22,9 @@ public:
 private:
   ros::NodeHandle n;
   ros::Subscriber joystick_sub;
+  ros::Publisher activate_pub;
   ros::Publisher drivemsg_pub;
   ros::Publisher softestop_pub;
-  ros::Publisher activate_pub;
   ros::Publisher state_pub;
   std_msgs::Bool stop_msg;
   std_msgs::Bool activate_msg;
