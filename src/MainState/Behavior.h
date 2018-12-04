@@ -1,3 +1,11 @@
+/*
+ * @file Behavior.h
+ * @brief behavior function prototypes
+ *
+ * @author Connor Novak
+ * @email connor@students.olin.edu
+ */
+
 #ifndef BEHAVIOR_H
 #define BEHAVIOR_H
 

@@ -1,18 +1,20 @@
 /*
  * @file Behavior.cpp
- * @author Connor Novak
- * @date 2018-11-21
+ * @brief behavior class correlating names, ids, priorities
  *
- * Behavior class with index
+ * @author Connor Novak
+ * @email connor@students.olin.edu
+ * @date 2018-11-21
+ * @version 1.0.0
  */
 
 #include "Behavior.h"
 
+/*
+ * @brief Constructor TODO(connor@students) Turn into struct
+ */
 Behavior::Behavior(const char* name, const int label)
- : name(name), id(label) {
-   //message = gravl::TwistLabeled();
-   //message.label = label;
- }
+ : name(name), id(label) { }
 
 int Behavior::getId() {
   return id;
@@ -23,6 +25,6 @@ gravl::TwistLabeled Behavior::getMessage() {
 }
 
 void Behavior::setMessage(gravl::TwistLabeled msg) {
-  //TODO: Check that label is equal to id
+  //TODO(connor@students): Check that label is equal to id
   message = msg;
 }
