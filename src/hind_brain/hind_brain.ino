@@ -35,7 +35,7 @@ unsigned long watchdog_timer;
 // ROS nodes, publishers, subscribers
 ros::NodeHandle nh;
 ackermann_msgs::AckermannDrive curr_drive_pose;
-ros::Subscriber<ackermann_msgs::AckermannDrive> sub("/teledrive", &ackermannCB);
+ros::Subscriber<ackermann_msgs::AckermannDrive> sub("/cmd_vel", &ackermannCB);
 ros::Subscriber<std_msgs::Empty> ping("/safety_clock", &watchdogCB);
 ros::Publisher pub_drive("/curr_drive", &curr_drive_pose);
 
