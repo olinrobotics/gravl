@@ -33,7 +33,7 @@ void MainState::stateCB(const std_msgs::UInt8& msg) {
 void MainState::activateCB(const std_msgs::Bool& msg) {
   // Callback for joy_active, updates activated state
   is_activated = msg.data;
-  if (is_activated) {ROS_INFO("Activating Tractor");}
+  if (is_activated) ROS_INFO("Activating Tractor");
   else {ROS_INFO("Disactivating Tractor");}
 }
 

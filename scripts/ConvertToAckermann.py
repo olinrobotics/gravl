@@ -54,6 +54,7 @@ class ConvertToAckermann():
         while not rospy.is_shutdown():
             if self.twist_data == None:
                 rospy.loginfo('MSG: No twist data published')
+                self.update_rate.sleep()
                 continue
             linear = self.twist_data.linear.x
             angular = self.twist_data.angular.z

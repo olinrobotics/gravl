@@ -30,6 +30,7 @@ private:
   void behaviorCB(const gravl::TwistLabeled& msg);
   void setState(std_msgs::UInt8 state);
   void setState(int state);
+  void addBehavior(std::pair<std::string, std::string> pair);
   void updateBehaviors();
   int getBehavior(int label, int* index);
 };
