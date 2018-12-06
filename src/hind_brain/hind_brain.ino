@@ -81,6 +81,8 @@ void setup() {
   rc1.SpeedAccelDeccelPositionM2(RC1_ADDRESS, 0, 500, 0, steerMsg, 1);
 
   watchdog_timer = millis();
+  eStart();
+  
 } // setup()
 
 void loop() {
@@ -136,14 +138,18 @@ void updateRoboClaw(int velMsg, int steerMsg) {
 
   // Write steering to RoboClaw if tractor is moving, else returns debug msg
   // TODO: add sensor for motor on or not; this is what actually matters.
-  if (velMsg < VEL_CMD_MIN - 100) {rc1.SpeedAccelDeccelPositionM2(RC1_ADDRESS, 0, 1000, 0, steerMsg, 1);}
-  else {nh.logwarn("Tractor not moving, steering message rejected");}
+  if (velMsg < VEL_CMD_MIN - 100) rc1.SpeedAccelDeccelPositionM2(RC1_ADDRESS, 0, 1000, 0, steerMsg, 1);
+  else {
+    #ifdef DEBUG
+      nh.logdebug("Tractor not moving, steering message rejected");
+    #endif //DEBUG
+  }
 
   // roslog msgs if debugging
   #ifdef DEBUG
     char j[36];
     snprintf(j, sizeof(j), "DBG: steerMsg = %d, velMsg = %d", steerMsg, velMsg);
-    nh.loginfo(j);
+    nh.logdebug(j);
   #endif //DEBUG
 
 } // updateRoboClaw()
@@ -182,11 +188,11 @@ int steerAckToCmd(float ack_steer){
   // Safety limits for signal
   if (ack_steer < STEER_CMD_LEFT) {
     ack_steer = STEER_CMD_LEFT;
-    nh.logwarn("ERR: oversteering left");
+    nh.logwarn("Oversteering left");
   }
   else if (ack_steer > STEER_CMD_RIGHT) {
     ack_steer = STEER_CMD_RIGHT;
-    nh.logwarn("ERR: oversteering right");
+    nh.logwarn("Oversteering right");
   }
 
   return ack_steer;
@@ -233,7 +239,7 @@ void eStart() {
 
   // Logs verification msg
   char i[32];
-  snprintf(i, sizeof(i), "MSG: EStop Disactivated");
+  snprintf(i, sizeof(i), "EStop Disactivated");
   nh.loginfo(i);
 
 } // eStart()
