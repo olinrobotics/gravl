@@ -53,7 +53,7 @@ class ConvertToAckermann():
         # Takes no args, executes timed loop for node
         while not rospy.is_shutdown():
             if self.twist_data == None:
-                rospy.loginfo('MSG: No twist data published')
+                rospy.logwarn_throttle(10, '(10s) No twist data published')
                 self.update_rate.sleep()
                 continue
             linear = self.twist_data.linear.x
