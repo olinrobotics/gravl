@@ -1,0 +1,1 @@
+= log(sqrt(x-xCenter)**2+(y-yCenter)**2) * [x-xCenter,y-yCenter] / sqrt(x-xCenter)**2+(y-yCenter)**2

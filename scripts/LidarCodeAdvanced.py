@@ -33,14 +33,14 @@ class ObstacleDetection():
         self.frontData = None
         self.downData = None
         self.ackermannData = None
-        self.DownToGround = 1.2 # Distance from down lidar to the ground
+        self.downToGround = 1.2 # Distance from down lidar to the ground
         self.senseRange = float(rospy.get_param('~senseRange','5.0'))
         self.mode = rospy.get_param('~mode',"circle")
         self.widthTractor = 1.25 # Horizontal length of the tractor
         self.fbWheelDist = 1.524 # Measures the distance from the front wheels to the back wheels
         self.angleOfIncline = 0.194724 # ?Empirically Discovered. Fix if necessary
         self.threshold = 5 # How many points must be seen to trigger a stop?
-        self.update_rate = rospy.Rate(5) # Sets the update rate to 5
+        self.updateRate = rospy.Rate(5) # Sets the update rate to 5
         self.vis_pubFront = rospy.Publisher('/LidarFront_pt', Marker, queue_size=2)
         self.vis_pubDown = rospy.Publisher('/LidarLineDown_pt', Marker, queue_size=2)
         self.vis_pubLines = rospy.Publisher('/TractorLine_pt',Marker,queue_size=2)
@@ -139,7 +139,7 @@ class ObstacleDetection():
         self.obstaclePointsDown = 0 # Counts how many points are not the ground
         self.triggerPointsDown = 0 # Counts number of points breaking threshold
         for i in range(len(self.totalDistDown)): # Sweep through the distances
-            if(self.zDistDown[i] < self.DownToGround and self.zDistDown[i] > 0.1): # Is there an object that is not the ground?
+            if(self.zDistDown[i] < self.downToGround and self.zDistDown[i] > 0.1): # Is there an object that is not the ground?
                 self.obstaclePointsDown += 1 # Add a point into the number of obstacle points
                 if(abs(self.yDistDown[i]) < (self.widthTractor / 2.0)): #Will the obstacle hit the tractor?
                     self.triggerPointsDown += 1 # Add a point the the number of triggers
@@ -224,7 +224,7 @@ class ObstacleDetection():
             self.sendMessagesDown()
             if visualize:
                 self.publishTractorLines()
-            self.update_rate.sleep()
+            self.updateRate.sleep()
         while not rospy.is_shutdown() and self.downData == None and self.frontData != None:
             rospy.logwarn("ERR: Missing data: /down/scan (Down Lidar Not Connected)")
             self.convertToXDistAndYDistFront()
@@ -232,7 +232,7 @@ class ObstacleDetection():
             self.sendMessagesFront()
             if visualize:
                 self.publishTractorLines()
-            self.update_rate.sleep()
+            self.updateRate.sleep()
         rospy.loginfo("Running")
         while not rospy.is_shutdown():
             self.convertToXDistAndYDistFront()
@@ -243,7 +243,7 @@ class ObstacleDetection():
             self.sendMessagesDown()
             if visualize:
                 self.publishTractorLines()
-            self.update_rate.sleep()
+            self.updateRate.sleep()
 
 if __name__ == '__main__':
     obs = ObstacleDetection()

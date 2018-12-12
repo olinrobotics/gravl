@@ -16,7 +16,7 @@ position or sensor data
   <node  pkg="gravl" type="DriveState" name="DriveState"/>
   <!-- Hindbrain -->
   <node pkg="rosserial_python" type="serial_node.py" name="serial">
-    <param name="port" value="/dev/teensy"/>
+    <param name="port" value="/dev/ttyACM0"/>
     <param name="baud" value="115200"/>
   </node>
   <!-- Safety Node -->

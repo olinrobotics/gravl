@@ -1,4 +1,4 @@
 <launch>
 	<include file="$(find gravl)/launch/frontlidar.launch"/>
-	<include file="$(find gravl)/launch/downlidar.launch"/>
+	<!--<include file="$(find gravl)/launch/downlidar.launch"/> -->
 </launch>
