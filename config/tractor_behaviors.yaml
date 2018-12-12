@@ -1,3 +1,12 @@
-behaviors/safety: '0'
-behaviors/teleop: '1'
-behaviors/ptrack: '2'
+# Tractor behavior parameter definitions
+#
+# Ex: Behaviors/BehaviorN: [Id #, Priority #]
+# - Id #s should be unique
+# - Lower priorities override higher priorities
+
+behaviors/safety/id:       0
+behaviors/safety/priority: 0
+behaviors/teleop/id:       1
+behaviors/teleop/priority: 1
+behaviors/ptrack/id:       2
+behaviors/ptrack/priority: 2

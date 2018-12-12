@@ -17,17 +17,16 @@ MainState::MainState()
  , state_sub(n.subscribe("/state_controller/cmd_state", 1, &MainState::MainState::stateCB, this))
  , activate_sub(n.subscribe("/state_controller/cmd_activate", 1, &MainState::MainState::activateCB, this))
  , behavior_sub(n.subscribe("/state_controller/cmd_behavior", 10, &MainState::MainState::behaviorCB, this))
- , state_pub(n.advertise<std_msgs::UInt8>("state", 1))
+ , state_pub(n.advertise<std_msgs::String>("state", 1))
  , command_pub(n.advertise<geometry_msgs::Twist>("cmd_twist", 1))
  , curr_state()
  , is_activated(false) {
-   curr_state.data = 1;
-   updateBehaviors();
+   setState("teleop");
 }
 
-void MainState::stateCB(const std_msgs::UInt8& msg) {
+void MainState::stateCB(const std_msgs::String& msg) {
   // Callback for joy_state, updates and publishes curr_state
-    if (msg.data != curr_state.data) setState(msg);
+    if (msg.data != curr_state.name) setState(msg.data.c_str());
 }
 
 void MainState::activateCB(const std_msgs::Bool& msg) {
@@ -39,96 +38,85 @@ void MainState::activateCB(const std_msgs::Bool& msg) {
 
 void MainState::behaviorCB(const gravl::TwistLabeled& msg) {
 /*
-*/
+ * @brief pass on received twist if correct mode, handles priority mode change
+ *
+ * Checks incoming twist messages. If they match the current state, they are
+ * published. If their priority is higher than that of the current state, the
+ * state is changed.
+ */
+
   if (is_activated) {
 
-    // Get current behavior index
-    int index;
-    if (getBehavior(msg.label, &index)) {
+    // Get current behavior priority
+    int priority;
+    if (checkBehavior(msg.label.c_str(), &priority)) {
         ROS_ERROR("Could not find behavior - is parameter space set up?");
         return;
     }
 
     // Estop overwrites Teleop overwrites Bn
-    if (behavior_vector[index].getId() == 0)                              setState(behavior_vector[index].getId());
-    else if (behavior_vector[index].getId() == 1 && curr_state.data != 0) setState(behavior_vector[index].getId());
+    if (priority == 0) setState(msg.label.c_str());
+    else if (priority == 1 && curr_state.priority != 0) setState(msg.label.c_str());
 
     // Update behavior, publish message
-    behavior_vector[index].setMessage(msg);
-    if (msg.label == curr_state.data) {
+    curr_state.message = msg;
+    if (msg.label.c_str() == curr_state.name) {
       command_pub.publish(msg.twist);
     }
 
   } else ROS_INFO_THROTTLE(5, "Tractor not activated");
 }
 
-void MainState::setState(std_msgs::UInt8 state) {
+void MainState::setState(const char* state) {
   /*! \brief Updates state with new state.
   *
   * setState updates the current state with a given state, publishes an info
   * message, and publishes the new state to the topic /curr_state
   */
 
-  if (curr_state.data != state.data) {
-    curr_state = state;
-    ROS_INFO("Activating State %i", curr_state.data);
-    state_pub.publish(curr_state);
-  }
-}
+  if (curr_state.name != state) {
 
-void MainState::setState(int state) {
-  /*! \brief Updates state with new state.
-  *
-  * setState updates the current state with a given state, publishes an info
-  * message, and publishes the new state to the topic /curr_state
-  */
-
-  if (curr_state.data != state) {
-    curr_state.data = state;
-    ROS_INFO("Activating State %i", state);
-    state_pub.publish(curr_state);
-  }
-}
-
-void MainState::updateBehaviors() {
-  /*! \brief Updates behavior parameters
-  *
-  * updateBehaviors checks the behavior namespace on the parameter server and
-  * populates behavior_list with the behaviors listed there.
-  * TODO: Ensure no duplicates in behavior vector
-  */
-
-  int i = 0;
-  std::map<std::string, std::string> temp_list;
-
-  if(n.getParam("/behaviors", temp_list)) {
-
-    // Use iterator to populate behavior list with parameter-defined behaviors
-    std::map<std::string, std::string>::iterator iterator = temp_list.begin();
-    while (iterator != temp_list.end()){
-      auto name = (iterator->first).c_str();
-      int id = stoi(iterator->second);
-      ROS_INFO("Found node %s, id %i", name, id);
-      Behavior b(name, id);
-      behavior_vector.push_back(b);
-      iterator++;
+    int priority;
+    if (checkBehavior(state, &curr_state.priority)) {
+      curr_state.name = state;
+      ROS_INFO("Activating State %s", curr_state.name);
+      std_msgs::String msg;
+      msg.data = curr_state.name;
+      state_pub.publish(msg);
     }
   }
 }
 
-int MainState::getBehavior(int label, int* index) {
-  /*! \brief gets index of behavior with given label
-  *
-  * getBehavior loops through
-  */
+int MainState::checkBehavior(const char* name, int* priority) {
+/*
+ *@brief get priority of given behavior; error if d.n.e.
+ *
+ * @param[in]  behavior name
+ * @param[in]  pointer to priority storage variable
+ * @param[out] priority, if behavior exists
+ * return      integer error code
+ */
+  std::string full_name = getParamName(name, 0);
+  if (n.getParam(full_name, *priority)) return 0;
+  else return 1;
+}
 
-  for(int i=0;i<behavior_vector.size();i++){
-    if (behavior_vector[i].getId() == label){
-      *index = i;
-      return 0;
-    }
-  }
-  return 1;
+std::string MainState::getParamName(const char* name, int info) {
+  /*
+   * @brief: Returns global ns name for info from named behavior
+   *
+   * TODO: Failure cases pretty shitty currently
+   * @param[in] name of behavior
+   * @param[in] info to get (1 for priority, 0 for id)
+   * @return string of name
+   */
+
+   std::string full_name("/behaviors/");
+   full_name.append(name);
+   if (info == 1)      full_name.append("/priority");
+   else if (info == 0) full_name.append("/id");
+
+   return full_name;
 }
 
 int main(int argc, char** argv) {
