@@ -5,7 +5,8 @@ import numpy as np
 from sensor_msgs.msg import LaserScan, PointCloud
 from visualization_msgs.msg import Marker
 from geometry_msgs.msg import Twist, Vector3, Point, Quaternion, Point32, PoseStamped, Pose
-from std_msgs.msg import ColorRGBA, Header
+from std_msgs.msg import ColorRGBA, Header, String
+from gravl.msg import TwistLabeled
 
 class Gradient():
     def __init__(self):
@@ -14,14 +15,15 @@ class Gradient():
         self.goalSub = rospy.Subscriber('/move_base_simple/goal',PoseStamped,self.goalPointCB)
         self.barrelPoints = np.array([[10,10]])
         self.vectorVisPub = rospy.Publisher('/vector_vis',Marker,queue_size=2)
-        self.tractorTwist = rospy.Publisher('/state_controller/cmd_bahavior',Twist,queue_size=10)
+        self.tractorTwist = rospy.Publisher('/state_controller/cmd_behavior',TwistLabeled,queue_size=10)
         self.goalPoint = None
 
     def barrelCB(self,data):
-        self.barrelPoints = []
+        self.barrelPoints = np.reshape([], (0,2))
         for i in data.points:
-            self.barrelPoints.append([i.x,i.y])
+            self.barrelPoints = np.vstack((self.barrelPoints, [i.x,i.y]))
         self.barrelPoints = np.array(self.barrelPoints)
+        print(self.barrelPoints)
 
     def goalPointCB(self,data):
         self.goalPoint = np.array([data.pose.position.x, data.pose.position.y])
@@ -34,19 +36,24 @@ class Gradient():
         @return 1D numpy array with the gradient at the origin
         '''
 
+        obstacles = self.barrelPoints
+        goal = self.goalPoint
         dx = 0.5
         samples = 3
         center = samples // 2
         lattice = (np.arange(samples) - center) * dx
         mesh = np.array(np.meshgrid(lattice, lattice))
 
-        repelSfc = np.log(np.linalg.norm(np.repeat(
-            mesh[np.newaxis], self.barrelPoints.shape[0], 0).transpose(3, 2, 0, 1) - self.barrelPoints, axis=-1)).sum(2)
-        attrSfc = -10*np.log(np.linalg.norm(self.goalPoint - mesh.T, axis=2))
+        sfc = 0
 
-        gradients = np.array(np.gradient(repelSfc + attrSfc, dx))
+        for obstacle in obstacles:
+            sfc += np.log(np.linalg.norm(obstacle - mesh.T, axis=2))
 
+        sfc -= np.log(np.linalg.norm(goal - mesh.T, axis=2))
+
+        gradients = np.array(np.gradient(sfc, dx))
         return gradients[:, center, center]
+
 
     def display(self,vector):
         vectorMarker = Marker() # marks the path that the tractor will take
@@ -65,9 +72,11 @@ class Gradient():
                 vector = np.array([0,0])
             else:
                 vector = self.potential()
-                tracTwist = Twist(Vector3(vector[0],0,0),Vector3(0,0,vector[1]))
-                self.tractorTwist.publish(tracTwist)
-                self.display(vector)
+            tracTwist = Twist(Vector3(vector[0],0,0),Vector3(0,0,vector[1]))
+
+            tracTwistLabel = TwistLabeled(Header(),"gauntlet",tracTwist)            
+            self.tractorTwist.publish(tracTwistLabel)
+            self.display(vector)
 
 if __name__ == '__main__':
     grad = Gradient()

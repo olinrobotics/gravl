@@ -22,7 +22,7 @@ from ackermann_msgs.msg import AckermannDrive
 class coneDetection():
     def __init__(self):
         rospy.init_node('ConeDetection', anonymous=True)
-        self.frontlaserSub = rospy.Subscriber('/front/scan',LaserScan,self.frontLidarCB) # Subscribes to the front LIDAR, calls the callback function
+        self.frontlaserSub = rospy.Subscriber('/scan',LaserScan,self.frontLidarCB) # Subscribes to the front LIDAR, calls the callback function
         self.downToGround = 1.2 # distance to the ground
         self.threshold = 0.03 # distance that a point has to be close to the expected circle to be counted
         self.frontData = None # initializes the front laser data
@@ -56,31 +56,32 @@ class coneDetection():
     def pointsToCircle(self):
         centers = []
         self.points = []
-        for i in range(800): # runs through 800 combinations, STILL NEEDS TO BE CALIBRATED, TOO HIGH NOW
-            rand2Pts = random.sample(self.realPoints, 2) # selects 2 random points from the points in the range
-            xCenter,yCenter = self.getCenterFrom2Points(rand2Pts) # gets a center of the circle from the 2 points
-            if(xCenter != 0 or yCenter != 0):
-                eligiblePoints = 0  
-                for i in self.realPoints:
-                    error = sqrt((i[0]-xCenter)**2 + (i[1]-yCenter)**2) - self.radius
-                    if(-self.threshold < error and error < self.threshold):
-                        eligiblePoints += 1
-                if eligiblePoints > 20:
-                    redundantCenter = False
-                    for i in centers:
-                        if((i[0]-xCenter)**2 + (i[1] - yCenter)**2 < 0.22**2):
-                            redundantCenter = True
-                    if(not redundantCenter):
-                        centers.append((xCenter,yCenter,eligiblePoints))
-                        p = Point32()
-                        p.x = xCenter
-                        p.y = yCenter
-                        self.points.append(p)
-        if(centers == []):
-            return "Failure"
-        else:
+        if(len(self.realPoints)>2):
+            for i in range(800): # runs through 800 combinations, STILL NEEDS TO BE CALIBRATED, TOO HIGH NOW
+                rand2Pts = random.sample(self.realPoints, 2) # selects 2 random points from the points in the range
+                xCenter,yCenter = self.getCenterFrom2Points(rand2Pts) # gets a center of the circle from the 2 points
+                if(xCenter != 0 or yCenter != 0):
+                    eligiblePoints = 0  
+                    for i in self.realPoints:
+                        error = sqrt((i[0]-xCenter)**2 + (i[1]-yCenter)**2) - self.radius
+                        if(-self.threshold < error and error < self.threshold):
+                            eligiblePoints += 1
+                    if eligiblePoints > 20:
+                        redundantCenter = False
+                        for i in centers:
+                            if((i[0]-xCenter)**2 + (i[1] - yCenter)**2 < 0.22**2):
+                                redundantCenter = True
+                        if(not redundantCenter):
+                            centers.append((xCenter,yCenter,eligiblePoints))
+                            p = Point32()
+                            p.x = xCenter
+                            p.y = yCenter
+                            self.points.append(p)
+            if(centers == []):
+                return "Failure"
+            else:
 
-            return centers
+                return centers
 
     def getCenterRadiusFrom3Points(self,points):
         # Unused method to get the center and radius from 3 points
@@ -155,7 +156,7 @@ class coneDetection():
             self.determineNonGroundPoints()
             self.circles = self.pointsToCircle()
             self.publish()
-            self.display()
+            #self.display()
             self.updateRate.sleep()
 
 
