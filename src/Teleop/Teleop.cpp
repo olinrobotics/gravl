@@ -9,7 +9,7 @@
  * @email carl.moser@students.olin.edu
  * @maintainer Kubo
  * @email olingravl@gmail.com
- * @version 1.1.0
+ * @version 1.2.0
  *
  * Takes input from controller specified by controllerType param, outputs to
  * main state controller - handles movement messages and state change commands
@@ -19,6 +19,7 @@
  */
 
 #include "Teleop.h"
+#include <std_msgs/String.h>
 
 /*
  * @brief Advertises & subscribes topics, loads joystick settings
@@ -36,7 +37,7 @@ Teleop::Teleop()
 , activate_pub(n.advertise<std_msgs::Bool>("/state_controller/cmd_activate", 1))
 , drivemsg_pub(n.advertise<gravl::TwistLabeled>("/state_controller/cmd_behavior", 1))
 , softestop_pub(n.advertise<std_msgs::Bool>("/softestop", 1))
-, state_pub(n.advertise<std_msgs::UInt8>("/state_controller/cmd_state", 1))
+, state_pub(n.advertise<std_msgs::String>("/state_controller/cmd_state", 1))
 , estop(false)
 , isActivated(false)
 , activateButton(0)
@@ -46,7 +47,12 @@ Teleop::Teleop()
 , activateButtonFlag(false)
 , behaviorAxisFlag(false)
 {
-  drive_msg.label = 1; // TODO(connor@students): Actually get label
+  // Init and sort behavior list, current behavior
+  behaviors = getBehaviors(n);
+  sort(behaviors.begin(), behaviors.end(), compareBehaviorId);
+  state_behavior = behaviors[0];
+
+  drive_msg.label = "teleop";
   n.param<std::string>("controllerType", controllerType, "gamepad");
   if (controllerType == "gamepad"){
     activateButton = 0;
@@ -60,17 +66,17 @@ Teleop::Teleop()
   }
 }
 
-/*
- * @brief Callback for /joy topic
- *
- * Runs upon each receipt of msg from /joy. Activates, disactivates,
- and estops based on button inputs. Changes state based on axis inputs.
- Passes through Twist messages based on joystick inputs unless estopped
- or disactivated, or message is same as message stored in drive_msg attr.
- *
- * @param[in] joy Message read from /joy topic
- */
 void Teleop::joyCB(const sensor_msgs::Joy::ConstPtr &joy){
+  /*
+   * @brief Callback for /joy topic
+   *
+   * Runs upon each receipt of msg from /joy. Activates, disactivates,
+   and estops based on button inputs. Changes state based on axis inputs.
+   Passes through Twist messages based on joystick inputs unless estopped
+   or disactivated, or message is same as message stored in drive_msg attr.
+   *
+   * @param[in] joy Message read from /joy topic
+   */
   //check for estop
   if(joy->buttons[estopButton] && !estop && !estopButtonFlag){
     activate(false);
@@ -104,7 +110,6 @@ void Teleop::joyCB(const sensor_msgs::Joy::ConstPtr &joy){
     }
     //check for statechange axis release
     if(joy->axes[behaviorAxis] && behaviorAxisFlag){
-      incrementState(joy->axes[behaviorAxis]);
       behaviorAxisFlag = false;
     }
 
@@ -143,54 +148,61 @@ void Teleop::joyCB(const sensor_msgs::Joy::ConstPtr &joy){
   }
 }
 
-/*
- * @brief publishes software estop command
- * @param[in] stop State of the softestop to publish
- */
 void Teleop::softestop(bool stop){
+  /*
+   * @brief publishes software estop command
+   * @param[in] stop State of the softestop to publish
+   */
   stop_msg.data = stop;
   softestop_pub.publish(stop_msg);
 }
 
-/*
- * @brief publishes activation command
- * @param[in] act State of the activate function to publish
- */
 void Teleop::activate(bool act){
+  /*
+   * @brief publishes activation command
+   * @param[in] act State of the activate function to publish
+   */
   activate_msg.data = act;
   activate_pub.publish(activate_msg);
 }
 
-/*
- * @brief publishes behavior statechange command
- * @param[in] behavior state to publish
- */
- void Teleop::state(int state){
-   state_msg.data = state;
-   state_pub.publish(state_msg);
+void Teleop::state(Behavior behavior){
+   /*
+    * @brief publishes behavior statechange command
+    * @param[in] behavior state to publish
+    */
+   state_behavior = behavior;
+   auto msg = std_msgs::String();
+   msg.data = behavior.name.c_str();
+   state_pub.publish(msg);
  }
 
-/*
- * @brief increments state in given direction
- *
- * Updates state to next numeric state or previous numeric state.
- * Implements wrapping of states, so incrementing down from 0th
- * state updates to nth state.
- * TODO(connor@students): Remove hardcoded number of states
- *
- * @param[in] direction to increment based on sign
- */
-void Teleop::incrementState(float dir) {
-  int s = state_msg.data;
-  if(dir < 0) {
-    s = state_msg.data + 1;
-    if (s > 2) s = 0;
-  }
-  if(dir > 0) {
-    s = state_msg.data - 1;
-    if (s < 0) s = 2;
-  }
-  state(s);
+int Teleop::incrementState(float dir) {
+  /*
+   * @brief increments state in given direction
+   *
+   * Updates state to next numeric state or previous numeric state.
+   * Implements wrapping of states, so incrementing down from 0th
+   * state updates to nth state.
+   * TODO(connor@students): Remove hardcoded number of states
+   *
+   * @param[in] direction to increment based on sign
+   * return integer error code
+   */
+  int s = state_behavior.id;
+  Behavior b_new;
+
+  // If incrementing
+  if(dir > 0) b_new = behaviors[(s + 1) % behaviors.size()];
+
+  // If decrementing (wrap to remove vals < 0)
+  else if (dir < 0) {
+    if (s==0) s = behaviors.size();
+    b_new = behaviors[(s - 1)];
+  } else return 1;
+
+  state(b_new);
+  return 0;
 }
 
 int main(int argc, char **argv){

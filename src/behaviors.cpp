@@ -31,3 +31,15 @@ std::vector<Behavior> getBehaviors(ros::NodeHandle n)
     }
   return behaviors;
 }
+
+bool compareBehaviorId(Behavior b1, Behavior b2) {
+  /*
+   * @brief returns if b1.id < b2.id
+   *
+   * @param[in] 1st behavior to compare
+   * @param[in] 2nd behavior to compare
+   * @return bool if b1 < b2
+   */
+
+   return (b1.id < b2.id);
+}

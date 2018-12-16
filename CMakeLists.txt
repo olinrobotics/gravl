@@ -148,7 +148,7 @@ add_executable(Watchdog src/Watchdog/Watchdog.cpp)
 
 ## Specify libraries to link a library or executable target against
 target_link_libraries( Camera ${OpenCV_LIBS} ${catkin_LIBRARIES} )
-target_link_libraries( Teleop ${catkin_LIBRARIES} )
+target_link_libraries( Teleop ${catkin_LIBRARIES} gravl)
 target_link_libraries( DriveState ${catkin_LIBRARIES} )
 target_link_libraries( MainState ${catkin_LIBRARIES} gravl )
 # target_link_libraries( BehaviorEx ${catkin_LIBRARIES} )
