@@ -13,8 +13,8 @@
 #include <sensor_msgs/Joy.h>
 #include <gravl/TwistLabeled.h>
 #include <std_msgs/Bool.h>
-#include <std_msgs/UInt8.h>
 #include <string.h>
+#include <gravl/behaviors.h>
 
 class Teleop{
 public:
@@ -28,14 +28,15 @@ private:
   ros::Publisher state_pub;
   std_msgs::Bool stop_msg;
   std_msgs::Bool activate_msg;
-  std_msgs::UInt8 state_msg;
+  Behavior state_behavior;
   gravl::TwistLabeled drive_msg;
+  std::vector<Behavior> behaviors;
 
   void joyCB(const sensor_msgs::Joy::ConstPtr &joy);
   void softestop(bool stop);
   void activate(bool aut);
-  void state(int state);
-  void incrementState(float dir);
+  void state(Behavior behavior);
+  int incrementState(float dir);
   std::string controllerType;
   bool estop;
   bool isActivated;
