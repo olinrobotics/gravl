@@ -14,6 +14,7 @@ class Gradient():
         self.goalSub = rospy.Subscriber('/move_base_simple/goal',PoseStamped,self.goalPointCB)
         self.barrelPoints = np.array([[10,10]])
         self.vectorVisPub = rospy.Publisher('/vector_vis',Marker,queue_size=2)
+        self.tractorTwist = rospy.Publisher('/state_controller/cmd_bahavior',Twist,queue_size=10)
         self.goalPoint = None
 
     def barrelCB(self,data):
@@ -64,7 +65,8 @@ class Gradient():
                 vector = np.array([0,0])
             else:
                 vector = self.potential()
-                rospy.loginfo(vector)
+                tracTwist = Twist(Vector3(vector[0],0,0),Vector3(0,0,vector[1]))
+                self.tractorTwist.publish(tracTwist)
                 self.display(vector)
 
 if __name__ == '__main__':
