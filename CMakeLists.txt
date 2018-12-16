@@ -145,6 +145,7 @@ add_executable( road_detection src/road_detection.cpp )
 add_executable(imu_safety src/imu_safety/ImuSafety.cpp)
 add_executable(imu_base src/ImuBase/ImuBase.cpp)
 add_executable(Watchdog src/Watchdog/Watchdog.cpp)
+add_executable(BehaviorEx src/BehaviorEx/BehaviorEx.cpp)
 
 ## Specify libraries to link a library or executable target against
 target_link_libraries( Camera ${OpenCV_LIBS} ${catkin_LIBRARIES} )
@@ -160,7 +161,7 @@ target_link_libraries( road_detection ${OpenCV_LIBS} )
 target_link_libraries(imu_safety ${catkin_LIBRARIES})
 target_link_libraries(imu_base ${catkin_LIBRARIES})
 target_link_libraries(Watchdog ${catkin_LIBRARIES})
-
+target_link_libraries(BehaviorEx ${catkin_LIBRARIES})
 
 ## Add cmake target dependencies of the executable
 ## same as for the library above
