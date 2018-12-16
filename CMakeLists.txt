@@ -63,6 +63,7 @@ add_message_files(
   Hemisphere.msg
   RoboClawStats.msg
   ImuSafety.msg
+  TwistLabeled.msg
 )
 
 ## Generate services in the 'srv' folder
@@ -135,6 +136,7 @@ include_directories(
 add_executable( Camera src/Camera/Camera.cpp )
 add_executable( Teleop src/Teleop/Teleop.cpp )
 add_executable( DriveState src/DriveState/DriveState.cpp )
+add_executable( MainState src/MainState/MainState.cpp )
 add_executable( Driver src/Driver/Driver.cpp )
 add_executable( Waypoint src/Waypoint/Waypoint.cpp )
 add_executable( Hemisphere src/Hemisphere/Hemisphere.cpp )
@@ -147,6 +149,7 @@ add_executable(imu_base src/ImuBase/ImuBase.cpp)
 target_link_libraries( Camera ${OpenCV_LIBS} ${catkin_LIBRARIES} )
 target_link_libraries( Teleop ${catkin_LIBRARIES} )
 target_link_libraries( DriveState ${catkin_LIBRARIES} )
+target_link_libraries( MainState ${catkin_LIBRARIES} )
 target_link_libraries( Driver ${catkin_LIBRARIES} )
 target_link_libraries( Waypoint ${catkin_LIBRARIES} )
 target_link_libraries( Hemisphere ${catkin_LIBRARIES} ${Boost_LIBRARIES} -lrt )
@@ -170,8 +173,8 @@ add_dependencies(imu_safety ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTE
 #  add_dependencies( gps_map ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS} )
 #  target_link_libraries( gps_map
 #    Qt5::Widgets
-#    Qt5::Qml 
-#    Qt5::Quick 
+#    Qt5::Qml
+#    Qt5::Quick
 #    Qt5::Positioning
 #    ${catkin_LIBRARIES} )
 #ENDIF()
