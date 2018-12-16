@@ -1,0 +1,19 @@
+<!--
+@file simulation.launch
+Tractor simulation ROSlaunch file
+@brief: Runs tractor simulation with necessary components
+@version: 1.0
+-->
+
+<launch>
+  <!-- Teleop -->
+  <include file="$(find gravl)/launch/teleop.launch"/>
+  <!-- State Controller -->
+  <include file="$(find gravl)/launch/mainstate.launch"/>
+  <!-- Safety Node -->
+  <!-- TODO -->
+  <!-- Static Transforms -->
+  <include file="$(find gravl)/launch/localization.launch"/>
+  <!-- Simulation -->
+  <include file="$(find tractor_sim_gazebo)/launch/tractor_sim.launch"/>
+</launch>
