@@ -7,12 +7,7 @@
 #include <std_msgs/Bool.h>
 #include <std_msgs/String.h>
 #include <vector>
-
-struct Behavior {
-    const char* name = "safety";
-    int priority = 0;
-    gravl::TwistLabeled message = gravl::TwistLabeled();
-};
+#include <gravl/behaviors.h>
 
 class MainState{
 public:
@@ -26,16 +21,16 @@ private:
   ros::Publisher command_pub;
   ros::Rate rate;
 
-  std::vector<Behavior> behavior_vector;
-  bool is_activated;
+  std::vector<Behavior> behaviors;
   Behavior curr_state;
+  bool is_activated;
 
   void stateCB(const std_msgs::String& msg);
   void activateCB(const std_msgs::Bool& msg);
   void behaviorCB(const gravl::TwistLabeled& msg);
-  void setState(const char* state);
-  int checkBehavior(const char* name, int* priority);
-  std::string getParamName(const char* name, int info);
+  int setState(const char* state);
+  int setActivation(bool activate);
+  int checkBehavior(const char* name, int* index);
 };
 
 #endif //MAIN_STATE_H
