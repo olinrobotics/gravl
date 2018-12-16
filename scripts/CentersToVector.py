@@ -56,7 +56,7 @@ class Gradient():
         for obstacle in obstacles:
             sfc += np.log(np.linalg.norm(obstacle - mesh.T, axis=2))
 
-        sfc -= np.log(np.linalg.norm(goal - mesh.T, axis=2))
+        sfc -= 10*np.log(np.linalg.norm(goal - mesh.T, axis=2))
 
         gradients = np.array(np.gradient(sfc, dx))
         return gradients[:, center, center]
