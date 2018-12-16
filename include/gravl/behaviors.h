@@ -15,4 +15,3 @@ struct Behavior
 };
 
 std::vector<Behavior> getBehaviors(ros::NodeHandle n);
-bool compareBehaviorId(Behavior b1, Behavior b2);
