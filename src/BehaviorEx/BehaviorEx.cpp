@@ -8,10 +8,8 @@
  */
 
  #include "BehaviorEx.h"          // header
- #include <ros/console.h>         // used for logging
  #include <geometry_msgs/Twist.h> // node lisens to twist messages
  #include <gravl/TwistLabeled.h>  // node publishes twistlabeled messages
- #include <std_msgs/String.h>
 
  BehaviorEx::BehaviorEx() {
     twist_subscriber = n.subscribe("/ex_topic", 1, &BehaviorEx::BehaviorEx::twistCB, this);
@@ -33,7 +31,7 @@ void BehaviorEx::twistCB(const geometry_msgs::Twist& msg) {
 }
 
 int main (int argc, char** argv) {
-  ros::init(argc, argv, "BehaviorEx");  //Initialize the ROS node
+  ros::init(argc, argv, "BehaviorEx");  // Initialize the ROS node
   BehaviorEx behavior;                  // Initialize a behavior class instance
   ros::spin();                          // Continuously update the ROS loop
 }

@@ -22,7 +22,6 @@ class BehaviorEx {
     ros::Subscriber twist_subscriber;
     ros::Publisher twist_publisher;
 
-    const char* name;
     gravl::TwistLabeled current_message;
 
     void twistCB(const geometry_msgs::Twist& msg);
