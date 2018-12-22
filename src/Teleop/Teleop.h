@@ -13,6 +13,7 @@
 #include <sensor_msgs/Joy.h>
 #include <gravl/TwistLabeled.h>
 #include <std_msgs/Bool.h>
+#include <std_msgs/UInt8.h>
 #include <string.h>
 #include <gravl/behaviors.h>
 
