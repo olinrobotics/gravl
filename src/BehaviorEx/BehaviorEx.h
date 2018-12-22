@@ -16,7 +16,7 @@
 
 class BehaviorEx {
   public:
-    explicit BehaviorEx();
+    BehaviorEx();
   private:
     ros::NodeHandle n;
     ros::Subscriber twist_subscriber;

@@ -109,7 +109,7 @@ catkin_package(
   INCLUDE_DIRS /usr/include/boost/algorithm include
   LIBRARIES gravl
 #  CATKIN_DEPENDS roscpp rospy std_msgs
-  DEPENDS message_runtime system_lib lrt include
+  DEPENDS message_runtime system_lib lrt
 )
 
 ###########
@@ -136,7 +136,7 @@ add_executable( Camera src/Camera/Camera.cpp )
 add_executable( Teleop src/Teleop/Teleop.cpp )
 add_executable( DriveState src/DriveState/DriveState.cpp )
 add_executable( MainState src/MainState/MainState.cpp)
-# add_executable( BehaviorEx src/BehaviorEx/BehaviorEx.cpp)
+add_executable( BehaviorEx src/BehaviorEx/BehaviorEx.cpp) # Executable for example
 add_executable( Driver src/Driver/Driver.cpp )
 add_executable( Waypoint src/Waypoint/Waypoint.cpp )
 add_executable( Hemisphere src/Hemisphere/Hemisphere.cpp )
@@ -152,7 +152,7 @@ target_link_libraries( Camera ${OpenCV_LIBS} ${catkin_LIBRARIES} )
 target_link_libraries( Teleop ${catkin_LIBRARIES} gravl)
 target_link_libraries( DriveState ${catkin_LIBRARIES} )
 target_link_libraries( MainState ${catkin_LIBRARIES} gravl )
-# target_link_libraries( BehaviorEx ${catkin_LIBRARIES} )
+target_link_libraries( BehaviorEx ${catkin_LIBRARIES} )
 target_link_libraries( Driver ${catkin_LIBRARIES} )
 target_link_libraries( Waypoint ${catkin_LIBRARIES} )
 target_link_libraries( Hemisphere ${catkin_LIBRARIES} ${Boost_LIBRARIES} -lrt )
