@@ -1,0 +1,6 @@
+<launch>
+	<include file="$(find gravl)/launch/teleop.launch"/>
+	<include file="$(find gravl)/launch/mainstate.launch"/>
+	<node pkg="gravl" type="ConeDetection.py" name="ConeDetection"/>
+	<node pkg="gravl" type="CentersToVector.py" name="Gradient"/>
+</launch>
