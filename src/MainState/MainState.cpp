@@ -3,7 +3,7 @@
  * @author Connor Novak
  * @date 2018-11-13
  *
- * Subscribes to /cmd_behavior, publishes msgs to /cmd_vel based on tractor's
+ * Subscribes to /cmd_behavior, publishes msgs to /cmd_twist based on tractor's
  * current state.
  */
 
