@@ -1,198 +1,143 @@
-/**********************************************************************
- * KUBO Hindbrain Code (Teensy 3.5)
- * @file hind_brain.ino
- * @author: Connor Novak
- * @email: connor.novak@students.olin.edu
- * @version: 1.3
- *
- * Basic OAK_compatible control of velocity actuator and
- * steering actuator through ackermann steering messages
- * over /drive, autonomous activation through boolean
- * message over /auto, estop capability over /softestop
- **********************************************************************/
+/**
+  hind_brain.ino
+  Purpose: Provides firmware interface from software to hardware, runs
+  realtime control/safety loop
 
-// Include Libraries
-#include "RoboClaw.h"                       // Used for motor controller interface
-#include <Arduino.h>                        // Used for Arduino functions
-#include "ros.h"                            // Used for rosserial communication
-#include "ackermann_msgs/AckermannDrive.h"  // Used for rosserial steering message
-#include "estop.h"                          // Used to implement estop class
-#include "soft_switch.h"                    // Used to implement auto switch
+  @author Connor Novak
+  @email connor.novak@students.olin.edu
+  @version 0.1.0 18/10/24
+*/
+
+// Header file
+#include "hind_brain.h"
 
 // Declare switch & estop
 Estop *e;
 OAKSoftSwitch *l;
 
-// Def/Init Constants ----------C----------C----------C
-
-// Physical Pins
-const byte AUTO_LED_PIN = 3;
-const byte ESTOP_PIN = 2;
-
-// RoboClaw & Settings
-#define RC_SERIAL Serial1
-#define address 0x80
-#define ROBOCLAW_UPDATE_RATE 500
-RoboClaw rc(&Serial1, 10000);
-
-// General Constants
-#define DEBUG TRUE
-const int VEL_HIGH = 2048;
-const int VEL_LOW = 190;
-const int VEL_CONTROL_RANGE = 2;    // Range of incoming signals
-const int STEER_HIGH = 1200;
-const int STEER_LOW = 600;
-const int STEER_CONTROL_RANGE = 90;
-const byte VEL_FIDELITY = 10;       // Stepping sub-division of actuator
-const byte STEER_FIDELITY = 1;
-
-
-// Def/Init Global Variables ----------V----------V----------V
+// RoboClaws
+auto rc1_serial = &Serial1;
+RoboClaw rc1(rc1_serial, RC_TIMEOUT);
+auto rc2_serial = &Serial2;
+RoboClaw rc2(rc2_serial, RC_TIMEOUT);
 
 // States
 boolean isEStopped = false;
 boolean isAuto = false;
 
-int prevVelMsg;
-unsigned int velMsg = VEL_HIGH;                     // High vel var = low vel
-int prevSteerMsg;
-signed int steerMsg = (STEER_HIGH + STEER_LOW) / 2; // Straight steer in middle
-unsigned long prevMillis = millis();
+// Global Variables
+unsigned int velMsg = VEL_CMD_MIN;        // Initialize velocity to 0
+signed int steerMsg = STEER_CMD_CENTER;   // Initialize steering to straight
+char buf[7];
+unsigned long watchdog_timer;
 
 
-/*
- * FUNCTION: ackermannCB()
- * DESC: Called upon msg receipt from /drive; saves data to global vars
- * ARGS: ros ackermanndrive message
- * RTNS: none
- */
-void ackermannCB(const ackermann_msgs::AckermannDrive &drive){
-  steerMsg = steerConvert(drive.steering_angle);
-  velMsg = velConvert(drive.speed);
-  
-} //ackermannCB()
-
-
-// Declare ROS node & subscriber
+// ROS nodes, publishers, subscribers
 ros::NodeHandle nh;
-ros::Subscriber<ackermann_msgs::AckermannDrive> sub("drive", &ackermannCB);
+ackermann_msgs::AckermannDrive curr_drive_pose;
+ros::Subscriber<ackermann_msgs::AckermannDrive> sub("/cmd_vel", &ackermannCB);
+ros::Subscriber<std_msgs::Empty> ping("/safety_clock", &watchdogCB);
+ros::Publisher pub_drive("/curr_drive", &curr_drive_pose);
 
-
-/*
- * FUNCTION: setup()
- * DESC: runs once on startup
- * ARGS: none
- * RTNS: none
- */
-void setup() { // ----------S----------S----------S----------S----------S
-
-  //Open serial communication with roboclaw
-  rc.begin(38400);
-
-  // Set up ROS node and initialize subscriber
-  nh.getHardware()->setBaud(115200);
-  nh.initNode(); // Initialize ROS nodehandle
-  nh.subscribe(sub);
+void setup() {
 
   // Initialize estop and auto-switch
   e = new Estop(&nh, ESTOP_PIN, 1);
   pinMode(ESTOP_PIN, OUTPUT);
-  l = new OAKSoftSwitch(&nh, "/auto", AUTO_LED_PIN);
-
-  // Provide estop and estart functions
   e->onStop(eStop);
   e->offStop(eStart);
+  l = new OAKSoftSwitch(&nh, "/auto", AUTO_LED_PIN);
 
-  // TODO Operator verify that actuators are in default positions
+  //Stop engine for safety
+  stopEngine();
+
+  //Open serial communication with roboclaw
+  rc1.begin(38400);
+
+  // Set up ROS node, subscribers, publishers
+  nh.getHardware()->setBaud(115200);
+  nh.initNode();
+  nh.subscribe(sub);
+  nh.subscribe(ping);
+  nh.advertise(pub_drive);
+
+  // Wait for connection
+  while(true){
+    if(nh.connected() && (millis() - watchdog_timer < WATCHDOG_TIMEOUT)) {break;}
+    nh.spinOnce();
+    delay(1);
+  }
+
+  // Send message of connectivity
+  // TODO: make wait until motors reach default positions
+  delay(500);
+  nh.loginfo("Hindbrain connected; Setting motor positions to neutral.");
+  delay(500);
+
+  // TODO Operator verify that all pins are removed
 
   // Set actuators to default positions
-  rc.SpeedAccelDeccelPositionM1(address, 0, 300, 0, velMsg, 0);
-  prevVelMsg = velMsg;
-  rc.SpeedAccelDeccelPositionM2(address, 0, 500, 0, steerMsg, 0);
-  prevSteerMsg = steerMsg;
+  rc1.SpeedAccelDeccelPositionM1(RC1_ADDRESS, 0, 300, 0, velMsg, 1);
+  rc1.SpeedAccelDeccelPositionM2(RC1_ADDRESS, 0, 500, 0, steerMsg, 1);
 
-} //setup()
+  watchdog_timer = millis();
+} // setup()
 
+void loop() {
 
-/*
- * FUNCTION: loop()
- * DESC:  loops constantly
- * ARGS: none
- * RTNS: none
-*/
-void loop() { // ----------L----------L----------L----------L----------L
-
-  // Checks for connectivity with mid-brain and updates estopped state
+  // Checks for connectivity with mid-brain
   checkSerial(&nh);
-  
-  // Sends commands to RoboClaw every ROBOCLAW_UPDATE_RATE milliseconds
-  if (millis() - prevMillis > ROBOCLAW_UPDATE_RATE && !isEStopped) {
-    updateRoboClaw(velMsg, steerMsg);
 
+  // Send updated motor commands to roboclaws
+  if (!isEStopped) {
+    updateRoboClaw(velMsg, steerMsg);
+  } else {
+    stopRoboClaw(&rc1);
   }
-    
+
+  // Update current published pose
+  updateCurrDrive();
+
   // Updates node
   nh.spinOnce();
   delay(1);
 
-} //loop()
+} // loop()
 
+void ackermannCB(const ackermann_msgs::AckermannDrive &drive) {
+  // Callback for ackermann messages; saves data to global vars
+  steerMsg = steerAckToCmd(drive.steering_angle);
+  velMsg = velAckToCmd(drive.speed);
 
-// ----------F----------F----------F----------F----------F----------F----------F
+} // ackermannCB()
 
-/*
- * FUNCTION: checkSerial()
- * DESC: Estops if node isn't connected
- * ARGS: nodehandle to check for connectivity
- * RTNS: none
- */
- void checkSerial(ros::NodeHandle *nh) {
+void watchdogCB(const std_msgs::Empty &msg) {
+  watchdog_timer = millis();
+} // watchdogCB()
 
-  // If node isn't connected and tractor isn't estopped, estop
-  if(!nh->connected()) {
+void checkSerial(ros::NodeHandle *nh) {
+  // Given node, estops if watchdog has timed out
+  // https://answers.ros.org/question/124481/rosserial-arduino-how-to-check-on-device-if-in-sync-with-host/
+
+  if(millis() - watchdog_timer >= WATCHDOG_TIMEOUT) {
     if(!isEStopped) {
+      nh->logerror("Lost connectivity . . .");
       eStop();
     }
   }
- } //checkSerial()
+} // checkSerial()
 
-
-/*
- * FUNCTION: updateRoboClaw()
- * DESC: Sends current velocity and steering vals to RoboClaw; called at ROBOCLAW_UPDATE_RATE
- * ARGS: integer velocity, integer steering angle
- * RTNS: none
-*/
 void updateRoboClaw(int velMsg, int steerMsg) {
+  // Given velocity and steering message, sends vals to RoboClaw
+  // TODO: update to take roboclaw as arg
 
-  //Calculate step sizes based on fidelity
-  int steerStep = (STEER_HIGH - STEER_LOW) / STEER_FIDELITY;
-  int velStep = (VEL_HIGH - VEL_LOW) / VEL_FIDELITY;
-
-  //Update velMsg based on step
-  stepActuator(&velMsg, &prevVelMsg, velStep);
-  stepActuator(&steerMsg, &prevSteerMsg, steerStep);
-  
-  // Update prev msgs
-  prevVelMsg = velMsg;
-  prevSteerMsg = steerMsg;
-  
   // Write velocity to RoboClaw
-  rc.SpeedAccelDeccelPositionM1(address, 100000, 1000, 0, velMsg, 0);
+  rc1.SpeedAccelDeccelPositionM1(RC1_ADDRESS, 100000, 1000, 0, velMsg, 1);
 
   // Write steering to RoboClaw if tractor is moving, else returns debug msg
-  if (velMsg < VEL_HIGH) {
-    rc.SpeedAccelDeccelPositionM2(address, 0, 1000, 0, steerMsg, 0);
-  }
-  else {
-    #ifdef DEBUG
-    char i[48];
-    snprintf(i, sizeof(i), "ERR: tractor not moving, steering message failed");
-    nh.loginfo(i);
-    #endif //DEBUG
-  }
-
-  prevMillis = millis();  // Reset timer
+  // TODO: add sensor for motor on or not; this is what actually matters.
+  if (velMsg < VEL_CMD_MIN - 100) {rc1.SpeedAccelDeccelPositionM2(RC1_ADDRESS, 0, 1000, 0, steerMsg, 1);}
+  else {nh.logwarn("Tractor not moving, steering message rejected");}
 
   // roslog msgs if debugging
   #ifdef DEBUG
@@ -201,121 +146,89 @@ void updateRoboClaw(int velMsg, int steerMsg) {
     nh.loginfo(j);
   #endif //DEBUG
 
-} //updateRoboClaw()
+} // updateRoboClaw()
 
+void stopRoboClaw(RoboClaw *rc) {
+  // Given roboclaw to stop, publishes messages such that Roboclaw is safe
 
-/*
- * FUNCTION: steerConvert()
- * DESC: Converts ackermann steering angle to motor encoder value for RoboClaw
- * ARGS: float ackermann steering angle
- * RTNS: converted encoder steering angle
- */
-int steerConvert(float ack_steer){
+  // Send velocity pedal to stop position
+  rc->SpeedAccelDeccelPositionM1(RC1_ADDRESS, 100000, 1000, 0, VEL_CMD_MIN, 0);
 
-  // Convert from range of input signal to range of output signal, then shift signal
-  ack_steer = ack_steer * ((STEER_HIGH - STEER_LOW) / STEER_CONTROL_RANGE) + (STEER_HIGH + STEER_LOW) / 2;
+  // Stop steering motor
+  rc->SpeedM2(RC1_ADDRESS, 0);
 
-  // Safety limits for signal (double safety, RoboClaw already does this)
-  if (ack_steer > STEER_HIGH) {
-    ack_steer = STEER_HIGH;
+} // stopRoboClaw
+
+void updateCurrDrive() {
+  // Read encoder values, convert to ackermann drive, publish
+  // TODO Fix mapping for steering
+
+  uint32_t encoder1, encoder2;
+  rc1.ReadEncoders(RC1_ADDRESS, encoder1, encoder2);
+  curr_drive_pose.speed = mapPrecise(encoder1, VEL_CMD_MIN, VEL_CMD_MAX, VEL_MSG_MIN, VEL_MSG_MAX);
+  curr_drive_pose.steering_angle = mapPrecise(encoder2, STEER_CMD_RIGHT, STEER_CMD_LEFT, STEER_MSG_RIGHT, STEER_MSG_LEFT);
+  pub_drive.publish(&curr_drive_pose);
+
+} // updateCurrDrive()
+
+int steerAckToCmd(float ack_steer){
+  //  Given ackermann steering message, returns corresponding RoboClaw command
+
+  // Convert from input message to output command
+  if (ack_steer > STEER_MSG_CENTER) {ack_steer = map(ack_steer, STEER_MSG_CENTER, STEER_MSG_LEFT, STEER_CMD_CENTER, STEER_CMD_LEFT);}
+  else if (ack_steer < STEER_MSG_CENTER) {ack_steer = map(ack_steer, STEER_MSG_RIGHT, STEER_MSG_CENTER, STEER_CMD_RIGHT, STEER_CMD_CENTER);}
+  else { ack_steer = STEER_CMD_CENTER;}
+
+  // Safety limits for signal
+  if (ack_steer < STEER_CMD_LEFT) {
+    ack_steer = STEER_CMD_LEFT;
+    nh.logwarn("ERR: oversteering left");
   }
-  else if (ack_steer < STEER_LOW) {
-    ack_steer = STEER_LOW;
+  else if (ack_steer > STEER_CMD_RIGHT) {
+    ack_steer = STEER_CMD_RIGHT;
+    nh.logwarn("ERR: oversteering right");
   }
-
-  // Switches steering dir
-  ack_steer = STEER_HIGH - (ack_steer - STEER_LOW);
 
   return ack_steer;
-} //steerConvert
+} //steerMsgToCmd
 
-
-/*
- * FUNCTION: velConvert()
- * DESC: Converts ackermann velocity to motor encoder value for RoboClaw
- * ARGS: float ackermann velocity
- * RTRNS: converted ackermann velocity
- */
-int velConvert(float ack_vel){
+int velAckToCmd(float ack_vel){
+  // given ackermann velocity, returns corresponding RoboClaw command
 
   // filter to remove tractor reversal commands (platform wont back up)
-  if (ack_vel < 0) {
-    ack_vel = 0;
-  }
+  if (ack_vel < 0) {ack_vel = 0;}
 
   // Convert from range of input signal to range of output signal
-  ack_vel = VEL_HIGH - ack_vel * ((VEL_HIGH - VEL_LOW) / VEL_CONTROL_RANGE);
+  ack_vel = map(ack_vel, VEL_MSG_MIN, VEL_MSG_MAX, VEL_CMD_MIN, VEL_CMD_MAX);
+
+  // Safety limits for signal; feels switched bc high vals = low speed
+  if (ack_vel < VEL_CMD_MAX) {ack_vel = VEL_CMD_MAX;}
+  else if(ack_vel > VEL_CMD_MIN) {ack_vel = VEL_CMD_MIN;}
 
   return ack_vel;
-} //velConvert()
+} //velMsgToCmd()
 
+void stopEngine() {
+  // Toggles engine stop relay
 
-/*
- * FUNCTION: stepActuator()
- * DESC: Meters commands sent to motors to ensure quick response and low latency
- * ARGS: current motor message, previous motor message, step size to check
- * RTNS: none
- */
-
-void stepActuator(int *msg, int *prevMsg, int step) {
-
-  // Checks if stepping is necessary (input signal wants to increase by more than the given step size)
-  if (abs(*prevMsg - *msg) > step) {
-
-    // Logs step verification if debugging
-    #ifdef DEBUG
-    nh.loginfo("DBG: Stepping signal");
-    #endif //DEBUG
-
-    // If signal increasing, step up
-    if (*msg > *prevMsg) {
-      *msg = *prevMsg + step;
-    }
-
-    // If signal decreasing, step down
-    else if (*msg < *prevMsg) {
-      *msg = *prevMsg - step;
-    }
-
-    // Exception case
-    else {
-      *msg = *prevMsg;
-    }
-  }
-} //stepActuator()
-
-
-/*
- *  FUNCTION eStop()
- *  DESC: Estops tractor, sends error message, flips estop state
- *  ARGS: none
- *  RTRNS: none
- */
-void eStop() {
-
-  isEStopped = true;
-
-  // Logs estop msg
-  char i[32];
-  snprintf(i, sizeof(i), "ERR: Tractor E-Stopped");
-  nh.loginfo(i);
-
-  // Toggle relay to stop engine
   digitalWrite(ESTOP_PIN, HIGH);
   delay(2000);
   digitalWrite(ESTOP_PIN, LOW);
 
+} // stopEngine()
 
-} //eStop()
+void eStop() {
+  // Estops tractor
 
+  isEStopped = true;
+  nh.logerror("Tractor has E-Stopped");
+  stopRoboClaw(&rc1);
+  stopEngine();
+} // eStop()
 
-/*
- * FUNCTION eStart()
- * DESC: Changes estopped state upon tractor restart
- * ARGS: none
- * RTNS: none
- */
- void eStart() {
+void eStart() {
+  // Disactivates isEStopped state
+
   isEStopped = false;
 
   // Logs verification msg
@@ -323,4 +236,10 @@ void eStop() {
   snprintf(i, sizeof(i), "MSG: EStop Disactivated");
   nh.loginfo(i);
 
- } //eStart()
+} // eStart()
+
+float mapPrecise(float x, float inMin, float inMax, float outMin, float outMax) {
+  // Emulates Arduino map() function, but uses floats for precision
+  return (x - inMin) * (outMax - outMin) / (inMax - inMin) + outMin;
+
+} // mapPrecise()

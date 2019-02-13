@@ -1,0 +1,20 @@
+<!--
+@file mainstate.launch
+@author Connor Novak
+@date 2018-11-21
+Sets up behavior parameters and launches MainState class
+-->
+<!--
+Tractor full ROSlaunch file
+@brief: Runs tractor with environment reference, rtk gps,
+and sensor mapping abilities
+@version: 2.0
+-->
+<launch>
+
+<rosparam command="load" file="$(find gravl)/config/tractor_behaviors.yaml" />
+<node pkg="gravl" type="MainState" name="mainstate" output="screen"/>
+
+<node name="convert_to_ackermann" pkg="gravl" type="ConvertToAckermann.py"/>
+
+</launch>

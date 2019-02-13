@@ -1,0 +1,6 @@
+<launch>
+
+	<include file='$(find gravl)/launch/bringup_min.launch'/>
+	<node name="lidarFollow" pkg="gravl" type="LidarFollower.py"/>
+
+</launch>
