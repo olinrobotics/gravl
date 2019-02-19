@@ -65,6 +65,7 @@ void MainState::behaviorCB(const gravl::TwistLabeled& msg) {
 void MainState::setState(std_msgs::UInt8 state) {
   /*! \brief Updates state with new state.
   *
+  * Note: this takes in a ROS integer
   * setState updates the current state with a given state, publishes an info
   * message, and publishes the new state to the topic /curr_state
   */
@@ -79,6 +80,7 @@ void MainState::setState(std_msgs::UInt8 state) {
 void MainState::setState(int state) {
   /*! \brief Updates state with new state.
   *
+  * Note: this takes in a regular integer
   * setState updates the current state with a given state, publishes an info
   * message, and publishes the new state to the topic /curr_state
   */
