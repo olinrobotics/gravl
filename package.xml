@@ -4,7 +4,7 @@
   <version>0.0.0</version>
   <description>Olin's ground robotic autonomous vehicle lab repo</description>
 
-  <maintainer email="carl.moser@students.olin.edu">carl</maintainer>
+  <maintainer email="olingravl@gmail.com">connor</maintainer>
 
   <license>MIT</license>
 
@@ -24,6 +24,7 @@
   <depend>tf2</depend>
   <depend>tf2_geometry_msgs</depend>
   <depend>rospy</depend>
+  <depend>state_controller</depend>
 
   <build_depend>roscpp</build_depend>
 

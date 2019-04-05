@@ -23,6 +23,7 @@ find_package(catkin REQUIRED COMPONENTS
   tf2
   tf2_geometry_msgs
   cv_bridge
+	state_controller
 )
 
 ## System dependencies are found with CMake's conventions
@@ -32,8 +33,8 @@ find_package(Boost REQUIRED COMPONENTS system)
 find_package(OpenCV 3.2 REQUIRED)
 include_directories( ${OpenCV_INCLUDE_DIRS} )
 
-## QT dependencies
-find_package(Qt5Widgets)
+# QT dependencies
+#find_package(Qt5Widgets)
 
 IF(Qt5Widgets_FOUND)
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${Qt5Widgets_EXECUTABLE_COMPILE_FLAGS}")
@@ -46,7 +47,6 @@ IF(Qt5Widgets_FOUND)
   find_package(Qt5Quick)
   find_package(Qt5Positioning)
 ENDIF()
-
 
 ## Uncomment this if the package has a setup.py. This macro ensures
 ## modules and global scripts declared therein get installed
@@ -63,7 +63,6 @@ add_message_files(
   Hemisphere.msg
   RoboClawStats.msg
   ImuSafety.msg
-  TwistLabeled.msg
 )
 
 ## Generate services in the 'srv' folder
@@ -106,8 +105,7 @@ generate_dynamic_reconfigure_options(
 ## CATKIN_DEPENDS: catkin_packages dependent projects also need
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
-  INCLUDE_DIRS /usr/include/boost/algorithm include
-  LIBRARIES gravl
+  INCLUDE_DIRS /usr/include/boost/algorithm
 #  CATKIN_DEPENDS roscpp rospy std_msgs
   DEPENDS message_runtime system_lib lrt
 )
@@ -119,21 +117,16 @@ catkin_package(
 ## Specify additional locations of header files
 ## Your package locations should be listed before other locations
 include_directories(
-  include
   ${catkin_INCLUDE_DIRS}
   ${OpenCV_INCLUDE_DIRS}
   ${Qt5Widgets_INCLUDE_DIRS}
   ${QtQml_INCLUDE_DIRS}
 )
 
-## Declare a C++ library
-add_library( gravl src/behaviors.cpp )
-
 ## Declare a C++ executable
 ## With catkin_make all packages are built within a single CMake context
 ## The recommended prefix ensures that target names across packages don't collide
 add_executable( Camera src/Camera/Camera.cpp )
-add_executable( Teleop src/Teleop/Teleop.cpp )
 add_executable( DriveState src/DriveState/DriveState.cpp )
 add_executable( Hemisphere src/Hemisphere/Hemisphere.cpp )
 add_executable( idk src/arm_drone.cpp )
@@ -141,11 +134,9 @@ add_executable( road_detection src/road_detection.cpp )
 add_executable(imu_safety src/imu_safety/ImuSafety.cpp)
 add_executable(imu_base src/ImuBase/ImuBase.cpp)
 add_executable(Watchdog src/Watchdog/Watchdog.cpp)
-add_executable(BehaviorEx src/BehaviorEx/BehaviorEx.cpp)
 
 ## Specify libraries to link a library or executable target against
 target_link_libraries( Camera ${OpenCV_LIBS} ${catkin_LIBRARIES} )
-target_link_libraries( Teleop ${catkin_LIBRARIES} gravl)
 target_link_libraries( DriveState ${catkin_LIBRARIES} )
 target_link_libraries( Hemisphere ${catkin_LIBRARIES} ${Boost_LIBRARIES} -lrt )
 target_link_libraries( idk ${catkin_LIBRARIES} )
@@ -153,14 +144,12 @@ target_link_libraries( road_detection ${OpenCV_LIBS} )
 target_link_libraries(imu_safety ${catkin_LIBRARIES})
 target_link_libraries(imu_base ${catkin_LIBRARIES})
 target_link_libraries(Watchdog ${catkin_LIBRARIES})
-target_link_libraries(BehaviorEx ${catkin_LIBRARIES})
 
 ## Add cmake target dependencies of the executable
 ## same as for the library above
 # add_dependencies(${PROJECT_NAME}_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 add_dependencies(Hemisphere ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 add_dependencies(imu_safety ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
-add_dependencies(BehaviorEx ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
 
 #IF(Qt5Widgets_FOUND)
