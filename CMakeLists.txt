@@ -1,12 +1,12 @@
 cmake_minimum_required(VERSION 2.8.11)
 project(gravl)
 
-## Compile as C++11, supported in ROS Kinetic and newer
+# Compile as C++11, supported in ROS Kinetic and newer
 set(CMAKE_CXX_FLAGS "-std=c++11")
 
-## Find catkin macros and libraries
-## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
-## is used, also find other catkin packages
+# Find catkin macros and libraries
+# if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
+# is used, also find other catkin packages
 find_package(catkin REQUIRED COMPONENTS
   roscpp
   rospy
@@ -26,7 +26,7 @@ find_package(catkin REQUIRED COMPONENTS
 	state_controller
 )
 
-## System dependencies are found with CMake's conventions
+# System dependencies are found with CMake's conventions
 find_package(Boost REQUIRED COMPONENTS system)
 
 # OpenCV dependencies
@@ -48,16 +48,16 @@ IF(Qt5Widgets_FOUND)
   find_package(Qt5Positioning)
 ENDIF()
 
-## Uncomment this if the package has a setup.py. This macro ensures
-## modules and global scripts declared therein get installed
-## See http://ros.org/doc/api/catkin/html/user_guide/setup_dot_py.html
+# Uncomment this if the package has a setup.py. This macro ensures
+# modules and global scripts declared therein get installed
+# See http://ros.org/doc/api/catkin/html/user_guide/setup_dot_py.html
 # catkin_python_setup()
 
 ################################################
 ## Declare ROS messages, services and actions ##
 ################################################
 
-## Generate messages in the 'msg' folder
+# Generate messages in the 'msg' folder
 add_message_files(
   FILES
   Hemisphere.msg
@@ -65,25 +65,26 @@ add_message_files(
   ImuSafety.msg
 )
 
-## Generate services in the 'srv' folder
+# Generate services in the 'srv' folder
 # add_service_files(
 #   FILES
 #   Service1.srv
 #   Service2.srv
 # )
 
-## Generate actions in the 'action' folder
+# Generate actions in the 'action' folder
 # add_action_files(
 #   FILES
 #   Action1.action
 #   Action2.action
 # )
 
-## Generate added messages and services with any dependencies listed here
+# Generate added messages and services with any dependencies listed here
 generate_messages(
   DEPENDENCIES
   std_msgs
   geometry_msgs
+	sensor_msgs
 )
 
 ################################################
@@ -98,12 +99,12 @@ generate_dynamic_reconfigure_options(
 ###################################
 ## catkin specific configuration ##
 ###################################
-## The catkin_package macro generates cmake config files for your package
-## Declare things to be passed to dependent projects
-## INCLUDE_DIRS: uncomment this if you package contains header files
-## LIBRARIES: libraries you create in this project that dependent projects also need
-## CATKIN_DEPENDS: catkin_packages dependent projects also need
-## DEPENDS: system dependencies of this project that dependent projects also need
+# The catkin_package macro generates cmake config files for your package
+# Declare things to be passed to dependent projects
+# INCLUDE_DIRS: uncomment this if you package contains header files
+# LIBRARIES: libraries you create in this project that dependent projects also need
+# CATKIN_DEPENDS: catkin_packages dependent projects also need
+# DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
   INCLUDE_DIRS /usr/include/boost/algorithm
 #  CATKIN_DEPENDS roscpp rospy std_msgs
@@ -114,8 +115,8 @@ catkin_package(
 ## Build ##
 ###########
 
-## Specify additional locations of header files
-## Your package locations should be listed before other locations
+# Specify additional locations of header files
+# Your package locations should be listed before other locations
 include_directories(
   ${catkin_INCLUDE_DIRS}
   ${OpenCV_INCLUDE_DIRS}
@@ -123,9 +124,9 @@ include_directories(
   ${QtQml_INCLUDE_DIRS}
 )
 
-## Declare a C++ executable
-## With catkin_make all packages are built within a single CMake context
-## The recommended prefix ensures that target names across packages don't collide
+# Declare a C++ executable
+# With catkin_make all packages are built within a single CMake context
+# The recommended prefix ensures that target names across packages don't collide
 add_executable( Camera src/Camera/Camera.cpp )
 add_executable( DriveState src/DriveState/DriveState.cpp )
 add_executable( Hemisphere src/Hemisphere/Hemisphere.cpp )
@@ -135,7 +136,7 @@ add_executable(imu_safety src/imu_safety/ImuSafety.cpp)
 add_executable(imu_base src/ImuBase/ImuBase.cpp)
 add_executable(Watchdog src/Watchdog/Watchdog.cpp)
 
-## Specify libraries to link a library or executable target against
+# Specify libraries to link a library or executable target against
 target_link_libraries( Camera ${OpenCV_LIBS} ${catkin_LIBRARIES} )
 target_link_libraries( DriveState ${catkin_LIBRARIES} )
 target_link_libraries( Hemisphere ${catkin_LIBRARIES} ${Boost_LIBRARIES} -lrt )
@@ -145,9 +146,8 @@ target_link_libraries(imu_safety ${catkin_LIBRARIES})
 target_link_libraries(imu_base ${catkin_LIBRARIES})
 target_link_libraries(Watchdog ${catkin_LIBRARIES})
 
-## Add cmake target dependencies of the executable
-## same as for the library above
-# add_dependencies(${PROJECT_NAME}_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+# Add cmake target dependencies of the executable
+# same as for the library above
 add_dependencies(Hemisphere ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 add_dependencies(imu_safety ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
