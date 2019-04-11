@@ -3,4 +3,5 @@
     <param name="port" value="/dev/ttyACM0"/>
     <param name="baud" value="115200"/>
   </node>
+  <node pkg="gravl" type="Watchdog" name="watchdog"/>
 </launch>

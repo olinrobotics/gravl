@@ -34,9 +34,9 @@ const byte ESTOP_PIN = 2;
 #define WATCHDOG_TIMEOUT 250
 
 // Velocity Motor Ranges
-const int VEL_CMD_MIN = 1400;       // Roboclaw cmd for max speed
-const int VEL_CMD_MAX = 0;          // Roboclaw cmd for min speed
-const int VEL_MSG_MIN = 0;          // Ackermann msg min speed
+const int VEL_CMD_MIN = 1400;       // Roboclaw cmd for min speed
+const int VEL_CMD_MAX = 0;        // Roboclaw cmd for max speed
+const int VEL_MSG_MIN = 0;         // Ackermann msg min speed
 const int VEL_MSG_MAX = 2;          // Ackermann msg max speed
 
 // Steering Motor Ranges
