@@ -2,7 +2,7 @@
   <!-- This brings up teleop -->
   <arg name="controllerType" default="gamepad" />
   <node pkg="joy" type="joy_node" name="joytick"/>
-  <node pkg="gravl" type="Teleop" name="joystick_teleop" >
+  <node pkg="state_controller" type="Teleop" name="joystick_teleop" output="screen">
   	<param name="~controllerType" value="$(arg controllerType)"/>
   </node>
 </launch>
