@@ -39,8 +39,8 @@ class ConvertToAckermann():
             angular_vel - angular velocity from Twist message (should be between -1 and 1)
         """
         # Assume twist message is angular vel from -1 to 1, velocity is -1 to 1
-        # steering in degrees from -45 to 45, velocity is -2 to 2
-        vel_scale = interp1d([-1,1],[-2,2])
+        # steering in degrees from -45 to 45, velocity is -1 to 1
+        vel_scale = interp1d([-1,1],[-1,1])
         angle_scale = interp1d([-1,1],[-45,45])
 
         ack_msg = AckermannDrive()
