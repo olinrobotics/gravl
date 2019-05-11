@@ -12,9 +12,11 @@ and sensor mapping abilities
 -->
 <launch>
 
-<rosparam command="load" file="$(find gravl)/config/tractor_behaviors.yaml" />
-<node pkg="state_controller" type="MainState" name="mainstate" output="screen"/>
+<arg name="behaviors_file" default="$(find gravl)/config/tractor_behaviors.yaml" />
 
-<node name="convert_to_ackermann" pkg="gravl" type="ConvertToAckermann.py"/>
+<rosparam command="load" file="$(arg behaviors_file)" />
+
+<include file="$(find state_controller)/launch/mainstate.launch"/>
+<node name="convert_to_ackermann" pkg="gravl" type="ConvertToAckermann.py" output="screen"/>
 
 </launch>
