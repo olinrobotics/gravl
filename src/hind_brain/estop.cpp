@@ -26,7 +26,7 @@ Estop::Estop(ros::NodeHandle *nh, const int pin, const unsigned int debounceTime
   nh->subscribe(*softEStop);
   last_mill = millis();
   pinMode(pin, INPUT_PULLUP);
-  attachInterrupt2(digitalPinToInterrupt(pin), &Estop::globalStop, CHANGE, this);
+  attachInterrupt(digitalPinToInterrupt(pin), &Estop::globalStop, CHANGE);
   stopped.data = !digitalRead(pin);
 }
 

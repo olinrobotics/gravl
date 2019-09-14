@@ -18,10 +18,16 @@
 #include "std_msgs/Empty.h"                 // Used for watchdog hf connection monitor
 #include "estop.h"                          // Used to implement estop class
 #include "soft_switch.h"                    // Used to implement auto switch
+#include <Encoder.h>
+#include <std_msgs/Float64.h>
+#include <geometry_msgs/Point.h>
 
 // Arduino Pins
 const byte AUTO_LED_PIN = 3;
 const byte ESTOP_PIN = 2;
+const byte HITCH_ENC_A_PIN = 18;
+const byte HITCH_ENC_B_PIN = 19;
+
 
 // Roboclaw Constants
 #define RC1_ADDRESS 0x80
