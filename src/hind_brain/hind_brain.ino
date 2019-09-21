@@ -187,7 +187,7 @@ void updateCurrHitchPose(){
   hitchEncoderValue = hitchEncoder.read(); 
   encoderValInch = hitchEncoderValue / 1000.0;
   Serial.println("I'm right here!!!!!!!!!");
-  hitchHeight = encoderValInch * 1.1429 + 1.7474;
+  hitchHeight = encoderValInch * -1.1429 * 0.0254;
   curr_hitch_pose.z = hitchHeight;
   hitch_pose.publish(&curr_hitch_pose);
 } // updateCurrHitchPose()
