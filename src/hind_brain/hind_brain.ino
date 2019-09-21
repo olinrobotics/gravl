@@ -21,6 +21,10 @@ RoboClaw rc1(rc1_serial, RC_TIMEOUT);
 auto rc2_serial = &Serial2;
 RoboClaw rc2(rc2_serial, RC_TIMEOUT);
 
+// Encoders
+Encoder hitchEncoder(HITCH_ENC_A_PIN, HITCH_ENC_B_PIN);
+
+
 // States
 boolean isEStopped = false;
 boolean isAuto = false;
@@ -35,9 +39,11 @@ unsigned long watchdog_timer;
 // ROS nodes, publishers, subscribers
 ros::NodeHandle nh;
 ackermann_msgs::AckermannDrive curr_drive_pose;
+geometry_msgs::Point curr_hitch_pose;
 ros::Subscriber<ackermann_msgs::AckermannDrive> sub("/cmd_vel", &ackermannCB);
 ros::Subscriber<std_msgs::Empty> ping("/safety_clock", &watchdogCB);
 ros::Publisher pub_drive("/curr_drive", &curr_drive_pose);
+ros::Publisher hitch_pose("/hitch_pose", &curr_hitch_pose);
 
 void setup() {
 
@@ -60,6 +66,7 @@ void setup() {
   nh.subscribe(sub);
   nh.subscribe(ping);
   nh.advertise(pub_drive);
+  nh.advertise(hitch_pose);
 
   // Wait for connection
   while(true){
@@ -97,6 +104,7 @@ void loop() {
 
   // Update current published pose
   updateCurrDrive();
+  updateCurrHitchPose();
 
   // Updates node
   nh.spinOnce();
@@ -170,6 +178,19 @@ void updateCurrDrive() {
   pub_drive.publish(&curr_drive_pose);
 
 } // updateCurrDrive()
+
+void updateCurrHitchPose(){
+  // Read encoder value, convert to hitch height, publish
+  long hitchEncoderValue;
+  float hitchHeight;
+  float encoderValInch;
+  hitchEncoderValue = hitchEncoder.read(); 
+  encoderValInch = hitchEncoderValue / 1000.0;
+  Serial.println("I'm right here!!!!!!!!!");
+  hitchHeight = encoderValInch * 1.1429 + 1.7474;
+  curr_hitch_pose.z = hitchHeight;
+  hitch_pose.publish(&curr_hitch_pose);
+} // updateCurrHitchPose()
 
 int steerAckToCmd(float ack_steer){
   //  Given ackermann steering message, returns corresponding RoboClaw command
