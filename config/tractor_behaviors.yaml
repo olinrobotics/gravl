@@ -1,10 +1,10 @@
 # Tractor behavior parameter definitions
 #
-# Ex: behaviors/behaviorn: [Id #, Priority #]
-# - Id #s should be unique
-# - Lower priorities override higher priorities
+# Ex: behaviors/[name_of_behavior]: '[priority]'
+# - Lower numbers = higher priority
+# - Lower number commands override higher number commands
 
 behaviors/safety: '0'
 behaviors/teleop: '1'
 behaviors/ptrack: '2'
-# behaviors/example: [3,2]
+# behaviors/example: '3'
