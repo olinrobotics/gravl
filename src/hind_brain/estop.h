@@ -5,7 +5,6 @@
 #include "std_msgs/Bool.h"
 
 static void dummyFunc() {return;}
-extern void attachInterrupt2(uint8_t pin, void (*function)(void*), int mode, void* clas);
 
 class Estop{
 public:
