@@ -1,0 +1,10 @@
+# Tractor behavior parameter definitions
+#
+# Ex: behaviors/[name_of_behavior]: '[priority]'
+# - Lower numbers = higher priority
+# - Lower number commands override higher number commands
+
+behaviors/safety: '0'
+behaviors/teleop: '1'
+behaviors/ptrack: '2'
+# behaviors/example: '3'

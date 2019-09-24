@@ -9,6 +9,9 @@ Then, in another Terminal, start the state machine controller by running the com
 the circle driving script by running the command `circle_drive.py`. Make sure that Kubo is set up and running by following the instructions on the homepage
 of the Github GRAVL wiki.
 
+#### `ConvertToAckermann.py`
+Converts from `/cmd_twist` geometry_msgs/Twist topic to `/cmd_vel` ackermann_msgs/AckermannDrive topic. Interpolates velocity from [-1.0, 1.0] to [-2.0, 2.0]. Interpolates angle from [-1.0, 1.0] to [-45.0, 45.0]. Run separately through `rosrun gravl ConvertToAckermann.py` - must be running to connect state controller with tractor.
+
 #### `test_pointgrey.py`
 Displays raw imagery from a pointgrey camera publishing through ROS. To run, first setup a pointgrey camera such that it is
 publishing over ROS by looking at this wiki page: ([link](https://github.com/olinrobotics/gravl/wiki/Kubo:-Cameras))  Then,
