@@ -20,7 +20,7 @@ find_package(catkin REQUIRED COMPONENTS
   mavros_msgs
   nav_msgs
   tf
-  tf2
+  tf2_ros
   tf2_geometry_msgs
   cv_bridge
 	state_controller
@@ -63,6 +63,7 @@ add_message_files(
   Hemisphere.msg
   RoboClawStats.msg
   ImuSafety.msg
+  DiffDrive.msg
 )
 
 # Generate services in the 'srv' folder
@@ -134,6 +135,7 @@ add_executable( idk src/arm_drone.cpp )
 add_executable( road_detection src/road_detection.cpp )
 add_executable(imu_safety src/imu_safety/ImuSafety.cpp)
 add_executable(imu_base src/ImuBase/ImuBase.cpp)
+add_executable(enc_odom src/EncOdom/EncOdom.cpp)
 add_executable(Watchdog src/Watchdog/Watchdog.cpp)
 
 # Specify libraries to link a library or executable target against
@@ -144,12 +146,14 @@ target_link_libraries( idk ${catkin_LIBRARIES} )
 target_link_libraries( road_detection ${OpenCV_LIBS} )
 target_link_libraries(imu_safety ${catkin_LIBRARIES})
 target_link_libraries(imu_base ${catkin_LIBRARIES})
+target_link_libraries(enc_odom ${catkin_LIBRARIES})
 target_link_libraries(Watchdog ${catkin_LIBRARIES})
 
 # Add cmake target dependencies of the executable
 # same as for the library above
 add_dependencies(Hemisphere ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 add_dependencies(imu_safety ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+add_dependencies(enc_odom ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
 
 #IF(Qt5Widgets_FOUND)
