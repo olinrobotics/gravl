@@ -15,12 +15,19 @@
 #include <Arduino.h>                        // Used for Arduino functions
 #include "ros.h"                            // Used for rosserial communication
 #include "ackermann_msgs/AckermannDrive.h"  // Used for rosserial steering message
+#include "std_msgs/Empty.h"                 // Used for watchdog hf connection monitor
 #include "estop.h"                          // Used to implement estop class
 #include "soft_switch.h"                    // Used to implement auto switch
+#include <Encoder.h>
+#include <std_msgs/Float64.h>
+#include <geometry_msgs/Point.h>
 
 // Arduino Pins
 const byte AUTO_LED_PIN = 3;
 const byte ESTOP_PIN = 2;
+const byte HITCH_ENC_A_PIN = 18;
+const byte HITCH_ENC_B_PIN = 19;
+
 
 // Roboclaw Constants
 #define RC1_ADDRESS 0x80
@@ -30,10 +37,11 @@ const byte ESTOP_PIN = 2;
 
 // General Constants
 #define DEBUG True
+#define WATCHDOG_TIMEOUT 250
 
 // Velocity Motor Ranges
-const int VEL_CMD_MIN = 1400;       // Roboclaw cmd for max speed
-const int VEL_CMD_MAX = 0;        // Roboclaw cmd for min speed
+const int VEL_CMD_MIN = 1400;       // Roboclaw cmd for min speed
+const int VEL_CMD_MAX = 0;        // Roboclaw cmd for max speed
 const int VEL_MSG_MIN = 0;         // Ackermann msg min speed
 const int VEL_MSG_MAX = 2;          // Ackermann msg max speed
 
@@ -48,6 +56,7 @@ const int STEER_MSG_RIGHT = -30;       // Ackermann msg max steering angle
 // function prototypes
 
 void ackermannCB(const ackermann_msgs::AckermannDrive&);
+void watchdogCB(const std_msgs::Empty&);
 void stopEngine();
 void eStop();
 void eStart();

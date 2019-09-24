@@ -21,6 +21,10 @@ RoboClaw rc1(rc1_serial, RC_TIMEOUT);
 auto rc2_serial = &Serial2;
 RoboClaw rc2(rc2_serial, RC_TIMEOUT);
 
+// Encoders
+Encoder hitchEncoder(HITCH_ENC_A_PIN, HITCH_ENC_B_PIN);
+
+
 // States
 boolean isEStopped = false;
 boolean isAuto = false;
@@ -29,12 +33,17 @@ boolean isAuto = false;
 unsigned int velMsg = VEL_CMD_MIN;        // Initialize velocity to 0
 signed int steerMsg = STEER_CMD_CENTER;   // Initialize steering to straight
 char buf[7];
+unsigned long watchdog_timer;
+
 
 // ROS nodes, publishers, subscribers
 ros::NodeHandle nh;
 ackermann_msgs::AckermannDrive curr_drive_pose;
-ros::Subscriber<ackermann_msgs::AckermannDrive> sub("/teledrive", &ackermannCB);
+geometry_msgs::Point curr_hitch_pose;
+ros::Subscriber<ackermann_msgs::AckermannDrive> sub("/cmd_vel", &ackermannCB);
+ros::Subscriber<std_msgs::Empty> ping("/safety_clock", &watchdogCB);
 ros::Publisher pub_drive("/curr_drive", &curr_drive_pose);
+ros::Publisher hitch_pose("/hitch_pose", &curr_hitch_pose);
 
 void setup() {
 
@@ -55,11 +64,13 @@ void setup() {
   nh.getHardware()->setBaud(115200);
   nh.initNode();
   nh.subscribe(sub);
+  nh.subscribe(ping);
   nh.advertise(pub_drive);
+  nh.advertise(hitch_pose);
 
   // Wait for connection
   while(true){
-    if(nh.connected()) {break;}
+    if(nh.connected() && (millis() - watchdog_timer < WATCHDOG_TIMEOUT)) {break;}
     nh.spinOnce();
     delay(1);
   }
@@ -76,6 +87,7 @@ void setup() {
   rc1.SpeedAccelDeccelPositionM1(RC1_ADDRESS, 0, 300, 0, velMsg, 1);
   rc1.SpeedAccelDeccelPositionM2(RC1_ADDRESS, 0, 500, 0, steerMsg, 1);
 
+  watchdog_timer = millis();
 } // setup()
 
 void loop() {
@@ -92,6 +104,7 @@ void loop() {
 
   // Update current published pose
   updateCurrDrive();
+  updateCurrHitchPose();
 
   // Updates node
   nh.spinOnce();
@@ -106,10 +119,15 @@ void ackermannCB(const ackermann_msgs::AckermannDrive &drive) {
 
 } // ackermannCB()
 
+void watchdogCB(const std_msgs::Empty &msg) {
+  watchdog_timer = millis();
+} // watchdogCB()
+
 void checkSerial(ros::NodeHandle *nh) {
-  // Given node, estops if node is not connected
+  // Given node, estops if watchdog has timed out
   // https://answers.ros.org/question/124481/rosserial-arduino-how-to-check-on-device-if-in-sync-with-host/
-  if(!nh->connected()) {
+
+  if(millis() - watchdog_timer >= WATCHDOG_TIMEOUT) {
     if(!isEStopped) {
       nh->logerror("Lost connectivity . . .");
       eStop();
@@ -160,6 +178,19 @@ void updateCurrDrive() {
   pub_drive.publish(&curr_drive_pose);
 
 } // updateCurrDrive()
+
+void updateCurrHitchPose(){
+  // Read encoder value, convert to hitch height, publish
+  long hitchEncoderValue;
+  float hitchHeight;
+  float encoderValInch;
+  hitchEncoderValue = hitchEncoder.read(); 
+  encoderValInch = hitchEncoderValue / 1000.0;
+  Serial.println("I'm right here!!!!!!!!!");
+  hitchHeight = encoderValInch * -1.1429 * 0.0254;
+  curr_hitch_pose.z = hitchHeight;
+  hitch_pose.publish(&curr_hitch_pose);
+} // updateCurrHitchPose()
 
 int steerAckToCmd(float ack_steer){
   //  Given ackermann steering message, returns corresponding RoboClaw command

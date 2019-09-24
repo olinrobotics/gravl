@@ -1,3 +1,5 @@
 - git:
     local-name: swiftnav_ros
     uri: https://github.com/swift-nav/swiftnav_ros
+    local-name: state_controller
+    uri: https://github.com/olinrobotics/state_controller
