@@ -63,6 +63,7 @@ void setup() {
 
   //Open serial communication with roboclaw
   rc1.begin(38400);
+  rc2.begin(38400);
 
   // Set up ROS node, subscribers, publishers
   nh.getHardware()->setBaud(115200);
