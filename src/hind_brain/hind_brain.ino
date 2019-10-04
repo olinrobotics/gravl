@@ -82,7 +82,6 @@ void setup() {
   }
 
   // Send message of connectivity
-  // TODO: make wait until motors reach default positions
   delay(500);
   nh.loginfo("Hindbrain connected; Setting motor positions to neutral.");
   delay(500);
@@ -93,6 +92,8 @@ void setup() {
   rc1.SpeedAccelDeccelPositionM1(RC1_ADDRESS, 0, 300, 0, velMsg, 1);
   rc1.SpeedAccelDeccelPositionM2(RC1_ADDRESS, 0, 500, 0, steerMsg, 1);
   rc2.SpeedAccelDeccelPositionM2(RC2_ADDRESS, 0, 300, 0, hitchMsg, 1);
+
+  // TODO: make wait until motors reach default positions
 
   watchdog_timer = millis();
 } // setup()
@@ -207,7 +208,6 @@ void updateCurrHitchPose(){
   float encoderValInch;
   hitchEncoderValue = hitchEncoder.read();
   encoderValInch = hitchEncoderValue / 1000.0; // Inches
-  Serial.println("I'm right here!!!!!!!!!");
   hitchHeight = encoderValInch * -1.1429 * 0.0254; // Meters TODO: What is the -1.1429?
   curr_hitch_pose.position.z = hitchHeight;
   hitch_pose.publish(&curr_hitch_pose);
@@ -231,7 +231,7 @@ int computeHitchMsg(){
       hitch_msg = H_ACTUATOR_MIN; // Move lever forwards + hitch down
     }
     else { // Hitch is too low
-      hitch_msg = H_ACTUATOR_MIN; // Move lever backwards + hitch up
+      hitch_msg = H_ACTUATOR_MAX; // Move lever backwards + hitch up
     }
   }
   return hitch_msg;
