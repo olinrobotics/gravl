@@ -166,8 +166,8 @@ void updateRoboClaw(int velMsg, int steerMsg, int hitchMsg) {
 
   // roslog msgs if debugging
   #ifdef DEBUG
-    char j[36];
-    snprintf(j, sizeof(j), "DBG: steerMsg = %d, velMsg = %d", steerMsg, velMsg);
+    char j[56];
+    snprintf(j, sizeof(j), "DBG: steerMsg = %d, velMsg = %d, hitchMsg = %d", steerMsg, velMsg, hitchMsg);
     nh.loginfo(j);
   #endif //DEBUG
 

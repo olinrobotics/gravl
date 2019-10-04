@@ -59,7 +59,7 @@ const int H_ACTUATOR_MIN = 540;  // Extended Actuator   540
 const int H_ACTUATOR_CENTER = (H_ACTUATOR_MAX + H_ACTUATOR_MIN) / 2;
 const int H_ACTUATOR_RANGE = H_ACTUATOR_MAX-H_ACTUATOR_MIN;
 // Encoder
-const long ENC_STOP_THRESHOLD = 0.0381; // Threshold of blade accuracy to stop in meters
+const float ENC_STOP_THRESHOLD = 0.0381; // Threshold of blade accuracy to stop in meters
 
 // function prototypes
 void ackermannCB(const ackermann_msgs::AckermannDrive&);
