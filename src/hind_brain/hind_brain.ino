@@ -32,7 +32,7 @@ boolean isAuto = false;
 // Global Variables
 unsigned int velMsg = VEL_CMD_MIN;        // Initialize velocity to 0
 signed int steerMsg = STEER_CMD_CENTER;   // Initialize steering to straight
-float hitchMsg = H_ACTUATOR_CENTER; // Start actuator in center
+unsigned int hitchMsg = H_ACTUATOR_CENTER; // Start actuator in center
 
 char buf[7];
 unsigned long watchdog_timer;
@@ -115,8 +115,6 @@ void loop() {
   } else {
     stopRoboClaw(&rc1, &rc2);
   }
-
-
 
   // Updates node
   nh.spinOnce();
