@@ -32,7 +32,7 @@ boolean isAuto = false;
 // Global Variables
 unsigned int velMsg = VEL_CMD_MIN;        // Initialize velocity to 0
 signed int steerMsg = STEER_CMD_CENTER;   // Initialize steering to straight
-float hitchMsg = H_ACTUATOR_CENTER; // Start actuator in center
+unsigned int hitchMsg = H_ACTUATOR_CENTER; // Start actuator in center
 
 char buf[7];
 unsigned long watchdog_timer;
@@ -114,8 +114,6 @@ void loop() {
   } else {
     stopRoboClaw(&rc1, &rc2);
   }
-
-
 
   // Updates node
   nh.spinOnce();
@@ -207,7 +205,6 @@ void updateCurrHitchPose(){
   float encoderValInch;
   hitchEncoderValue = hitchEncoder.read();
   encoderValInch = hitchEncoderValue / 1000.0; // Inches
-  Serial.println("I'm right here!!!!!!!!!");
   hitchHeight = encoderValInch * -1.1429 * 0.0254; // Meters TODO: What is the -1.1429?
   curr_hitch_pose.position.z = hitchHeight;
   hitch_pose.publish(&curr_hitch_pose);
@@ -231,7 +228,7 @@ int computeHitchMsg(){
       hitch_msg = H_ACTUATOR_MIN; // Move lever forwards + hitch down
     }
     else { // Hitch is too low
-      hitch_msg = H_ACTUATOR_MIN; // Move lever backwards + hitch up
+      hitch_msg = H_ACTUATOR_MAX; // Move lever backwards + hitch up
     }
   }
   return hitch_msg;
