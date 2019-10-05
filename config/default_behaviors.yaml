@@ -6,5 +6,5 @@
 
 behaviors/safety: '0'
 behaviors/teleop: '1'
-behaviors/ptrack: '2'
+behaviors/p2p: '2'
 # behaviors/example: '3'
