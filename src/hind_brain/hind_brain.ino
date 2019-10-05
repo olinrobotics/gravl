@@ -32,7 +32,7 @@ boolean isAuto = false;
 // Global Variables
 unsigned int velMsg = VEL_CMD_MIN;        // Initialize velocity to 0
 signed int steerMsg = STEER_CMD_CENTER;   // Initialize steering to straight
-float hitchMsg = H_ACTUATOR_CENTER; // Start actuator in center
+unsigned int hitchMsg = H_ACTUATOR_CENTER; // Start actuator in center
 
 char buf[7];
 unsigned long watchdog_timer;
@@ -82,7 +82,6 @@ void setup() {
   }
 
   // Send message of connectivity
-  // TODO: make wait until motors reach default positions
   delay(500);
   nh.loginfo("Hindbrain connected; Setting motor positions to neutral.");
   delay(500);
@@ -93,6 +92,8 @@ void setup() {
   rc1.SpeedAccelDeccelPositionM1(RC1_ADDRESS, 0, 300, 0, velMsg, 1);
   rc1.SpeedAccelDeccelPositionM2(RC1_ADDRESS, 0, 500, 0, steerMsg, 1);
   rc2.SpeedAccelDeccelPositionM2(RC2_ADDRESS, 0, 300, 0, hitchMsg, 1);
+
+  // TODO: make wait until motors reach default positions
 
   watchdog_timer = millis();
 } // setup()
@@ -114,8 +115,6 @@ void loop() {
   } else {
     stopRoboClaw(&rc1, &rc2);
   }
-
-
 
   // Updates node
   nh.spinOnce();
@@ -167,8 +166,8 @@ void updateRoboClaw(int velMsg, int steerMsg, int hitchMsg) {
 
   // roslog msgs if debugging
   #ifdef DEBUG
-    char j[36];
-    snprintf(j, sizeof(j), "DBG: steerMsg = %d, velMsg = %d", steerMsg, velMsg);
+    char j[56];
+    snprintf(j, sizeof(j), "DBG: steerMsg = %d, velMsg = %d, hitchMsg = %d", steerMsg, velMsg, hitchMsg);
     nh.loginfo(j);
   #endif //DEBUG
 
@@ -184,7 +183,7 @@ void stopRoboClaw(RoboClaw *rc1, RoboClaw *rc2) {
   rc1->SpeedM2(RC1_ADDRESS, 0);
 
   // Send hitch actuator to stop position
-  rc2->SpeedAccelDeccelPositionM2(RC1_ADDRESS, 100000, 1000, 0, H_ACTUATOR_CENTER, 0);
+  rc2->SpeedAccelDeccelPositionM2(RC2_ADDRESS, 100000, 1000, 0, H_ACTUATOR_CENTER, 0);
 } // stopRoboClaw
 
 void updateCurrDrive() {
@@ -207,7 +206,6 @@ void updateCurrHitchPose(){
   float encoderValInch;
   hitchEncoderValue = hitchEncoder.read();
   encoderValInch = hitchEncoderValue / 1000.0; // Inches
-  Serial.println("I'm right here!!!!!!!!!");
   hitchHeight = encoderValInch * -1.1429 * 0.0254; // Meters TODO: What is the -1.1429?
   curr_hitch_pose.position.z = hitchHeight;
   hitch_pose.publish(&curr_hitch_pose);
@@ -228,7 +226,7 @@ int computeHitchMsg(){
   }
   else{
     if (error > 0){ // Hitch is too high
-      hitch_msg = H_ACTUATOR_MIN; // Move lever forwards + hitch down
+      hitch_msg = H_ACTUATOR_MAX; // Move lever forwards + hitch down
     }
     else { // Hitch is too low
       hitch_msg = H_ACTUATOR_MAX; // Move lever backwards + hitch up
