@@ -183,7 +183,7 @@ void stopRoboClaw(RoboClaw *rc1, RoboClaw *rc2) {
   rc1->SpeedM2(RC1_ADDRESS, 0);
 
   // Send hitch actuator to stop position
-  rc2->SpeedAccelDeccelPositionM2(RC1_ADDRESS, 100000, 1000, 0, H_ACTUATOR_CENTER, 0);
+  rc2->SpeedAccelDeccelPositionM2(RC2_ADDRESS, 100000, 1000, 0, H_ACTUATOR_CENTER, 0);
 } // stopRoboClaw
 
 void updateCurrDrive() {
@@ -226,10 +226,10 @@ int computeHitchMsg(){
   }
   else{
     if (error > 0){ // Hitch is too high
-      hitch_msg = H_ACTUATOR_MIN; // Move lever forwards + hitch down
+      hitch_msg = H_ACTUATOR_MAX; // Move lever forwards + hitch down
     }
     else { // Hitch is too low
-      hitch_msg = H_ACTUATOR_MAX; // Move lever backwards + hitch up
+      hitch_msg = H_ACTUATOR_MIN; // Move lever backwards + hitch up
     }
   }
   return hitch_msg;

@@ -30,8 +30,8 @@ const byte HITCH_ENC_B_PIN = 19;
 
 
 // Roboclaw Constants
-#define RC1_ADDRESS 0x80          // In front box, for steering and driving
-#define RC2_ADDRESS 0x80  //TODO: What is this used for?       // In back of tractor, for hitch
+#define RC1_ADDRESS 0x80  // In front box, for steering and driving // NOTE: needs to change for multiple
+#define RC2_ADDRESS 0x80  // In back of tractor, for hitch          // roboclaws on one serial port
 // Timeout below equivalent to 10 ms
 #define RC_TIMEOUT 10000
 
@@ -54,8 +54,8 @@ const int STEER_MSG_CENTER = 0;        // Ackermann msg center steering angle
 const int STEER_MSG_RIGHT = -30;       // Ackermann msg max steering angle
 
 // Hitch Actuator Ranges
-const int H_ACTUATOR_MAX = 1300; // Retracted Actuator  1300
-const int H_ACTUATOR_MIN = 540;  // Extended Actuator   540
+const int H_ACTUATOR_MAX = 1300; // Retracted Actuator - Move hitch up
+const int H_ACTUATOR_MIN = 540;  // Extended Actuator - Move hitch down
 const int H_ACTUATOR_CENTER = (H_ACTUATOR_MAX + H_ACTUATOR_MIN) / 2;
 const int H_ACTUATOR_RANGE = H_ACTUATOR_MAX-H_ACTUATOR_MIN;
 // Encoder
