@@ -32,6 +32,8 @@ boolean isAuto = false;
 // Global Variables
 unsigned int velMsg = VEL_CMD_MIN;        // Initialize velocity to 0
 signed int steerMsg = STEER_CMD_CENTER;   // Initialize steering to straight
+unsigned int hitchMsg = H_ACTUATOR_CENTER; // Start actuator in center
+
 char buf[7];
 unsigned long watchdog_timer;
 
@@ -39,8 +41,10 @@ unsigned long watchdog_timer;
 // ROS nodes, publishers, subscribers
 ros::NodeHandle nh;
 ackermann_msgs::AckermannDrive curr_drive_pose;
-geometry_msgs::Point curr_hitch_pose;
-ros::Subscriber<ackermann_msgs::AckermannDrive> sub("/cmd_vel", &ackermannCB);
+geometry_msgs::Pose curr_hitch_pose;
+geometry_msgs::Pose desired_hitch_pose;
+ros::Subscriber<ackermann_msgs::AckermannDrive> drive_sub("/cmd_vel", &ackermannCB);
+ros::Subscriber<geometry_msgs::Pose> hitch_sub("/cmd_hitch", &hitchCB);
 ros::Subscriber<std_msgs::Empty> ping("/safety_clock", &watchdogCB);
 ros::Publisher pub_drive("/curr_drive", &curr_drive_pose);
 ros::Publisher hitch_pose("/hitch_pose", &curr_hitch_pose);
@@ -59,11 +63,13 @@ void setup() {
 
   //Open serial communication with roboclaw
   rc1.begin(38400);
+  rc2.begin(38400);
 
   // Set up ROS node, subscribers, publishers
   nh.getHardware()->setBaud(115200);
   nh.initNode();
-  nh.subscribe(sub);
+  nh.subscribe(drive_sub);
+  nh.subscribe(hitch_sub);
   nh.subscribe(ping);
   nh.advertise(pub_drive);
   nh.advertise(hitch_pose);
@@ -76,7 +82,6 @@ void setup() {
   }
 
   // Send message of connectivity
-  // TODO: make wait until motors reach default positions
   delay(500);
   nh.loginfo("Hindbrain connected; Setting motor positions to neutral.");
   delay(500);
@@ -86,6 +91,9 @@ void setup() {
   // Set actuators to default positions
   rc1.SpeedAccelDeccelPositionM1(RC1_ADDRESS, 0, 300, 0, velMsg, 1);
   rc1.SpeedAccelDeccelPositionM2(RC1_ADDRESS, 0, 500, 0, steerMsg, 1);
+  rc2.SpeedAccelDeccelPositionM2(RC2_ADDRESS, 0, 300, 0, hitchMsg, 1);
+
+  // TODO: make wait until motors reach default positions
 
   watchdog_timer = millis();
 } // setup()
@@ -95,16 +103,18 @@ void loop() {
   // Checks for connectivity with mid-brain
   checkSerial(&nh);
 
-  // Send updated motor commands to roboclaws
-  if (!isEStopped) {
-    updateRoboClaw(velMsg, steerMsg);
-  } else {
-    stopRoboClaw(&rc1);
-  }
-
   // Update current published pose
   updateCurrDrive();
   updateCurrHitchPose();
+
+  hitchMsg = computeHitchMsg();
+
+  // Send updated motor commands to roboclaws
+  if (!isEStopped) {
+    updateRoboClaw(velMsg, steerMsg, hitchMsg);
+  } else {
+    stopRoboClaw(&rc1, &rc2);
+  }
 
   // Updates node
   nh.spinOnce();
@@ -118,6 +128,11 @@ void ackermannCB(const ackermann_msgs::AckermannDrive &drive) {
   velMsg = velAckToCmd(drive.speed);
 
 } // ackermannCB()
+
+void hitchCB(const geometry_msgs::Pose &hitch){
+  desired_hitch_pose.position.z = hitch.position.z; // In meters from flat ground
+  // TODO: Copy over all desired attributes
+} //hitchCB()
 
 void watchdogCB(const std_msgs::Empty &msg) {
   watchdog_timer = millis();
@@ -135,9 +150,8 @@ void checkSerial(ros::NodeHandle *nh) {
   }
 } // checkSerial()
 
-void updateRoboClaw(int velMsg, int steerMsg) {
-  // Given velocity and steering message, sends vals to RoboClaw
-  // TODO: update to take roboclaw as arg
+void updateRoboClaw(int velMsg, int steerMsg, int hitchMsg) {
+  // Given velocity, steering, and hitch message, sends vals to RoboClaw
 
   // Write velocity to RoboClaw
   rc1.SpeedAccelDeccelPositionM1(RC1_ADDRESS, 100000, 1000, 0, velMsg, 1);
@@ -147,24 +161,29 @@ void updateRoboClaw(int velMsg, int steerMsg) {
   if (velMsg < VEL_CMD_MIN - 100) {rc1.SpeedAccelDeccelPositionM2(RC1_ADDRESS, 0, 1000, 0, steerMsg, 1);}
   else {nh.logwarn("Tractor not moving, steering message rejected");}
 
+  // Write hitch to RoboClaw
+  rc2.SpeedAccelDeccelPositionM2(RC2_ADDRESS, 100000, 1000, 0, hitchMsg, 1);
+
   // roslog msgs if debugging
   #ifdef DEBUG
-    char j[36];
-    snprintf(j, sizeof(j), "DBG: steerMsg = %d, velMsg = %d", steerMsg, velMsg);
+    char j[56];
+    snprintf(j, sizeof(j), "DBG: steerMsg = %d, velMsg = %d, hitchMsg = %d", steerMsg, velMsg, hitchMsg);
     nh.loginfo(j);
   #endif //DEBUG
 
 } // updateRoboClaw()
 
-void stopRoboClaw(RoboClaw *rc) {
+void stopRoboClaw(RoboClaw *rc1, RoboClaw *rc2) {
   // Given roboclaw to stop, publishes messages such that Roboclaw is safe
 
   // Send velocity pedal to stop position
-  rc->SpeedAccelDeccelPositionM1(RC1_ADDRESS, 100000, 1000, 0, VEL_CMD_MIN, 0);
+  rc1->SpeedAccelDeccelPositionM1(RC1_ADDRESS, 100000, 1000, 0, VEL_CMD_MIN, 0);
 
   // Stop steering motor
-  rc->SpeedM2(RC1_ADDRESS, 0);
+  rc1->SpeedM2(RC1_ADDRESS, 0);
 
+  // Send hitch actuator to stop position
+  rc2->SpeedAccelDeccelPositionM2(RC2_ADDRESS, 100000, 1000, 0, H_ACTUATOR_CENTER, 0);
 } // stopRoboClaw
 
 void updateCurrDrive() {
@@ -180,17 +199,41 @@ void updateCurrDrive() {
 } // updateCurrDrive()
 
 void updateCurrHitchPose(){
-  // Read encoder value, convert to hitch height, publish
+  // Read encoder value, convert to hitch height in meters, publish
+  // TODO: What is the hitch height measured from? Where is 0?
   long hitchEncoderValue;
   float hitchHeight;
   float encoderValInch;
-  hitchEncoderValue = hitchEncoder.read(); 
-  encoderValInch = hitchEncoderValue / 1000.0;
-  Serial.println("I'm right here!!!!!!!!!");
-  hitchHeight = encoderValInch * -1.1429 * 0.0254;
-  curr_hitch_pose.z = hitchHeight;
+  hitchEncoderValue = hitchEncoder.read();
+  encoderValInch = hitchEncoderValue / 1000.0; // Inches
+  hitchHeight = encoderValInch * -1.1429 * 0.0254; // Meters TODO: What is the -1.1429?
+  curr_hitch_pose.position.z = hitchHeight;
   hitch_pose.publish(&curr_hitch_pose);
 } // updateCurrHitchPose()
+
+int computeHitchMsg(){
+  // Take current and desired hitch position to compute actuator position
+  float desired = desired_hitch_pose.position.z;
+  float current = curr_hitch_pose.position.z;
+
+  float error = desired - current;
+
+  int hitch_msg;
+
+  // If hitch height is "good enough," then move actuator to neutral position
+  if (abs(error) < ENC_STOP_THRESHOLD){
+    hitch_msg = H_ACTUATOR_CENTER;
+  }
+  else{
+    if (error > 0){ // Hitch is too high
+      hitch_msg = H_ACTUATOR_MIN; // Move lever forwards + hitch down
+    }
+    else { // Hitch is too low
+      hitch_msg = H_ACTUATOR_MAX; // Move lever backwards + hitch up
+    }
+  }
+  return hitch_msg;
+}
 
 int steerAckToCmd(float ack_steer){
   //  Given ackermann steering message, returns corresponding RoboClaw command
@@ -243,7 +286,7 @@ void eStop() {
 
   isEStopped = true;
   nh.logerror("Tractor has E-Stopped");
-  stopRoboClaw(&rc1);
+  stopRoboClaw(&rc1, &rc2);
   stopEngine();
 } // eStop()
 
