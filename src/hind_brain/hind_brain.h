@@ -68,5 +68,14 @@ void watchdogCB(const std_msgs::Empty&);
 void stopEngine();
 void eStop();
 void eStart();
+void checkSerial(ros::NodeHandle *nh);
+void updateCurrDrive();
+void updateCurrHitchPose();
+void updateRoboClaw(int velMsg, int steerMsg, int hitchMsg);
+void stopRoboClaw(RoboClaw *rc1, RoboClaw *rc2);
+int steerAckToCmd(float ack_steer);
+int velAckToCmd(float ack_vel);
+float mapPrecise(float x, float inMin, float inMax, float outMin, float outMax);
+int computeHitchMsg();
 
 #endif
