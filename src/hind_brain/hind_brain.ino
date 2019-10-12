@@ -226,7 +226,7 @@ int computeHitchMsg(){
   }
   else{
     if (error > 0){ // Hitch is too high
-      hitch_msg = H_ACTUATOR_MAX; // Move lever forwards + hitch down
+      hitch_msg = H_ACTUATOR_MIN; // Move lever forwards + hitch down
     }
     else { // Hitch is too low
       hitch_msg = H_ACTUATOR_MAX; // Move lever backwards + hitch up
