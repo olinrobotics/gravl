@@ -12,6 +12,8 @@ For current documentation see the [wiki](https://github.com/olinrobotics/Tractor
 - Install [ROS](http://wiki.ros.org/)
 - `cd <your_catkin_ws>/src>`
 - Clone this project: `git clone https://github.com/olinrobotics/gravl.git`
+- Navigate to gravl directory `cd <your_catkin_ws/src/gravl>`
+- Install dependencies pt1: `sudo ./setup.bash`
 - Navigate back to the catkin works pace root: `cd ..`
 - Install dependencies: `rosdep install -iry --from-paths src`
 - Build the platform: `catkin_make`

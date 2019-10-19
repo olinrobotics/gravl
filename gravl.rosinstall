@@ -1,9 +1,15 @@
 - git:
     local-name: ethz_piksi_ros
-    uri: git clone https://github.com/ethz-asl/ethz_piksi_ros.git
+    uri: https://github.com/olinrobotics/ethz_piksi_ros.git
+- git:
     local-name: state_controller
     uri: https://github.com/olinrobotics/state_controller
+- git:
     local-name: hokuyo_node
-    uri: git clone https://github.com/ros-drivers/hokuyo_node
+    uri: https://github.com/ros-drivers/hokuyo_node
+- git:
     local-name: pointgrey_camera_driver
     uri: https://github.com/ros-drivers/pointgrey_camera_driver.git
+- git:
+    local-name: gps_common
+    uri: https://github.com/olinrobotics/gps_common.git
