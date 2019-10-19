@@ -1,5 +1,9 @@
 - git:
-    local-name: swiftnav_ros
-    uri: https://github.com/swift-nav/swiftnav_ros
+    local-name: ethz_piksi_ros
+    uri: git clone https://github.com/ethz-asl/ethz_piksi_ros.git
     local-name: state_controller
     uri: https://github.com/olinrobotics/state_controller
+    local-name: hokuyo_node
+    uri: git clone https://github.com/ros-drivers/hokuyo_node
+    local-name: pointgrey_camera_driver
+    uri: https://github.com/ros-drivers/pointgrey_camera_driver.git
