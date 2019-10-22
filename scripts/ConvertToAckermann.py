@@ -13,7 +13,6 @@ Assumes all inputs are normalized between -1 and 1
 import rospy
 from geometry_msgs.msg import Twist
 from ackermann_msgs.msg import AckermannDrive
-from scipy.interpolate import interp1d
 
 class ConvertToAckermann():
     def __init__(self):
@@ -40,12 +39,10 @@ class ConvertToAckermann():
         """
         # Assume twist message is angular vel from -1 to 1, velocity is -1 to 1
         # steering in degrees from -45 to 45, velocity is -2 to 2
-        vel_scale = interp1d([-1,1],[-2,2])
-        angle_scale = interp1d([-1,1],[-45,45])
 
         ack_msg = AckermannDrive()
-        ack_msg.speed = vel_scale(linear_vel)
-        ack_msg.steering_angle = angle_scale(angular_vel)
+        ack_msg.speed = reMap(linear_vel,1,-1,2,-2)
+        ack_msg.steering_angle = reMap(angular_vel,1,-1,45,-45)
 
         return ack_msg
 
@@ -62,6 +59,18 @@ class ConvertToAckermann():
             ack_msg = self.twist_to_ackermann(linear, angular)
             self.ack_pub.publish(ack_msg)
             self.update_rate.sleep()
+
+def reMap(value, maxInput, minInput, maxOutput, minOutput):
+
+	value = maxInput if value > maxInput else value
+	value = minInput if value < minInput else value
+
+	inputSpan = maxInput - minInput
+	outputSpan = maxOutput - minOutput
+
+	scaled_value = float(value - minInput) / float(inputSpan)
+
+	return minOutput + (scaled_value * outputSpan)
 
 if __name__ == "__main__":
     convert_to_ackermann = ConvertToAckermann()
