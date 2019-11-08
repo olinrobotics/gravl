@@ -1,15 +1,16 @@
-#!/usr/bin/env python
-######################################################################
- # KUBO Safety Behavior Node (Teensy 3.5)
- # @file LidarCodeAdvanced.py
- # @author: Nathan Estill
- # @email: nathan.estill@students.olin.edu
- # @version: 2.0
- #
- # Sensing with the Lidar, detecting obstacles,
- # publishing True to estop if an obstacle is seen
- ######################################################################
-import rospy 
+#!/usr/bin/env python3
+
+"""Lidar safety behavior module.
+
+Detects obstacles with lidar data using /scan topic, publishes True
+to /estop topic if an obstacle is detected
+
+@author: Nathan Estill
+@email: nathan.estill@students.olin.edu
+@version: 2.0
+"""
+
+import rospy
 from math import *
 from std_msgs.msg import Bool
 from sensor_msgs.msg import LaserScan
@@ -20,213 +21,339 @@ from ackermann_msgs.msg import AckermannDrive
 
 
 class ObstacleDetection():
+    """Obstacle detection behavior - uses front and downward lidar data."""
 
     def __init__(self):
-        # Variables explained in Github Wiki: https://github.com/olinrobotics/gravl/wiki/Vehicle-Safety
-        rospy.init_node('ObstacleDetection', anonymous=True)
-        self.hasSensedFront = False # If there is an obstacle sensed
+        """Start up ObstacleDetection node, variables explained in wiki.
+
+        https://github.com/olinrobotics/gravl/wiki/Vehicle-Safety
+        """
+        # State variables for obstacle detections
+        self.hasSensedFront = False
         self.hasSensedDown = False
-        self.pubEstop = rospy.Publisher('/softestop', Bool,  queue_size=10) # Publisher that publishes to the estop
-        self.frontlaserSub = rospy.Subscriber('/front/scan',LaserScan,self.frontLidarCB) # Subscribes to the front LIDAR, calls the callback function
-        self.downLaserSub = rospy.Subscriber('/down/scan',LaserScan,self.downLidarCB) # Subscribes to the down Lidar, calls the cb function
-        self.ackermannSub = rospy.Subscriber('/cmd_vel',AckermannDrive,self.ackermannCB) # Subscribes to the tractors velocity commands
+
+        # Attributes to store current data from subscribers
         self.frontData = None
         self.downData = None
         self.ackermannData = None
-        self.DownToGround = 1.2 # Distance from down lidar to the ground
-        self.senseRange = float(rospy.get_param('~senseRange','5.0'))
-        self.mode = rospy.get_param('~mode',"circle")
-        self.widthTractor = 1.25 # Horizontal length of the tractor
-        self.fbWheelDist = 1.524 # Measures the distance from the front wheels to the back wheels
-        self.angleOfIncline = 0.194724 # ?Empirically Discovered. Fix if necessary
-        self.threshold = 5 # How many points must be seen to trigger a stop?
-        self.update_rate = rospy.Rate(5) # Sets the update rate to 5
-        self.vis_pubFront = rospy.Publisher('/LidarFront_pt', Marker, queue_size=2)
-        self.vis_pubDown = rospy.Publisher('/LidarLineDown_pt', Marker, queue_size=2)
-        self.vis_pubLines = rospy.Publisher('/TractorLine_pt',Marker,queue_size=2)
 
+        # Configuration constants
+        self.mode = rospy.get_param('~mode', "circle")
+        self.senseRange = float(rospy.get_param('~senseRange', '5.0'))
+        self.downToGround = 1.2  # Distance from down lidar to ground
+        self.widthTractor = 1.25  # Kubo width (tire-tire)
+        self.fbWheelDist = 1.524  # Kubo dist btw axles (front-back)
+        self.angleOfIncline = 0.194724  # empirically Discovered, fix if needed
+        self.threshold = 5  # How many points must be seen to trigger a stop?
 
-    def frontLidarCB(self,data):
-        # Collects data from the Front Hokuyo Lidar and stores it
+        # Ros main setup
+        rospy.init_node('ObstacleDetection', anonymous=True)
+        rospy.Subscriber('/front/scan', LaserScan, self.frontLidarCB)
+        rospy.Subscriber('/down/scan', LaserScan, self.downLidarCB)
+        rospy.Subscriber('/cmd_vel', AckermannDrive, self.ackermannCB)
+
+        self.update_rate = rospy.Rate(5)  # Behavior loop rate is 5 Hz
+        self.pubEstop = rospy.Publisher('/softestop', Bool,  queue_size=10)
+
+        # Ros visualization setup
+        self.vis_pubFront = rospy.Publisher(
+            '/LidarFront_pt', Marker, queue_size=2)
+        self.vis_pubDown = rospy.Publisher(
+            '/LidarLineDown_pt', Marker, queue_size=2)
+        self.vis_pubLines = rospy.Publisher(
+            '/TractorLine_pt', Marker, queue_size=2)
+
+    def frontLidarCB(self, data):
+        """Store data from front-facing lidar."""
         self.frontData = data
 
-    def downLidarCB(self,data):
-        # Collects data from the Down Hokuyo Lidar and stores it
+    def downLidarCB(self, data):
+        """Store data from downward-facing lidar."""
         self.downData = data
 
-    def ackermannCB(self,data):
-        # Collects data from the Wheels and stores it
+    def ackermannCB(self, data):
+        """Store data on current wheel angle & velocity."""
         self.ackermannData = data
 
     def convertToXDistAndYDistFront(self):
-        self.totalDistFront = [] # Initializing arrays
-        self.xDistFront = [] # Distance from front of tractor
-        self.yDistFront = [] # Distance from center of tractor
-        self.zDistFront = [] # Distance from the tractor to the point, (usually the ground)
+        """Convert raw front scan data to xyz dist of each pt from Kubo."""
+        # Create arrays for storage
+        self.totalDistFront = []
+        self.xDistFront = []
+        self.yDistFront = []
+        self.zDistFront = []
         dataPoints = len(self.frontData.ranges)
         angleSweep = 190.0
-        for i in range(len(self.frontData.ranges)): # Puts the tuple of data into x and y Distances
-            self.totalDistFront.append(self.frontData.ranges[i])
-            angleRad = radians((i - dataPoints / 2) * (angleSweep / dataPoints))      
-            self.xDistFront.append(abs(cos(self.angleOfIncline) * cos(angleRad) * self.totalDistFront[i])) # Computes the distance from the object
-            self.yDistFront.append(sin(angleRad) * self.totalDistFront[i]) # Computes the distance parallel to tractor
-            self.zDistFront.append(sin(self.angleOfIncline) * cos(angleRad) * self.totalDistFront[i])
 
-    def getNumberOfObstaclesFront(self,visualize):
-        # Calculates the number of points that pose a threat to the tractor
-        if self.ackermannData == None: # If the wheel data cannot be found, assume the tractor is pointing forward
-            wheelAngle = 0
-        else:
-            wheelAngle = self.ackermannData.steering_angle
-        self.obstaclePointsFront = 0 # Counts how many points are not the ground
-        self.triggerPointsFront = 0 # Counts number of points breaking threshold  
-        if self.mode == "line" or wheelAngle == 0: # If the mode is set to check a straight line in front of the tractor      
-            for i in range(len(self.totalDistFront)): # Sweep through the distances
-                if(sqrt(self.xDistFront[i]**2 + self.yDistFront[i]**2) < self.senseRange): # Is there an object that is not the ground?
-                    self.obstaclePointsFront += 1 # Add a point into the number of obstacle points
-                    if((sin(wheelAngle) * self.xDistFront[i] - self.widthTractor / 2.0) < self.yDistFront[i] < sin(wheelAngle) * self.xDistFront[i] + self.widthTractor / 2.0): #Will the obstacle hit the tractor?
-                        self.triggerPointsFront += 1 # Add a point the the number of triggers
-        elif self.mode == "circle": # If the mode is set to check a curved path in front of the tractor
-            r = self.fbWheelDist / sin(wheelAngle) # sets the radius of the path of the tractor. Equation is a / sin(theta)
-            if(wheelAngle > 0): # if the wheel angle is to the left, the inner radius is the left one, elsewise, the right radius is inner
-                rInner = self.fbWheelDist / sin(wheelAngle) - self.widthTractor / 2 # radius slightly different from the one above
-                rOuter = self.fbWheelDist / sin(wheelAngle) + self.widthTractor / 2
-            elif(wheelAngle < 0):
-                rInner = self.fbWheelDist / sin(wheelAngle) + self.widthTractor / 2
-                rOuter = self.fbWheelDist / sin(wheelAngle) - self.widthTractor / 2
-            for i in range(len(self.totalDistFront)):
-                if sqrt(self.xDistFront[i]**2 + self.yDistFront[i]**2) < self.senseRange: # checks if the point is within the sense range
+        # Transform each lidar point
+        for i in range(len(self.frontData.ranges)):
+            self.totalDistFront.append(self.frontData.ranges[i])
+            angleRad = radians(
+                (i - dataPoints / 2) * (angleSweep / dataPoints))
+            xDist = abs(
+                cos(self.angleOfIncline) * cos(angleRad)
+                * self.totalDistFront[i])
+            yDist = sin(angleRad) * self.totalDistFront[i]
+            zDist = sin(self.angleOfIncline) * cos(angleRad)\
+                * self.totalDistFront[i]
+
+            self.xDistFront.append(xDist)
+            self.yDistFront.append(yDist)
+            self.zDistFront.append(zDist)
+
+    def getNumberOfObstaclesFront(self, visualize):
+        """Calculate number of points that pose a threat to the tractor."""
+        # If wheel data not found, assume steering straight
+        wheelAngle = 0 if self.ackermannData is None\
+            else self.ackermannData.steering_angle
+
+        self.obstaclePointsFront = 0  # Number of points that aren't ground
+        self.triggerPointsFront = 0  # Number of points breaking threshold
+
+        # If checking straight in front of tractor
+        if self.mode == "line" or wheelAngle == 0:
+            for i in range(len(self.totalDistFront)):  # Sweep point distances
+
+                # Increment obstacle counter if point isn't on ground
+                if (sqrt(self.xDistFront[i]**2 + self.yDistFront[i]**2)
+                        < self.senseRange):
                     self.obstaclePointsFront += 1
-                    if (rInner**2 < self.xDistFront[i]**2 + (self.yDistFront[i]+r)**2 < rOuter**2): # checks if the point is in the path of the tractor
+
+                    # Increment trigger counter if point will hit tractor
+                    if(sin(wheelAngle) * self.xDistFront[i]
+                            - self.widthTractor / 2.0
+                            < self.yDistFront[i]
+                            < sin(wheelAngle) * self.xDistFront[i]
+                            + self.widthTractor / 2.0):
+                        self.triggerPointsFront += 1
+
+        # If checking along tractor trajectory
+        elif self.mode == "circle":
+            r = self.fbWheelDist / sin(wheelAngle)  # Path radius a/sin(theta)
+
+            # Set inner and outer radii based on sign of steer angle
+            # Note: radius slightly different from above
+            if(wheelAngle > 0):
+                rInner = r - self.widthTractor / 2
+                rOuter = r + self.widthTractor / 2
+            elif(wheelAngle < 0):
+                rInner = r + self.widthTractor / 2
+                rOuter = r - self.widthTractor / 2
+
+            for i in range(len(self.totalDistFront)):  # Sweep point distances
+
+                # Increment obstacle counter if point isn't on ground
+                if (sqrt(self.xDistFront[i]**2 + self.yDistFront[i]**2)
+                        < self.senseRange):
+                    self.obstaclePointsFront += 1
+
+                    # Increment trigger counter if point is in path
+                    if (rInner**2
+                            < self.xDistFront[i]**2 + (self.yDistFront[i]+r)**2
+                            < rOuter**2):
                         self.triggerPointsFront += 1
 
         if visualize:
-            lidarPoints = Marker() # Marker to visualize used lidar pts
-            lidarPoints.header.frame_id = "laser" # Publishes it to the laser link, idk if it should be changed
+            lidarPoints = Marker()  # Shows lidar pts
+            # TODO verify that this is the correct frame
+            lidarPoints.header.frame_id = "laser"
             lidarPoints.header.stamp = rospy.Time.now()
-            lidarPoints.type = 8 # makes it a list of points
-            lidarPoints.scale = Vector3(0.02,0.02,0.02) # scale is about 2 cm
-            lidarPoints.color = ColorRGBA(0,0,1,1) # Color is blue
+            lidarPoints.type = 8  # Sets type to point list
+            lidarPoints.scale = Vector3(0.02, 0.02, 0.02)  # Approximately 2cm
+            lidarPoints.color = ColorRGBA(0, 0, 1, 1)  # Blue
+
+            # Add points to lidarPoints and publish
             for i in range(len(self.totalDistFront)):
-                lidarPoints.points.append(Point(self.xDistFront[i],self.yDistFront[i],-self.zDistFront[i]))
+                lidarPoints.points.append(Point(
+                    self.xDistFront[i], self.yDistFront[i],
+                    -self.zDistFront[i]))
             self.vis_pubFront.publish(lidarPoints)
 
     def sendMessagesFront(self):
-        # If the number of trigger points is greater than the threshold, send a singal message to the tractor
-        if(self.triggerPointsFront > self.threshold and not self.hasSensedFront): # if there is an obstacle that will hit the tractor
-            # stop the tractor
+        """Estop tractor if trigger point count passes threshold."""
+        # Stop tractor if threshold crossed (low -> high)
+        if (self.triggerPointsFront > self.threshold
+                and not self.hasSensedFront):
             self.pubEstop.publish(True)
             self.hasSensedFront = True
-        if(self.triggerPointsFront <= self.threshold and self.hasSensedFront):
-            # don't stop the tractor
+
+        # Stop tractor if threshold crossed (high -> low)
+        if (self.triggerPointsFront <= self.threshold
+                and self.hasSensedFront):
             self.pubEstop.publish(False)
             self.hasSensedFront = False
 
     def convertToYDistAndZDistDown(self):
-        self.totalDistDown = [] # Initializing arrays
-        self.zDistDown = [] # Distance from front of tractor
-        self.yDistDown = [] # Distance from center of tractor
+        """Convert raw downward scan data to yz dist of each pt from Kubo."""
+        # Create arrays for storage
+        self.totalDistDown = []
+        self.xDistDown = []
+        self.yDistDown = []
+        self.zDistDown = []
         dataPoints = len(self.downData.ranges)
         angleSweep = 270.0
-        for i in range(len(self.downData.ranges)): # Puts the tuple of data into x and y Distances
-            self.totalDistDown.append(self.downData.ranges[i])
-            angleRad = radians((i - dataPoints / 2) * (angleSweep / dataPoints))
-            self.zDistDown.append(cos(angleRad) * self.totalDistDown[i]) # Computes the distance from the object
-            self.yDistDown.append(sin(angleRad) * self.totalDistDown[i]) # Computes the distance parallel to tractor
 
-    def getNumberOfObstaclesDown(self,visualize):
-        # Calculates the number of points that pose a threat to the tractor
-        self.obstaclePointsDown = 0 # Counts how many points are not the ground
-        self.triggerPointsDown = 0 # Counts number of points breaking threshold
-        for i in range(len(self.totalDistDown)): # Sweep through the distances
-            if(self.zDistDown[i] < self.DownToGround and self.zDistDown[i] > 0.1): # Is there an object that is not the ground?
-                self.obstaclePointsDown += 1 # Add a point into the number of obstacle points
-                if(abs(self.yDistDown[i]) < (self.widthTractor / 2.0)): #Will the obstacle hit the tractor?
-                    self.triggerPointsDown += 1 # Add a point the the number of triggers
+        # Transform each lidar point
+        for i in range(len(self.downData.ranges)):
+            self.totalDistDown.append(self.downData.ranges[i])
+            angleRad = radians(
+                (i - dataPoints / 2) * (angleSweep / dataPoints))
+            zDist = cos(angleRad) * self.totalDistDown[i]
+            yDist = sin(angleRad) * self.totalDistDown[i]
+
+            self.zDistDown.append(zDist)
+            self.yDistDown.append(yDist)
+
+    def getNumberOfObstaclesDown(self, visualize):
+        """Calculate number of points that pose a threat to the tractor."""
+        # Mode doesn't matter bc downward lidar is so close to tires
+
+        self.obstaclePointsDown = 0  # Number of points that aren't ground
+        self.triggerPointsDown = 0  # Number of points breaking threshold
+
+        for i in range(len(self.totalDistDown)):  # Sweep point distances
+
+            # Increment obstacle counter if point isn't on ground
+            if (0.1 < self.zDistDown[i] < self.downToGround):
+                self.obstaclePointsDown += 1
+
+                # Increment trigger counter if point will hit tractor
+                if (abs(self.yDistDown[i]) < (self.widthTractor / 2.0)):
+                    self.triggerPointsDown += 1
+
         if visualize:
-            lidarPoints = Marker() # Marker to visualize used lidar pts
-            lidarPoints.header.frame_id = "laser" # Publishes it to the laser link, idk if it should be changed
+            lidarPoints = Marker()  # Shows lidar pts
+            # TODO verify frame is correct
+            lidarPoints.header.frame_id = "laser"
             lidarPoints.header.stamp = rospy.Time.now()
-            lidarPoints.type = 8 # makes it a list of points
-            lidarPoints.scale = Vector3(0.02,0.02,0.02) # scale is about 2 cm
-            lidarPoints.color = ColorRGBA(0,0,1,1) # Color is Boolue
+            lidarPoints.type = 8  # Sets type to point list
+            lidarPoints.scale = Vector3(0.02, 0.02, 0.02)  # Approximately 2cm
+            lidarPoints.color = ColorRGBA(0, 0, 1, 1)  # Blue
+
+            # Add points to lidarPoints and publish
             for i in range(len(self.totalDistDown)):
-                lidarPoints.points.append(Point(0,self.yDistDown[i],-self.zDistDown[i]))
+                lidarPoints.points.append(Point(
+                    0, self.yDistDown[i], -self.zDistDown[i]))
             self.vis_pubDown.publish(lidarPoints)
-            
+
     def sendMessagesDown(self):
-        # If the number of trigger points is greater than the threshold, send a singal message to the tractor
-        if(self.triggerPointsDown > self.threshold and not self.hasSensedDown): # if there is an obstacle that will hit the tractor
-            # stop the tractor
+        """Estop tractor if trigger point count passes threshold."""
+        # Stop tractor if threshold crossed (low -> high)
+        if (self.triggerPointsDown > self.threshold
+                and not self.hasSensedDown):
             self.pubEstop.publish(True)
             self.hasSensedDown = True
-        if(self.triggerPointsDown <= self.threshold and self.hasSensedDown):
-            # don't stop the tractor
+
+        # Start tractor if threshold crossed (high -> low)
+        if (self.triggerPointsDown <= self.threshold
+                and self.hasSensedDown):
             self.pubEstop.publish(False)
             self.hasSensedDown = False
 
     def publishTractorLines(self):
-        # publishes the path of the tractor going through space, purely for visualization.
-        tractorLines = Marker() # marks the path that the tractor will take
+        """Visualize path of tractor tires based on mode."""
+        tractorLines = Marker()  # Marks planned tractor path
         tractorLines.header.frame_id = "laser"
         tractorLines.header.stamp = rospy.Time.now()
-        tractorLines.scale = Vector3(0.02, 0.01, 0.01)
-        tractorLines.color = ColorRGBA(1,1,1,1) # white
-        if self.mode == "line": # checks the mode the tractor is in
-            tractorLines.type = 5 # makes the markers a line that is on every 2 points, (line from 0-1, 2-3, 4-5, etc.)
-            if self.ackermannData == None:
-                wheelAngle = 0 # if teh tractor isn't getting data, it will make a path straight forward
-            else:
-                wheelAngle = self.ackermannData.steering_angle
-            tractorLines.points.append(Point(self.senseRange * cos(wheelAngle),self.widthTractor / 2 + sin(wheelAngle) * self.senseRange,0)) # makes a straight line in the direction of the wheels
-            tractorLines.points.append(Point(0,self.widthTractor / 2,0))
-            tractorLines.points.append(Point(0,-self.widthTractor / 2,0))
-            tractorLines.points.append(Point(self.senseRange * cos(wheelAngle),-self.widthTractor / 2 + sin(wheelAngle) * self.senseRange,0))
-            self.vis_pubLines.publish(tractorLines)
-        elif self.mode == "circle":
-            if self.ackermannData == None or self.ackermannData.steering_angle == 0.0: # does the same as above
-                tractorLines.type = 5 # makes the markers a line that is on every 2 points, (line from 0-1, 2-3, 4-5, etc.)
-                tractorLines.points.append(Point(100,self.widthTractor / 2,0))
-                tractorLines.points.append(Point(-100,self.widthTractor / 2,0))
-                tractorLines.points.append(Point(-100,-self.widthTractor / 2,0))
-                tractorLines.points.append(Point(100,-self.widthTractor / 2,0))
-            else:
-                wheelAngle = self.ackermannData.steering_angle
-                tractorLines.type = 4 # makes the markers a line that is on every point, (line from 0-1, 1-2, 2-3, 3-4, 4-5, etc.)
-                x = 0.0 # initializes x, y, t
-                y = 0.0
-                t = 0.0
-                r = self.fbWheelDist / sin(wheelAngle)
-                while x**2 + y**2 < self.senseRange**2 and t < pi / 2: # stops at the sense range or if the angle gets above 90 degrees
-                    rOuter = self.fbWheelDist / sin(wheelAngle) + self.widthTractor / 2
-                    x = abs(rOuter * sin(t)) # parametric equation for a circle
-                    y = rOuter * cos(t) - r
-                    if x**2 + y**2 < self.senseRange **2:
-                        tractorLines.points.append(Point(x,y,0))
-                    t += 0.01
-                while t >= -0.01:
-                    rInner = self.fbWheelDist / sin(wheelAngle) - self.widthTractor / 2
-                    x = abs(rInner * sin(t))
-                    y = rInner * cos(t) - r
-                    if(x**2 + y**2 < self.senseRange**2):
-                        tractorLines.points.append(Point(x,y,0))
-                    t -= 0.01
+        tractorLines.scale = Vector3(0.02,  0.01,  0.01)
+        tractorLines.color = ColorRGBA(1, 1, 1, 1)  # White
+
+        # Visualization for line mode
+        if self.mode == "line":
+            # Marker type connects every two points (line from 0-1, 2-3, 4-5)
+            tractorLines.type = 5
+
+            # If wheel data not found, assume steering straight
+            wheelAngle = 0 if self.ackermannData is None\
+                else self.ackermannData.steering_angle
+
+            # Line for right wheel
+            tractorLines.points.append(Point(0, self.widthTractor / 2, 0))
+            tractorLines.points.append(Point(
+                self.senseRange * cos(wheelAngle),
+                self.widthTractor / 2 + sin(wheelAngle) * self.senseRange, 0))
+
+            # Line for left wheel
+            tractorLines.points.append(Point(0, -self.widthTractor / 2, 0))
+            tractorLines.points.append(Point(
+                self.senseRange * cos(wheelAngle),
+                -self.widthTractor / 2 + sin(wheelAngle) * self.senseRange, 0))
+
             self.vis_pubLines.publish(tractorLines)
 
-    def run(self,visualize = False):
-        # Runs the code
-        while not rospy.is_shutdown() and self.frontData == None and self.downData == None:
-            rospy.logwarn("ERR: Missing data: /front/scan and /down/scan")
-        while not rospy.is_shutdown() and self.frontData == None and self.downData != None:
-            rospy.logwarn("ERR: Missing data: /front/scan (Front Lidar Not Connected)")
+        # Visualization for arc mode
+        elif self.mode == "circle":
+
+            # If wheel data not found or steering straight, make straight lines
+            if (self.ackermannData is None
+                    or self.ackermannData.steering_angle == 0.0):
+
+                # Marker type connects every other pair of points (0-1, 2-3)
+                tractorLines.type = 5
+                tractorLines.points.append(Point(
+                    100, self.widthTractor / 2, 0))
+                tractorLines.points.append(Point(
+                    -100, self.widthTractor / 2, 0))
+                tractorLines.points.append(Point(
+                    -100, -self.widthTractor / 2, 0))
+                tractorLines.points.append(Point(
+                    100, -self.widthTractor / 2, 0))
+
+            # Generate arced lines
+            else:
+                wheelAngle = self.ackermannData.steering_angle
+                tractorLines.type = 4  # Marker type connects every pair of pts
+                x, y, t = 0.0, 0.0, 0.0
+                r = self.fbWheelDist / sin(wheelAngle)
+
+                # Generate points until sense range or angle > 90 degrees
+                while x**2 + y**2 < self.senseRange**2 and t < pi / 2:
+                    rOuter = self.fbWheelDist / sin(wheelAngle)\
+                        + self.widthTractor / 2
+                    x = abs(rOuter * sin(t))  # Parametric equation for circle
+                    y = rOuter * cos(t) - r
+                    if x**2 + y**2 < self.senseRange**2:
+                        tractorLines.points.append(Point(x, y, 0))
+                    t += 0.01
+
+                while t >= -0.01:
+                    rInner = self.fbWheelDist / sin(wheelAngle)\
+                        - self.widthTractor / 2
+                    x = abs(rInner * sin(t))  # Parametric equation for circle
+                    y = rInner * cos(t) - r
+                    if(x**2 + y**2 < self.senseRange**2):
+                        tractorLines.points.append(Point(x, y, 0))
+                    t -= 0.01
+
+            self.vis_pubLines.publish(tractorLines)
+
+    def run(self, visualize=False):
+        """Run main behavior loop, dependent on available data."""
+        # If missing data from both Lidar
+        while (not rospy.is_shutdown()
+                and self.frontData is None
+                and self.downData is None):
+            rospy.logwarn_throttle(
+                5, "Missing data: /front/scan and /down/scan")
+
+        # If missing data from front Lidar only
+        while (not rospy.is_shutdown()
+                and self.frontData is None
+                and self.downData is not None):
+            rospy.logwarn_throttle(5, "Missing data: /front/scan")
+
             self.convertToYDistAndZDistDown()
             self.getNumberOfObstaclesDown(visualize)
             self.sendMessagesDown()
             if visualize:
                 self.publishTractorLines()
             self.update_rate.sleep()
-        while not rospy.is_shutdown() and self.downData == None and self.frontData != None:
-            rospy.logwarn("ERR: Missing data: /down/scan (Down Lidar Not Connected)")
+
+        # If missing data from down Lidar only
+        while (not rospy.is_shutdown()
+                and self.downData is None
+                and self.frontData is not None):
+            rospy.logwarn_throttle(5, "Missing data: /down/scan")
             self.convertToXDistAndYDistFront()
             self.getNumberOfObstaclesFront(visualize)
             self.sendMessagesFront()
@@ -234,6 +361,8 @@ class ObstacleDetection():
                 self.publishTractorLines()
             self.update_rate.sleep()
         rospy.loginfo("Running")
+
+        # If all data is available
         while not rospy.is_shutdown():
             self.convertToXDistAndYDistFront()
             self.getNumberOfObstaclesFront(visualize)
@@ -244,6 +373,7 @@ class ObstacleDetection():
             if visualize:
                 self.publishTractorLines()
             self.update_rate.sleep()
+
 
 if __name__ == '__main__':
     obs = ObstacleDetection()
