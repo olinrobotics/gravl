@@ -1,0 +1,604 @@
+title: p2p_test
+waypoints:
+   0:
+       index: 0
+       point: {x: 1.643, y: -8.5, z: -1.106}
+       frame: odom
+       behavior: p2p
+       forward: true
+       autocontinue: false
+   1:
+       index: 1
+       point: {x: 2.167, y: -7.848, z: -1.057}
+       frame: odom
+       behavior: p2p
+       forward: true
+       autocontinue: false
+   2:
+       index: 2
+       point: {x: 2.848, y: -6.987, z: -1.066}
+       frame: odom
+       behavior: p2p
+       forward: true
+       autocontinue: false
+   3:
+       index: 3
+       point: {x: 3.509, y: -6.01, z: -1.083}
+       frame: odom
+       behavior: p2p
+       forward: true
+       autocontinue: false
+   4:
+       index: 4
+       point: {x: 4.275, y: -4.989, z: -1.115}
+       frame: odom
+       behavior: p2p
+       forward: true
+       autocontinue: false
+   5:
+       index: 5
+       point: {x: 5.076, y: -3.847, z: -1.128}
+       frame: odom
+       behavior: p2p
+       forward: true
+       autocontinue: false
+   6:
+       index: 6
+       point: {x: 5.817, y: -2.722, z: -1.157}
+       frame: odom
+       behavior: p2p
+       forward: true
+       autocontinue: false
+   7:
+       index: 7
+       point: {x: 6.27, y: -2.009, z: -1.137}
+       frame: odom
+       behavior: p2p
+       forward: true
+       autocontinue: false
+   8:
+       index: 8
+       point: {x: 6.889, y: -1.047, z: -1.154}
+       frame: odom
+       behavior: p2p
+       forward: true
+       autocontinue: false
+   9:
+       index: 9
+       point: {x: 7.437, y: -0.052, z: -1.134}
+       frame: odom
+       behavior: p2p
+       forward: true
+       autocontinue: false
+   10:
+       index: 10
+       point: {x: 7.816, y: 0.94, z: -1.156}
+       frame: odom
+       behavior: p2p
+       forward: true
+       autocontinue: false
+   11:
+       index: 11
+       point: {x: 7.943, y: 1.718, z: -1.159}
+       frame: odom
+       behavior: p2p
+       forward: true
+       autocontinue: false
+   12:
+       index: 12
+       point: {x: 8.093, y: 2.726, z: -1.227}
+       frame: odom
+       behavior: p2p
+       forward: true
+       autocontinue: false
+   13:
+       index: 13
+       point: {x: 8.029, y: 3.686, z: -1.242}
+       frame: odom
+       behavior: p2p
+       forward: true
+       autocontinue: false
+   14:
+       index: 14
+       point: {x: 7.518, y: 4.601, z: -1.307}
+       frame: odom
+       behavior: p2p
+       forward: true
+       autocontinue: false
+   15:
+       index: 15
+       point: {x: 6.862, y: 5.397, z: -1.302}
+       frame: odom
+       behavior: p2p
+       forward: true
+       autocontinue: false
+   16:
+       index: 16
+       point: {x: 6.203, y: 5.897, z: -1.308}
+       frame: odom
+       behavior: p2p
+       forward: true
+       autocontinue: false
+   17:
+       index: 17
+       point: {x: 5.272, y: 6.373, z: -1.275}
+       frame: odom
+       behavior: p2p
+       forward: true
+       autocontinue: false
+   18:
+       index: 18
+       point: {x: 4.514, y: 6.669, z: -1.267}
+       frame: odom
+       behavior: p2p
+       forward: true
+       autocontinue: false
+   19:
+       index: 19
+       point: {x: 3.507, y: 7.106, z: -1.264}
+       frame: odom
+       behavior: p2p
+       forward: true
+       autocontinue: false
+   20:
+       index: 20
+       point: {x: 2.378, y: 7.408, z: -1.284}
+       frame: odom
+       behavior: p2p
+       forward: true
+       autocontinue: false
+   21:
+       index: 21
+       point: {x: 1.21, y: 7.59, z: -1.268}
+       frame: odom
+       behavior: p2p
+       forward: true
+       autocontinue: false
+   22:
+       index: 22
+       point: {x: 0.236, y: 7.629, z: -1.26}
+       frame: odom
+       behavior: p2p
+       forward: true
+       autocontinue: false
+   23:
+       index: 23
+       point: {x: -0.754, y: 7.476, z: -1.303}
+       frame: odom
+       behavior: p2p
+       forward: true
+       autocontinue: false
+   24:
+       index: 24
+       point: {x: -1.685, y: 7.26, z: -1.314}
+       frame: odom
+       behavior: p2p
+       forward: true
+       autocontinue: false
+   25:
+       index: 25
+       point: {x: -2.774, y: 6.73, z: -1.324}
+       frame: odom
+       behavior: p2p
+       forward: true
+       autocontinue: false
+   26:
+       index: 26
+       point: {x: -3.597, y: 6.216, z: -1.328}
+       frame: odom
+       behavior: p2p
+       forward: true
+       autocontinue: false
+   27:
+       index: 27
+       point: {x: -4.391, y: 5.693, z: -1.311}
+       frame: odom
+       behavior: p2p
+       forward: true
+       autocontinue: false
+   28:
+       index: 28
+       point: {x: -5.052, y: 4.871, z: -1.29}
+       frame: odom
+       behavior: p2p
+       forward: true
+       autocontinue: false
+   29:
+       index: 29
+       point: {x: -5.701, y: 4.279, z: -1.277}
+       frame: odom
+       behavior: p2p
+       forward: true
+       autocontinue: false
+   30:
+       index: 30
+       point: {x: -6.12, y: 3.555, z: -1.27}
+       frame: odom
+       behavior: p2p
+       forward: true
+       autocontinue: false
+   31:
+       index: 31
+       point: {x: -6.571, y: 2.857, z: -1.233}
+       frame: odom
+       behavior: p2p
+       forward: true
+       autocontinue: false
+   32:
+       index: 32
+       point: {x: -7.127, y: 1.802, z: -1.19}
+       frame: odom
+       behavior: p2p
+       forward: true
+       autocontinue: false
+   33:
+       index: 33
+       point: {x: -7.589, y: 1.049, z: -1.158}
+       frame: odom
+       behavior: p2p
+       forward: true
+       autocontinue: false
+   34:
+       index: 34
+       point: {x: -7.854, y: 0.645, z: -1.145}
+       frame: odom
+       behavior: p2p
+       forward: true
+       autocontinue: false
+   35:
+       index: 35
+       point: {x: -8.337, y: -0.1, z: -1.129}
+       frame: odom
+       behavior: p2p
+       forward: true
+       autocontinue: false
+   36:
+       index: 36
+       point: {x: -8.497, y: -0.651, z: -1.118}
+       frame: odom
+       behavior: p2p
+       forward: true
+       autocontinue: false
+   37:
+       index: 37
+       point: {x: -8.867, y: -1.379, z: -1.067}
+       frame: odom
+       behavior: p2p
+       forward: true
+       autocontinue: false
+   38:
+       index: 38
+       point: {x: -8.908, y: -1.818, z: -1.087}
+       frame: odom
+       behavior: p2p
+       forward: true
+       autocontinue: false
+   39:
+       index: 39
+       point: {x: -9.065, y: -2.398, z: -0.979}
+       frame: odom
+       behavior: p2p
+       forward: true
+       autocontinue: false
+   40:
+       index: 40
+       point: {x: -9.362, y: -3.04, z: -1.057}
+       frame: odom
+       behavior: p2p
+       forward: true
+       autocontinue: false
+   41:
+       index: 41
+       point: {x: -9.336, y: -3.383, z: -1.069}
+       frame: odom
+       behavior: p2p
+       forward: true
+       autocontinue: false
+   42:
+       index: 42
+       point: {x: -9.42, y: -3.826, z: -1.008}
+       frame: odom
+       behavior: p2p
+       forward: true
+       autocontinue: false
+   43:
+       index: 43
+       point: {x: -9.568, y: -4.396, z: -1.026}
+       frame: odom
+       behavior: p2p
+       forward: true
+       autocontinue: false
+   44:
+       index: 44
+       point: {x: -9.62, y: -4.927, z: -1.073}
+       frame: odom
+       behavior: p2p
+       forward: true
+       autocontinue: false
+   45:
+       index: 45
+       point: {x: -9.586, y: -5.457, z: -1.073}
+       frame: odom
+       behavior: p2p
+       forward: true
+       autocontinue: false
+   46:
+       index: 46
+       point: {x: -9.637, y: -5.885, z: -1.049}
+       frame: odom
+       behavior: p2p
+       forward: true
+       autocontinue: false
+   47:
+       index: 47
+       point: {x: -9.645, y: -6.326, z: -1.032}
+       frame: odom
+       behavior: p2p
+       forward: true
+       autocontinue: false
+   48:
+       index: 48
+       point: {x: -9.572, y: -6.708, z: -1.033}
+       frame: odom
+       behavior: p2p
+       forward: true
+       autocontinue: false
+   49:
+       index: 49
+       point: {x: -9.565, y: -7.325, z: -1.018}
+       frame: odom
+       behavior: p2p
+       forward: true
+       autocontinue: false
+   50:
+       index: 50
+       point: {x: -9.487, y: -7.783, z: -1.03}
+       frame: odom
+       behavior: p2p
+       forward: true
+       autocontinue: false
+   51:
+       index: 51
+       point: {x: -9.332, y: -8.176, z: -1.01}
+       frame: odom
+       behavior: p2p
+       forward: true
+       autocontinue: false
+   52:
+       index: 52
+       point: {x: -9.183, y: -8.524, z: -1.007}
+       frame: odom
+       behavior: p2p
+       forward: true
+       autocontinue: false
+   53:
+       index: 53
+       point: {x: -9.055, y: -8.92, z: -0.987}
+       frame: odom
+       behavior: p2p
+       forward: true
+       autocontinue: false
+   54:
+       index: 54
+       point: {x: -8.897, y: -9.291, z: -0.965}
+       frame: odom
+       behavior: p2p
+       forward: true
+       autocontinue: false
+   55:
+       index: 55
+       point: {x: -8.627, y: -9.786, z: -0.962}
+       frame: odom
+       behavior: p2p
+       forward: true
+       autocontinue: false
+   56:
+       index: 56
+       point: {x: -8.465, y: -10.178, z: -0.931}
+       frame: odom
+       behavior: p2p
+       forward: true
+       autocontinue: false
+   57:
+       index: 57
+       point: {x: -8.117, y: -10.531, z: -0.891}
+       frame: odom
+       behavior: p2p
+       forward: true
+       autocontinue: false
+   58:
+       index: 58
+       point: {x: -7.828, y: -10.777, z: -0.886}
+       frame: odom
+       behavior: p2p
+       forward: true
+       autocontinue: false
+   59:
+       index: 59
+       point: {x: -7.584, y: -11.168, z: -0.865}
+       frame: odom
+       behavior: p2p
+       forward: true
+       autocontinue: false
+   60:
+       index: 60
+       point: {x: -7.269, y: -11.499, z: -0.873}
+       frame: odom
+       behavior: p2p
+       forward: true
+       autocontinue: false
+   61:
+       index: 61
+       point: {x: -6.915, y: -11.764, z: -0.894}
+       frame: odom
+       behavior: p2p
+       forward: true
+       autocontinue: false
+   62:
+       index: 62
+       point: {x: -6.49, y: -12.032, z: -0.885}
+       frame: odom
+       behavior: p2p
+       forward: true
+       autocontinue: false
+   63:
+       index: 63
+       point: {x: -6.153, y: -12.24, z: -0.869}
+       frame: odom
+       behavior: p2p
+       forward: true
+       autocontinue: false
+   64:
+       index: 64
+       point: {x: -5.823, y: -12.379, z: -0.866}
+       frame: odom
+       behavior: p2p
+       forward: true
+       autocontinue: false
+   65:
+       index: 65
+       point: {x: -5.466, y: -12.535, z: -0.855}
+       frame: odom
+       behavior: p2p
+       forward: true
+       autocontinue: false
+   66:
+       index: 66
+       point: {x: -5.165, y: -12.69, z: -0.841}
+       frame: odom
+       behavior: p2p
+       forward: true
+       autocontinue: false
+   67:
+       index: 67
+       point: {x: -4.697, y: -12.791, z: -0.836}
+       frame: odom
+       behavior: p2p
+       forward: true
+       autocontinue: false
+   68:
+       index: 68
+       point: {x: -4.377, y: -12.828, z: -0.879}
+       frame: odom
+       behavior: p2p
+       forward: true
+       autocontinue: false
+   69:
+       index: 69
+       point: {x: -3.989, y: -12.881, z: -0.882}
+       frame: odom
+       behavior: p2p
+       forward: true
+       autocontinue: false
+   70:
+       index: 70
+       point: {x: -3.521, y: -13.14, z: -0.859}
+       frame: odom
+       behavior: p2p
+       forward: true
+       autocontinue: false
+   71:
+       index: 71
+       point: {x: -3.188, y: -13.17, z: -0.916}
+       frame: odom
+       behavior: p2p
+       forward: true
+       autocontinue: false
+   72:
+       index: 72
+       point: {x: -2.757, y: -13.194, z: -0.938}
+       frame: odom
+       behavior: p2p
+       forward: true
+       autocontinue: false
+   73:
+       index: 73
+       point: {x: -2.178, y: -13.072, z: -0.913}
+       frame: odom
+       behavior: p2p
+       forward: true
+       autocontinue: false
+   74:
+       index: 74
+       point: {x: -1.695, y: -13.171, z: -0.956}
+       frame: odom
+       behavior: p2p
+       forward: true
+       autocontinue: false
+   75:
+       index: 75
+       point: {x: -1.445, y: -13.032, z: -0.974}
+       frame: odom
+       behavior: p2p
+       forward: true
+       autocontinue: false
+   76:
+       index: 76
+       point: {x: -0.969, y: -12.837, z: -0.978}
+       frame: odom
+       behavior: p2p
+       forward: true
+       autocontinue: false
+   77:
+       index: 77
+       point: {x: -0.637, y: -12.718, z: -0.98}
+       frame: odom
+       behavior: p2p
+       forward: true
+       autocontinue: false
+   78:
+       index: 78
+       point: {x: -0.251, y: -12.468, z: -1.001}
+       frame: odom
+       behavior: p2p
+       forward: true
+       autocontinue: false
+   79:
+       index: 79
+       point: {x: 0.152, y: -12.237, z: -1.057}
+       frame: odom
+       behavior: p2p
+       forward: true
+       autocontinue: false
+   80:
+       index: 80
+       point: {x: 0.367, y: -11.886, z: -1.073}
+       frame: odom
+       behavior: p2p
+       forward: true
+       autocontinue: false
+   81:
+       index: 81
+       point: {x: 0.509, y: -11.702, z: -1.049}
+       frame: odom
+       behavior: p2p
+       forward: true
+       autocontinue: false
+   82:
+       index: 82
+       point: {x: 0.803, y: -11.355, z: -1.066}
+       frame: odom
+       behavior: p2p
+       forward: true
+       autocontinue: false
+   83:
+       index: 83
+       point: {x: 0.989, y: -11.059, z: -1.058}
+       frame: odom
+       behavior: p2p
+       forward: true
+       autocontinue: false
+   84:
+       index: 84
+       point: {x: 0.989, y: -11.059, z: -1.058}
+       frame: odom
+       behavior: p2p
+       forward: true
+       autocontinue: false
+   85:
+       index: 85
+       point: {x: 0, y: 0, z: 0}
+       frame: odom
+       behavior: safety
+       forward: none
+       autocontinue: none
