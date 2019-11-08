@@ -376,5 +376,11 @@ class ObstacleDetection():
 
 
 if __name__ == '__main__':
-    obs = ObstacleDetection()
-    obs.run(True)
+    # Ensure that roscore is running
+    try:
+        rospy.get_published_topics()  # Fails if roscore not running
+
+        obs = ObstacleDetection()
+        obs.run(True)
+    except:
+        print('Unable to find roscore.')
