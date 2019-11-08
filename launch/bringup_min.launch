@@ -10,6 +10,8 @@ position or sensor data
   <include file="$(find gravl)/launch/teleop.launch"/>
   <!-- Laser -->
   <include file="$(find gravl)/launch/lidar.launch"/>
+  <!-- RTK GPS -->
+  <include file="$(find gravl)/launch/rtk.launch"/>
   <!-- Imu -->
   <!-- TODO -->
   <!-- State Controller -->

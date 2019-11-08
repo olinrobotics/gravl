@@ -1,4 +1,17 @@
 #!/usr/bin/env python
+"""
+Subscribes to a relative position from the RTK gps and converts it to an odometry message
+to update the /base_link to /odom tf.
+
+Subscribes to /piksi/baseline_ned
+Publishes to /gps_odom
+
+@edited: 11/8/2019
+@author: Amy Phung
+
+TODO:
+Use the full gps coordinate instead of the relative measurements
+"""
 
 import rospy
 import tf
@@ -20,6 +33,7 @@ class PositionToOdom:
     def positionCB(self, msg):
         self.position_data = msg
 
+        # Broadcast message as tf & convert message units to meters
         self.odom_broadcaster.sendTransform((msg.n/1000., msg.e/1000., msg.d/1000.),
                   tf.transformations.quaternion_from_euler(0, 0, 0),
                   rospy.Time.now(),
@@ -29,7 +43,7 @@ class PositionToOdom:
     def convertToOdometry(self):
         odom_msg = Odometry()
         odom_msg.header.frame_id = "/base_link"#TODO: Make this gps frame
-        odom_msg.pose.pose.position.x = self.position_data.n/1000.
+        odom_msg.pose.pose.position.x = self.position_data.n/1000. # Convert to meters
         odom_msg.pose.pose.position.y = self.position_data.e/1000.
         odom_msg.pose.pose.position.z = self.position_data.d/1000.
         return odom_msg

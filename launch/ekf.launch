@@ -1,0 +1,31 @@
+<launch>
+  <node pkg="gravl" type="PositionToOdom.py" name="position_to_odom"/>
+</launch>
+
+<!--TODO: Use gps lat/long data instead of point -->
+
+<!-- <launch>
+ <node pkg="robot_pose_ekf" type="robot_pose_ekf" name="robot_pose_ekf" output="screen">
+   <remap from="imu_data" to="/imu/data"/>
+   <remap from="odom" to="gps_odom"/>
+   <param name="output_frame" value="odom"/>
+   <param name="freq" value="300.0"/>
+   <param name="sensor_timeout" value="10.0"/>
+   <param name="odom_used" value="true"/>
+   <param name="imu_used" value="true"/>
+   <param name="vo_used" value="false"/>
+   <param name="debug" value="true"/>
+   <param name="self_diagnose" value="true"/>
+ </node> -->
+ <!-- <node name="gps_conv" pkg="gps_common" type="utm_odometry_node" output="screen">
+   <remap from="odom" to="gps_odom"/>
+   <remap from="fix" to="/gps/fix" />
+   <param name="rot_covariance" value="99999" />
+   <param name="frame_id" value="base_footprint" />
+ </node>
+ <node pkg="tf" type="static_transform_publisher" name="base_broadcaster"
+       args="0 0 0 0 0 0 base_footprint base_link 100" />
+</launch> -->
+
+<!--TODO: Maybe this should be a link to the gps instead -->
+<!-- TODO: make input and output topics parameters -->
