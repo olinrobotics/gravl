@@ -1,6 +1,6 @@
 <launch>
   <arg name="senseRange" default="5.0" />
-  <arg name="mode" default="circle"
+  <arg name="mode" default="circle" />
   <node name="LidarCodeAdvanced" pkg="gravl" type="LidarCodeAdvanced.py" args="_senseRange:=$(arg senseRange) _mode:=$(arg mode)" />
   <arg name="vis" default="False" />
   <group if="$(arg vis)">
