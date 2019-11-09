@@ -13,7 +13,7 @@ position or sensor data
   <!-- RTK GPS -->
   <include file="$(find gravl)/launch/rtk.launch"/>
   <!-- Imu -->
-  <!-- TODO -->
+  <node pkg="phidgets_imu" type="phidgets_imu_node" name="phidgets_imu" output="screen"/>
   <!-- State Controller -->
   <include file="$(find gravl)/launch/mainstate.launch"/>
   <!-- Hindbrain -->
