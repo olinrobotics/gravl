@@ -24,6 +24,15 @@ RoboClaw rc2(rc2_serial, RC_TIMEOUT);
 // Encoders
 Encoder hitchEncoder(HITCH_ENC_A_PIN, HITCH_ENC_B_PIN);
 
+//Wheel Lengths
+float distanceR = 0.0;
+float distanceL = 0.0;
+int prevR = 0;
+int prevL = 0;
+int revsR = 0;
+int revsL = 0;
+int offsetR = 0;
+int offsetL = 0;
 
 // States
 boolean isEStopped = false;
@@ -43,11 +52,20 @@ ros::NodeHandle nh;
 ackermann_msgs::AckermannDrive curr_drive_pose;
 geometry_msgs::Pose curr_hitch_pose;
 geometry_msgs::Pose desired_hitch_pose;
+std_msgs::Float64 curr_wheel_enc_right;
+std_msgs::Float64 curr_wheel_enc_left;
+
 ros::Subscriber<ackermann_msgs::AckermannDrive> drive_sub("/cmd_vel", &ackermannCB);
 ros::Subscriber<geometry_msgs::Pose> hitch_sub("/cmd_hitch", &hitchCB);
 ros::Subscriber<std_msgs::Empty> ping("/safety_clock", &watchdogCB);
+ros::Subscriber<std_msgs::Float64> wheelResetRight("/wheel_reset_right", &wheelRRCB);
+ros::Subscriber<std_msgs::Float64> wheelResetLeft("/wheel_reset_left", &wheelRLCB);
 ros::Publisher pub_drive("/curr_drive", &curr_drive_pose);
 ros::Publisher hitch_pose("/hitch_pose", &curr_hitch_pose);
+ros::Publisher encoderRight("/wheel_enc_right", &curr_wheel_enc_right);
+ros::Publisher encoderLeft("/wheel_enc_left", &curr_wheel_enc_left);
+
+
 
 void setup() {
 
@@ -71,8 +89,13 @@ void setup() {
   nh.subscribe(drive_sub);
   nh.subscribe(hitch_sub);
   nh.subscribe(ping);
+  nh.subscribe(wheelResetRight);
+  nh.subscribe(wheelResetLeft);
   nh.advertise(pub_drive);
   nh.advertise(hitch_pose);
+  nh.advertise(encoderRight);
+  nh.advertise(encoderLeft);
+  
 
   // Wait for connection
   while(true){
@@ -93,6 +116,38 @@ void setup() {
   rc1.SpeedAccelDeccelPositionM2(RC1_ADDRESS, 0, 500, 0, steerMsg, 1);
   rc2.SpeedAccelDeccelPositionM2(RC2_ADDRESS, 0, 300, 0, hitchMsg, 1);
 
+  // Initialize Wheel Encoder Pins
+  for(int i = 0; i <=5; i++){
+    pinMode(WHEEL_ENC_R_PINS[i],INPUT);
+    pinMode(WHEEL_ENC_L_PINS[i],INPUT);
+  }
+
+  //Initialize the Wheel Encoders to 0
+  bool readingsR[6];
+  bool readingsL[6];
+  readingsR[0] = !digitalRead(WHEEL_ENC_R_PINS[0]);
+  readingsR[1] = !digitalRead(WHEEL_ENC_R_PINS[1]);
+  readingsR[2] = !digitalRead(WHEEL_ENC_R_PINS[2]);
+  readingsR[3] = !digitalRead(WHEEL_ENC_R_PINS[3]);
+  readingsR[4] = !digitalRead(WHEEL_ENC_R_PINS[4]);
+  readingsR[5] = !digitalRead(WHEEL_ENC_R_PINS[5]);
+  offsetR = readingsR[5] * pow(2,5);
+  for(int i = 4; i >= 0; i--){
+    readingsR[i] = readingsR[i+1] ^ readingsR[i];
+    offsetR += readingsR[i] * pow(2,i);
+  }
+  readingsL[0] = !digitalRead(WHEEL_ENC_L_PINS[0]);
+  readingsL[1] = !digitalRead(WHEEL_ENC_L_PINS[1]);
+  readingsL[2] = !digitalRead(WHEEL_ENC_L_PINS[2]);
+  readingsL[3] = !digitalRead(WHEEL_ENC_L_PINS[3]);
+  readingsL[4] = !digitalRead(WHEEL_ENC_L_PINS[4]);
+  readingsL[5] = !digitalRead(WHEEL_ENC_L_PINS[5]);
+  offsetL = readingsL[5] * pow(2,5);
+  for(int i = 4; i >= 0; i--){
+    readingsL[i] = readingsL[i+1] ^ readingsL[i];
+    offsetL += readingsL[i] * pow(2,i);
+  }
+    
   // TODO: make wait until motors reach default positions
 
   watchdog_timer = millis();
@@ -106,6 +161,7 @@ void loop() {
   // Update current published pose
   updateCurrDrive();
   updateCurrHitchPose();
+  updateWheelPose();
 
   hitchMsg = computeHitchMsg();
 
@@ -137,6 +193,16 @@ void hitchCB(const geometry_msgs::Pose &hitch){
 void watchdogCB(const std_msgs::Empty &msg) {
   watchdog_timer = millis();
 } // watchdogCB()
+
+void wheelRRCB(const std_msgs::Float64 &msg) {
+  revsR = int(msg.data / (0.8182 * 3.14));
+  offsetR = prevR - (int(64.0 * msg.data/ (0.8182 * 3.14)) % 64);
+}
+
+void wheelRLCB(const std_msgs::Float64 &msg) {
+  revsL = int(msg.data / (0.8182 * 3.14));
+  offsetL = prevL - (int(64.0 * msg.data/ (0.8182 * 3.14)) % 64);
+}
 
 void checkSerial(ros::NodeHandle *nh) {
   // Given node, estops if watchdog has timed out
@@ -210,6 +276,54 @@ void updateCurrHitchPose(){
   curr_hitch_pose.position.z = hitchHeight;
   hitch_pose.publish(&curr_hitch_pose);
 } // updateCurrHitchPose()
+
+void updateWheelPose(){
+  bool readingsR[6];
+  bool readingsL[6];
+  int totalR;
+  int totalL;
+  readingsR[0] = !digitalRead(WHEEL_ENC_R_PINS[0]);
+  readingsR[1] = !digitalRead(WHEEL_ENC_R_PINS[1]);
+  readingsR[2] = !digitalRead(WHEEL_ENC_R_PINS[2]);
+  readingsR[3] = !digitalRead(WHEEL_ENC_R_PINS[3]);
+  readingsR[4] = !digitalRead(WHEEL_ENC_R_PINS[4]);
+  readingsR[5] = !digitalRead(WHEEL_ENC_R_PINS[5]);
+  totalR = readingsR[5] * pow(2,5);
+  for(int i = 4; i >= 0; i--){
+    readingsR[i] = readingsR[i+1] ^ readingsR[i];
+    totalR += readingsR[i] * pow(2,i);
+  }
+  readingsL[0] = !digitalRead(WHEEL_ENC_L_PINS[0]);
+  readingsL[1] = !digitalRead(WHEEL_ENC_L_PINS[1]);
+  readingsL[2] = !digitalRead(WHEEL_ENC_L_PINS[2]);
+  readingsL[3] = !digitalRead(WHEEL_ENC_L_PINS[3]);
+  readingsL[4] = !digitalRead(WHEEL_ENC_L_PINS[4]);
+  readingsL[5] = !digitalRead(WHEEL_ENC_L_PINS[5]);
+  totalL = readingsL[5] * pow(2,5);
+  for(int i = 4; i >= 0; i--){
+    readingsL[i] = readingsL[i+1] ^ readingsL[i];
+    totalL += readingsL[i] * pow(2,i);
+  }
+  if(totalR > 48 && prevR < 16){
+    revsR--;
+  }
+  if(totalR < 16 && prevR > 48){
+    revsR++; 
+  }
+  if(totalL > 48 && prevL < 16){
+    revsL--;
+  }
+  if(totalL < 16 && prevL > 48){
+    revsL++; 
+  }
+  prevL = totalL;
+  prevR = totalR;
+  curr_wheel_enc_right.data = (revsR * 64 + totalR - offsetR) * 0.8182 * 3.14 / 64.0; // diameter * pi / hits per rev
+  curr_wheel_enc_left.data = (revsL * 64 + totalL - offsetL) * 0.8182 * 3.14 / 64.0 ;
+  encoderRight.publish(&curr_wheel_enc_right);
+  encoderLeft.publish(&curr_wheel_enc_left);
+  
+}
 
 int computeHitchMsg(){
   // Take current and desired hitch position to compute actuator position
