@@ -6,8 +6,6 @@ position or sensor data
 -->
 
 <launch>
-  <!-- Teleop -->
-  <include file="$(find gravl)/launch/teleop.launch"/>
   <!-- Laser -->
   <include file="$(find gravl)/launch/lidar.launch"/>
   <!-- RTK GPS -->
