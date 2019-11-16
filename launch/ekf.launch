@@ -1,9 +1,9 @@
 <launch>
   <!-- <node pkg="tf" type="static_transform_publisher" name="base_broadcaster"
         args="0 0 0 0 0 0 /base_footprint /base_link 100" /> -->
-  <node pkg="robot_localization" type="ekf_localization_node" name="ekf_se" clear_params="true">
+  <!-- <node pkg="robot_localization" type="ekf_localization_node" name="ekf_se" clear_params="true">
     <rosparam command="load" file="$(find gravl)/params/ekf_params.yaml"/>
-  </node>
+  </node> -->
 
 
 <!-- Broken EKF node: -->
@@ -26,8 +26,8 @@
    <param name="world_frame" value="enu"/>
    <param name="use_mag" value="true"/>
    <param name="use_magnetic_field_msg" value="true"/>
-   <param name="fixed_frame" value="odom"/>
-   <param name="publish_tf" value="true"/>
+   <param name="fixed_frame" value="base_link"/>
+   <param name="publish_tf" value="false"/>
  </node>
 
 <!-- Import node to convert gps data to odom -->
@@ -38,6 +38,7 @@
    <param name="frame_id" value="base_link" />
  </node>
 
+ <node name="tractor_odom" pkg="gravl" type="TractorOdom.py" output="screen"/>
 
 </launch>
 
