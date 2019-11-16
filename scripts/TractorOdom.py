@@ -25,6 +25,9 @@ class TractorOdom:
 
     def computeTractorOdom(self):
         msg = Odometry()
+        msg.header.frame_id='/odom'
+        msg.header.stamp = rospy.Time.now()
+        msg.child_frame_id='/base_link'
         msg.pose.pose.position = self._gps_msg.pose.pose.position
         msg.pose.pose.orientation = self._imu_msg.orientation
         self.odom_pub.publish(msg)
