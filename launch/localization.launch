@@ -1,8 +1,5 @@
 <launch>
   <!-- rosrun tf view_frames -->
-  <node pkg="robot_localization" type="ekf_localization_node" name="tractor_groundtruth">
-    <rosparam command="load" file="$(find gravl)/config/tractor_groundtruth.yaml"/>
-  </node>
   <node name="world_frame_transform" pkg="tf2_ros" type="static_transform_publisher" args="0 0 0 0 0 0 /earth /base_link" />
   <node name="gps_tf" pkg="tf" type="static_transform_publisher" args="0.03 0 2.21 0 0 0 /base_link /gps 2" />
   <!-- <node name="laser_to_base" pkg="tf" type="static_transform_publisher" args="2.02 0 1.19 0.157 0 0 /base_link /laser 50" /> -->

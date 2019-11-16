@@ -29,7 +29,7 @@ class TractorOdom:
         msg.pose.pose.orientation = self._imu_msg.orientation
         self.odom_pub.publish(msg)
 
-        # Broadcast message as tf & convert message units to meters
+        # Broadcast message as tf
         self.odom_broadcaster.sendTransform((msg.pose.pose.position.x,
                                              msg.pose.pose.position.y,
                                              msg.pose.pose.position.z),
