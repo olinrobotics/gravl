@@ -54,9 +54,9 @@ const int STEER_MSG_CENTER = 0;        // Ackermann msg center steering angle
 const int STEER_MSG_RIGHT = -30;       // Ackermann msg max steering angle
 
 // Hitch Actuator Ranges
-const int H_ACTUATOR_MAX = 1300; // Retracted Actuator - Move hitch up
-const int H_ACTUATOR_MIN = 540;  // Extended Actuator - Move hitch down
-const int H_ACTUATOR_CENTER = (H_ACTUATOR_MAX + H_ACTUATOR_MIN) / 2;
+const int H_ACTUATOR_MAX = 1593; // Retracted Actuator - Move hitch up
+const int H_ACTUATOR_MIN = 656;  // Extended Actuator - Move hitch down
+const int H_ACTUATOR_CENTER = 1215
 const int H_ACTUATOR_RANGE = H_ACTUATOR_MAX-H_ACTUATOR_MIN;
 // Encoder
 const float ENC_STOP_THRESHOLD = 0.0381; // Threshold of blade accuracy to stop in meters
