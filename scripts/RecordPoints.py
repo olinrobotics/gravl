@@ -10,7 +10,7 @@ from nav_msgs.msg import Odometry
 class Recorder:
     def __init__(self):
         rospy.init_node("point_recorder")
-        self.odom_sub = rospy.Subscriber("/gps_odom", Odometry, self.odomCB)
+        self.odom_sub = rospy.Subscriber("/tractor_odom", Odometry, self.odomCB)
         self.update_rate = rospy.Rate(10)
 
         self.root = tk.Tk()
