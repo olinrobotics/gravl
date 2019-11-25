@@ -1,25 +1,4 @@
 <launch>
-  <!-- <node pkg="tf" type="static_transform_publisher" name="base_broadcaster"
-        args="0 0 0 0 0 0 /base_footprint /base_link 100" /> -->
-  <!-- <node pkg="robot_localization" type="ekf_localization_node" name="ekf_se" clear_params="true">
-    <rosparam command="load" file="$(find gravl)/params/ekf_params.yaml"/>
-  </node> -->
-
-
-<!-- Broken EKF node: -->
- <!-- <node name="imu_to_base" pkg="tf" type="static_transform_publisher" args = "0 0 0 0 1.571 1.571 /base_link /base_imu 100"/> -->
- <!-- <node pkg="robot_pose_ekf" type="robot_pose_ekf" name="robot_pose_ekf" output="screen">
-   <remap from="imu_data" to="/imu/data"/>
-   <remap from="odom" to="gps_odom"/>
-   <param name="output_frame" value="odom"/>
-   <param name="freq" value="300.0"/>
-   <param name="sensor_timeout" value="10.0"/>
-   <param name="odom_used" value="true"/>
-   <param name="imu_used" value="true"/>
-   <param name="vo_used" value="false"/>
-   <param name="debug" value="true"/>
-   <param name="self_diagnose" value="true"/>
- </node> -->
 
  <!-- IMU orientation -->
  <node pkg="imu_filter_madgwick" type="imu_filter_node" name="imu_filter" output="screen">
@@ -42,5 +21,5 @@
 
 </launch>
 
-<!--TODO: Maybe this should be a link to the gps instead -->
+<!--TODO: Make gps publish to gps frame instead of base_link -->
 <!-- TODO: make input and output topics parameters -->

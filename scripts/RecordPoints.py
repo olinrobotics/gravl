@@ -1,5 +1,12 @@
 #!/usr/bin/env python
 
+"""
+Subscribes to `/tractor_odom` and starts a tkinter GUI with Record Point and
+Save Data buttons. When Record Point is clicked, it saves the last 2D x-y
+odometry point recieved. When Save Data is clicked, it writes the data to a
+file that can be used in the cut_planner package.
+"""
+
 # import keyboard
 import tkinter as tk
 import rospy
@@ -30,9 +37,12 @@ class Recorder:
         self.saved_z.append(self.odom_msg.pose.pose.position.z)
 
     def dataCB(self):
+        """Write recorded points to an output text file
+
+        TODO: make the output file a settable parameter
+        """
         f = open("p2p_output.txt","w+")
         print("Saving data...")
-        # self.saveData("points.csv")
         f.write("title: p2p_test\n")
         f.write("waypoints:\n")
 
@@ -58,14 +68,6 @@ class Recorder:
 
     def odomCB(self, msg):
         self.odom_msg = msg
-
-    def saveData(self, filename):
-        data = pd.DataFrame(
-            {'x': self.saved_x,
-             'y': self.saved_y,
-             'z': self.saved_z
-            })
-        data.to_csv(filename, index = None, header=True)
 
     def run(self):
         while not rospy.is_shutdown():

@@ -1,4 +1,12 @@
 #!/usr/bin/env python
+
+"""
+Uses orientation data from `/imu/data` and position data from
+`/piksi/navsatfix_best_fix` and creates an odometry message that is published
+to `/tractor_odom`. Also broadcasts this odometry message as the transform
+between `/base_link` and `/odom`
+"""
+
 import rospy
 from sensor_msgs.msg import Imu
 from nav_msgs.msg import Odometry
@@ -24,6 +32,10 @@ class TractorOdom:
         self._gps_msg = msg
 
     def computeTractorOdom(self):
+        """Creates an Odometry message from imu orientation data and gps
+        position data. Also broadcasts this data as a transform between
+        /base_link and /odom
+        """
         msg = Odometry()
         msg.header.frame_id='/odom'
         msg.header.stamp = rospy.Time.now()
