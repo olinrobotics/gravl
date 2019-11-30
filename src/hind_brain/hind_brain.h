@@ -40,9 +40,10 @@ const byte HITCH_ENC_B_PIN = 19;
 #define WATCHDOG_TIMEOUT 250
 
 // Velocity Motor Ranges
-const int VEL_CMD_MIN = 1029;       // Roboclaw cmd for min speed
+const int VEL_CMD_MIN = 1200;       // Roboclaw cmd for min speed
+const int VEL_CMD_STOP = 1029;      // Roboclaw cmd for stopped
 const int VEL_CMD_MAX = 850;        // Roboclaw cmd for max speed
-const int VEL_MSG_MIN = 0;          // Ackermann msg min speed
+const int VEL_MSG_MIN = -2;         // Ackermann msg min speed
 const int VEL_MSG_MAX = 2;          // Ackermann msg max speed
 
 // Steering Motor Ranges
