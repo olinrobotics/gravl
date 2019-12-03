@@ -30,7 +30,7 @@ boolean isEStopped = false;
 boolean isAuto = false;
 
 // Global Variables
-unsigned int velMsg = VEL_CMD_MIN;        // Initialize velocity to 0
+unsigned int velMsg = VEL_CMD_STOP;        // Initialize velocity to 0
 signed int steerMsg = STEER_CMD_CENTER;   // Initialize steering to straight
 unsigned int hitchMsg = H_ACTUATOR_CENTER; // Start actuator in center
 
@@ -177,7 +177,7 @@ void stopRoboClaw(RoboClaw *rc1, RoboClaw *rc2) {
   // Given roboclaw to stop, publishes messages such that Roboclaw is safe
 
   // Send velocity pedal to stop position
-  rc1->SpeedAccelDeccelPositionM1(RC1_ADDRESS, 100000, 1000, 0, VEL_CMD_MIN, 0);
+  rc1->SpeedAccelDeccelPositionM1(RC1_ADDRESS, 100000, 1000, 0, VEL_CMD_STOP, 0);
 
   // Stop steering motor
   rc1->SpeedM2(RC1_ADDRESS, 0);
@@ -258,9 +258,6 @@ int steerAckToCmd(float ack_steer){
 
 int velAckToCmd(float ack_vel){
   // given ackermann velocity, returns corresponding RoboClaw command
-
-  // filter to remove tractor reversal commands (platform wont back up)
-  if (ack_vel < 0) {ack_vel = 0;}
 
   // Convert from range of input signal to range of output signal
   ack_vel = map(ack_vel, VEL_MSG_MIN, VEL_MSG_MAX, VEL_CMD_MIN, VEL_CMD_MAX);

@@ -40,9 +40,10 @@ const byte HITCH_ENC_B_PIN = 19;
 #define WATCHDOG_TIMEOUT 250
 
 // Velocity Motor Ranges
-const int VEL_CMD_MIN = 1400;       // Roboclaw cmd for min speed
-const int VEL_CMD_MAX = 0;          // Roboclaw cmd for max speed
-const int VEL_MSG_MIN = 0;          // Ackermann msg min speed
+const int VEL_CMD_MIN = 1200;       // Roboclaw cmd for min speed
+const int VEL_CMD_STOP = 1029;      // Roboclaw cmd for stopped
+const int VEL_CMD_MAX = 850;        // Roboclaw cmd for max speed
+const int VEL_MSG_MIN = -2;         // Ackermann msg min speed
 const int VEL_MSG_MAX = 2;          // Ackermann msg max speed
 
 // Steering Motor Ranges
@@ -54,9 +55,9 @@ const int STEER_MSG_CENTER = 0;        // Ackermann msg center steering angle
 const int STEER_MSG_RIGHT = -30;       // Ackermann msg max steering angle
 
 // Hitch Actuator Ranges
-const int H_ACTUATOR_MAX = 1300; // Retracted Actuator - Move hitch up
-const int H_ACTUATOR_MIN = 540;  // Extended Actuator - Move hitch down
-const int H_ACTUATOR_CENTER = (H_ACTUATOR_MAX + H_ACTUATOR_MIN) / 2;
+const int H_ACTUATOR_MAX = 1660; // Retracted Actuator - Move hitch up
+const int H_ACTUATOR_MIN = 656;  // Extended Actuator - Move hitch down
+const int H_ACTUATOR_CENTER = 1162;
 const int H_ACTUATOR_RANGE = H_ACTUATOR_MAX-H_ACTUATOR_MIN;
 // Encoder
 const float ENC_STOP_THRESHOLD = 0.0381; // Threshold of blade accuracy to stop in meters
