@@ -6,12 +6,12 @@ position or sensor data
 -->
 
 <launch>
-  <!-- Teleop -->
-  <include file="$(find gravl)/launch/teleop.launch"/>
   <!-- Laser -->
   <include file="$(find gravl)/launch/lidar.launch"/>
+  <!-- RTK GPS -->
+  <include file="$(find gravl)/launch/rtk.launch"/>
   <!-- Imu -->
-  <!-- TODO -->
+  <node pkg="phidgets_imu" type="phidgets_imu_node" name="phidgets_imu" output="screen"/>
   <!-- State Controller -->
   <include file="$(find gravl)/launch/mainstate.launch"/>
   <!-- Hindbrain -->

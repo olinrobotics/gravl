@@ -41,3 +41,9 @@ At the moment, all it does is display an annotated video stream of a road, but w
 To run, start `roscore`, play the rosbags which can be found on a usb in the lab, and `rosrun tractor road_recognition`.
 The script will subscribe to the topic `/camera/image_raw`.
 The important bit of code is the callback which establishes the publisher, and the recognize_road function which at the moment returns an annotated picture, but should soon give the tractor directions.
+
+#### `RecordPoints.py`
+Subscribes to `/tractor_odom` and starts a tkinter GUI with Record Point and Save Data buttons. When Record Point is clicked, it saves the last 2D x-y odometry point recieved. When Save Data is clicked, it writes the data to a file that can be used in the cut_planner package.
+
+#### `TractorOdom.py`
+Uses orientation data from `/imu/data` and position data from `/piksi/navsatfix_best_fix` and creates an odometry message that is published to `/tractor_odom`. Also broadcasts this odometry message as the transform between `/base_link` and `/odom`

@@ -1,0 +1,25 @@
+<launch>
+
+ <!-- IMU orientation -->
+ <node pkg="imu_filter_madgwick" type="imu_filter_node" name="imu_filter" output="screen">
+   <param name="world_frame" value="enu"/>
+   <param name="use_mag" value="true"/>
+   <param name="use_magnetic_field_msg" value="true"/>
+   <param name="fixed_frame" value="base_link"/>
+   <param name="publish_tf" value="false"/>
+ </node>
+
+<!-- Import node to convert gps data to odom -->
+ <node name="gps_conv" pkg="gps_common" type="utm_odometry_node" output="screen">
+   <remap from="odom" to="gps_odom"/>
+   <remap from="fix" to="/piksi/navsatfix_best_fix" />
+   <param name="rot_covariance" value="99999" />
+   <param name="frame_id" value="base_link" />
+ </node>
+
+ <node name="tractor_odom" pkg="gravl" type="TractorOdom.py" output="screen"/>
+
+</launch>
+
+<!--TODO: Make gps publish to gps frame instead of base_link -->
+<!-- TODO: make input and output topics parameters -->
