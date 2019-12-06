@@ -1,0 +1,44 @@
+<?xml version="1.0"?>
+
+<!-- demos.launch
+For demo purposes only, do not use to test
+
+Key differences:
+  - Doesn't use simualted GPS, uses "absolute odometry"
+
+TODO:
+  - Removes delay in response
+  - Add in world
+  - Add in lidar follow behavior
+  - Add in square p2p behavior
+-->
+
+
+<launch>
+
+  <!-- Start simulation -->
+  <include file="$(find tractor_sim_gazebo)/launch/tractor_sim.launch">
+    <!-- Remove delay for more intuitive driving -->
+    <arg name="tractor_delay" value="1"/>
+  </include>
+  <include file="$(find tractor_sim_gazebo)/launch/hitch.launch"/>
+
+  <!-- Use virtual odometry for cleaner appearance -->
+  <include file="$(find tractor_sim_gazebo)/launch/sim_odometry.launch"/>
+
+  <!-- Display data in RVIZ -->
+  <include file="$(find tractor_sim_description)/launch/tractor_sim_rviz.launch">
+    <!-- Remove delay for more intuitive driving -->
+    <arg name="rviz_file" value="$(find gravl)/rviz/demo.rviz"/>
+  </include>
+
+
+  <include file="$(find gravl)/launch/mainstate.launch"/>
+  <include file="$(find gravl)/launch/teleop.launch"/>
+</launch>
+
+
+<!--
+Commands to run:
+roslaunch gravl demos.launch
+-->
