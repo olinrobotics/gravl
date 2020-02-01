@@ -5,23 +5,24 @@ from std_msgs.msg import Bool, Header, String, Float64, Float32
 from sensor_msgs.msg import LaserScan
 import genpy
 import numpy as np
-from geometry_msgs.msg import Point
+from geometry_msgs.msg import Point,PointStamped
 class ObstacleDetector():
     def __init__(self):
         self.pub0 = rospy.Publisher('/estop', Bool,  queue_size=10) # init your publishers early
-        self.pubObstPoint = rospy.Publisher('/point2follow', Point, queue_size=10)
+        self.pubObstPoint = rospy.Publisher('/point2follow', PointStamped, queue_size=10)
         rospy.init_node('ObstacleDetector', anonymous=True)
-        self.subScan = rospy.Subscriber('/scan',LaserScan,self.callback)
+        self.subScan = rospy.Subscriber('/front/scan',LaserScan,self.callback)
         self.rate = rospy.Rate(1)
         self.scan = None
 
     def callback(self,data):
         self.scan = data
 
-    def detectObstacles(self,data):
+    def detectObstacles(self):
     # Code is supposed to detect if there is an obstacle, and if so, stop the tractor
     # lines with *** coordinated to the bravobot - 10/15/17
     # Things do to before completion:
+    # TODO: Fix this up a little bit and make it more robust
     # Actually import data -- Done
     # Find out how to stop the tractor -- In Progress
     # Test various values to make sure it works
@@ -70,7 +71,11 @@ class ObstacleDetector():
         point.x = sumOfVert[targetObstacle] / obstaclePoints[targetObstacle] # Computes average distance of obstacle from tractor
         point.y = sumOfHor[targetObstacle] / obstaclePoints[targetObstacle] # Computes avearge distance from center of tractor
         point.z = 0
-        self.pubObstPoint.publish(point)
+        pointStamped = PointStamped()
+        pointStamped.point = point
+        pointStamped.header = Header()
+        pointStamped.header.frame_id = ('/hood')
+        self.pubObstPoint.publish(pointStamped)
 
     def main(self):
         while not rospy.is_shutdown():
