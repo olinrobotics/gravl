@@ -6,6 +6,12 @@ import genpy
 import numpy as np
 from geometry_msgs.msg import Point,PointStamped
 class ObstacleDetector2D():
+    """
+    Detects an obstacle in 2D space, and returns outputs it's 2D position
+    
+    Sub: /front/scan - LaserScan
+    Pub: /point2follow - PointStamped
+    """
     def __init__(self):
         self.pub0 = rospy.Publisher('/estop', Bool,  queue_size=10) # init your publishers early
         self.pubObstPoint = rospy.Publisher('/point2follow', PointStamped, queue_size=10)

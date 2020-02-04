@@ -7,6 +7,12 @@ from state_controller.msg import TwistLabeled
 from tf import TransformListener
 
 class Point Follower():
+    """
+    Directs the tractor at a point in 2D space, changing speed with distance from point.
+
+    Sub: /point2follow - PointStamped
+    Pub: /state_controller/cmd_behavior_twist - TwistLabeled
+    """
     def __init__(self):
         rospy.init_node('Point Follower', anonymous=True)
         self.subPoint = rospy.Subscriber('/point2follow', PointStamped, self.callback)
