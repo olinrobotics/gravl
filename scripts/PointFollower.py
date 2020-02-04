@@ -24,7 +24,6 @@ class Point Follower():
     def callback(self,data):
         #self.goalPoint = self.tf.transformPoint('/hood',data).point
         self.goalPoint = data.point
-        rospy.loginfo(self.goalPoint)
 
     def follow(self):
         drive_msg = TwistLabeled()
