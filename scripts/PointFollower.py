@@ -6,7 +6,7 @@ from std_msgs.msg import String
 from state_controller.msg import TwistLabeled
 from tf import TransformListener
 
-class Point Follower():
+class PointFollower():
     """
     Directs the tractor at a point in 2D space, changing speed with distance from point.
 
@@ -14,7 +14,7 @@ class Point Follower():
     Pub: /state_controller/cmd_behavior_twist - TwistLabeled
     """
     def __init__(self):
-        rospy.init_node('Point Follower', anonymous=True)
+        rospy.init_node('PointFollower', anonymous=True)
         self.subPoint = rospy.Subscriber('/point2follow', PointStamped, self.callback)
         self.pubDrive = rospy.Publisher('/state_controller/cmd_behavior_twist',TwistLabeled, queue_size=10)
         self.goalPoint = None
@@ -32,7 +32,7 @@ class Point Follower():
         """
         drive_msg = TwistLabeled()
         drive_msg.label = String()
-        drive_msg.label.data = "2D Point Follower"
+        drive_msg.label.data = "2D PointFollower"
         distance = math.sqrt(self.goalPoint.x**2+self.goalPoint.y**2)
         # distance is in meters
         if (distance > 1): #If obstacle is more than 1 meter away, go, faster if farther
