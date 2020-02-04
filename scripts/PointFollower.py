@@ -30,7 +30,8 @@ class Point Follower():
         drive_msg.label = String()
         drive_msg.label.data = "2D Point Follower"
         distance = math.sqrt(self.goalPoint.x**2+self.goalPoint.y**2)
-        if (distance > 1): #If obstacle is far away, go fast
+        # distance is in meters
+        if (distance > 1): #If obstacle is more than 1 meter away, go, faster if farther
             speed = 0.25 * (distance - 1) 
         else: # if obstacle is really close, stop moving
             speed = 0
