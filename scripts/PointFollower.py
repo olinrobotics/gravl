@@ -7,9 +7,9 @@ from std_msgs.msg import String
 from state_controller.msg import TwistLabeled
 from tf import TransformListener
 
-class Follower():
+class Point Follower():
     def __init__(self):
-        rospy.init_node('Follower', anonymous=True)
+        rospy.init_node('Point Follower', anonymous=True)
         self.subPoint = rospy.Subscriber('/point2follow', PointStamped, self.callback)
         self.pubDrive = rospy.Publisher('/state_controller/cmd_behavior_twist',TwistLabeled, queue_size=10)
         self.point = None
@@ -24,7 +24,7 @@ class Follower():
     def follow(self):
         drive_msg = TwistLabeled()
         drive_msg.label = String()
-        drive_msg.label.data = "2D Follower"
+        drive_msg.label.data = "2D Point Follower"
         distance = math.sqrt(self.point.x**2+self.point.y**2)
         if (distance > 1): #If obstacle is far away, go fast
             speed = 0.25 * (distance - 1) 
@@ -51,5 +51,5 @@ class Follower():
             self.rate.sleep()
 
 if __name__ == '__main__':
-    follower = Follower()
+    follower = Point Follower()
     follower.main()

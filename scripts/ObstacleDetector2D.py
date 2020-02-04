@@ -6,11 +6,11 @@ from sensor_msgs.msg import LaserScan
 import genpy
 import numpy as np
 from geometry_msgs.msg import Point,PointStamped
-class ObstacleDetector():
+class ObstacleDetector2D():
     def __init__(self):
         self.pub0 = rospy.Publisher('/estop', Bool,  queue_size=10) # init your publishers early
         self.pubObstPoint = rospy.Publisher('/point2follow', PointStamped, queue_size=10)
-        rospy.init_node('ObstacleDetector', anonymous=True)
+        rospy.init_node('ObstacleDetector2D', anonymous=True)
         self.subScan = rospy.Subscriber('/front/scan',LaserScan,self.callback)
         self.rate = rospy.Rate(1)
         self.scan = None
@@ -84,6 +84,6 @@ class ObstacleDetector():
             self.rate.sleep()
 
 if __name__ == '__main__':
-    obstec = ObstacleDetector()
+    obstec = ObstacleDetector2D()
     obstec.main()
     rospy.spin()
