@@ -62,5 +62,5 @@ class PointFollower():
             self.rate.sleep()
 
 if __name__ == '__main__':
-    follower = Point Follower()
+    follower = PointFollower()
     follower.main()
