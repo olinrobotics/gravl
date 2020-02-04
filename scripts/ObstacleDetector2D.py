@@ -24,13 +24,10 @@ class ObstacleDetector2D():
         self.scan = data
 
     def detectObstacles(self):
-    # Code is supposed to detect if there is an obstacle, and if so, stop the tractor
-    # lines with *** coordinated to the bravobot - 10/15/17
-    # Things do to before completion:
-    # TODO: Fix this up a little bit and make it more robust
-    # Actually import data -- Done
-    # Find out how to stop the tractor -- In Progress
-    # Test various values to make sure it works
+        """
+        Detects an obstacle made up of a few points that the scan sees as being above the ground.
+        """
+        # TODO: Fix this up a little bit and make it more robust
         totalDist = [] #Setting arrays
         verticalDistance = [] # Distance from front of tractor
         horizontalDistance = [] # Distance from center of tractor

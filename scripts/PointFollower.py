@@ -27,6 +27,9 @@ class Point Follower():
         self.goalPoint = data.point
 
     def follow(self):
+        """
+        Follows the point given, moving faster if farther, and stopping if closer than 1 meter.
+        """
         drive_msg = TwistLabeled()
         drive_msg.label = String()
         drive_msg.label.data = "2D Point Follower"
