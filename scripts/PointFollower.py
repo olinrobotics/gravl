@@ -20,6 +20,7 @@ class Point Follower():
         self.goalPoint = None
         self.rate = rospy.Rate(1)
         self.tf = TransformListener()
+        self.prevAngle = 0
 
     def callback(self,data):
         #self.goalPoint = self.tf.transformPoint('/hood',data).point
@@ -45,7 +46,8 @@ class Point Follower():
         elif(angle < -45):
             angle = -45
         elif(distance < 1): 
-            angle = 0.
+            angle = self.prevAngle
+        self.prevAngle = angle
         drive_msg.twist.angular.z = angle / 45
         self.pubDrive.publish(drive_msg) # publish
 
