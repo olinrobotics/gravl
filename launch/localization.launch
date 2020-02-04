@@ -1,16 +1,16 @@
 <launch>
-  <!-- This file launches transforms for all static links on the tractor. -->
-  <!-- Format1: static_transform_publisher x y z yaw pitch roll frame_id child_frame_id period_in_ms -->
-  <!-- Format2: static_transform_publisher x y z qx qy qz qw frame_id child_frame_id period_in_ms -->
+  <!-- This file launches transforms for all static links on the tractor.
+  Format1: static_transform_publisher x y z yaw pitch roll frame_id child_frame_id period_in_ms
+  Format2: static_transform_publisher x y z qx qy qz qw frame_id child_frame_id period_in_ms -->
 
-  <node name="world_frame_transform" pkg="tf2_ros" type="static_transform_publisher" args="0.00 0.00 0.00 0.00 0.000 0.00 /earth /base_link" />
+  <node name="world_frame_transform"    pkg="tf2_ros" type="static_transform_publisher" args="0.00 0.00 0.00 0.00 0.000 0.00 /earth /base_link" />
 
-  <node name="hood_to_base" 		 pkg="tf2_ros" type="static_transform_publisher" args="2.25 0.000 1.28 0.000 0.052 0.00 /base_link /hood" />
-  <node name="gps_to_base" 			 pkg="tf2_ros" type="static_transform_publisher" args="0.03 0.000 2.21 0.000 0.000 0.00 /base_link /gps" />
-  <node name="imu_to_base" 			 pkg="tf2_ros" type="static_transform_publisher" args="0.00 0.000 0.00 0.000 1.570 1.57 /base_link /imu"/>
-  <!-- <node name="gps2_to_base"	 pkg="tf2_ros" type="static_transform_publisher" args="1.94 0.000 1.49 0.000 0.000 0.00 /base_link /hemisphere" /> -->
+  <node name="hood_to_base"             pkg="tf2_ros" type="static_transform_publisher" args="2.250 0.000 1.280 0.000 0.052 0.000 /base_link /hood" />
+  <node name="gps_to_base"              pkg="tf2_ros" type="static_transform_publisher" args="0.030 0.000 2.210 0.000 0.000 0.000 /base_link /gps" />
+  <node name="imu_to_base"              pkg="tf2_ros" type="static_transform_publisher" args="0.000 0.000 0.000 0.000 1.570 1.570 /base_link /imu"/>
+  <!-- <node name="gps2_to_base"        pkg="tf2_ros" type="static_transform_publisher" args="1.940 0.000 1.490 0.000 0.000 0.000 /base_link /hemisphere" /> -->
 
-  <node name="laser_to_hood" 	 	 pkg="tf2_ros" type="static_transform_publisher" args="-0.125 0.0 -0.137 0.000 0.261 0.00 /hood /laser" />
-  <node name="lidarx_to_hood" 		 pkg="tf2_ros" type="static_transform_publisher" args="-0.144 0.0 -0.129 3.141 2.880 0.00 /hood /lidarx"/>
-  <!-- <node name="camera_to_hood" 	 pkg="tf2_ros" type="static_transform_publisher" args="0 0 0 0 0 0 /hood /image_raw" /> -->
+  <node name="laser_to_hood"            pkg="tf2_ros" type="static_transform_publisher" args="-0.125 0.000 -0.137 0.000 0.261 0.000 /hood /laser" />
+  <node name="lidarx_to_hood"           pkg="tf2_ros" type="static_transform_publisher" args="-0.144 0.000 -0.129 3.141 2.880 0.000 /hood /lidarx"/>
+  <!-- <node name="camera_to_hood"      pkg="tf2_ros" type="static_transform_publisher" args="0.000 0.000 0.000 0.000 0.000 0.000 /hood /image_raw" /> -->
 </launch>
