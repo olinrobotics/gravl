@@ -1,4 +1,4 @@
-/**
+/*
   hind_brain.ino
   Purpose: Provides firmware interface from software to hardware, runs
   realtime control/safety loop
@@ -11,75 +11,82 @@
 // Header file
 #include "hind_brain.h"
 
-// Declare switch & estop
-Estop *e;
-OAKSoftSwitch *l;
-
 // RoboClaws
 auto rc1_serial = &Serial1;
-RoboClaw rc1(rc1_serial, RC_TIMEOUT);
 auto rc2_serial = &Serial2;
+RoboClaw rc1(rc1_serial, RC_TIMEOUT);
 RoboClaw rc2(rc2_serial, RC_TIMEOUT);
 
-// Encoders
+// Components
 Encoder hitchEncoder(HITCH_ENC_A_PIN, HITCH_ENC_B_PIN);
-
+Estop *eStop;
+OAKSoftSwitch *autoLight;
 
 // States
 boolean isEStopped = false;
 boolean isAuto = false;
 
-// Global Variables
-unsigned int velMsg = VEL_CMD_STOP;        // Initialize velocity to 0
-signed int steerMsg = STEER_CMD_CENTER;   // Initialize steering to straight
-unsigned int hitchMsg = H_ACTUATOR_CENTER; // Start actuator in center
+// Global variables
+unsigned long watchdogTimer;
+char usrMsg;
 
-char buf[7];
-unsigned long watchdog_timer;
-
+signed int steerMsg;
+unsigned int velMsg;
+unsigned int hitchMsg;
 
 // ROS nodes, publishers, subscribers
 ros::NodeHandle nh;
-ackermann_msgs::AckermannDrive curr_drive_pose;
-geometry_msgs::Pose curr_hitch_pose;
-geometry_msgs::Pose desired_hitch_pose;
-ros::Subscriber<ackermann_msgs::AckermannDrive> drive_sub("/cmd_vel", &ackermannCB);
-ros::Subscriber<geometry_msgs::Pose> hitch_sub("/cmd_hitch", &hitchCB);
+ackermann_msgs::AckermannDrive currDrivePose;
+geometry_msgs::Pose currHitchPose;
+geometry_msgs::Pose desiredHitchPose;
+
+ros::Subscriber<ackermann_msgs::AckermannDrive> driveSub("/cmd_vel", &ackermannCB);
+ros::Subscriber<geometry_msgs::Pose> hitchSub("/cmd_hitch", &hitchCB);
 ros::Subscriber<std_msgs::Empty> ping("/safety_clock", &watchdogCB);
-ros::Publisher pub_drive("/curr_drive", &curr_drive_pose);
-ros::Publisher hitch_pose("/hitch_pose", &curr_hitch_pose);
+ros::Subscriber<std_msgs::String> userInput("/user_input", &userInputCB);
+
+ros::Publisher pubDrive("/curr_drive", &currDrivePose);
+ros::Publisher hitchPose("/hitch_pose", &currHitchPose);
+
+std_msgs::String str_msg;
+ros::Publisher chatter("chatter", &str_msg);
+
 
 void setup() {
-
-  // Initialize estop and auto-switch
-  e = new Estop(&nh, ESTOP_PIN, 1);
+  // Initialize estop and auto-light switch
+  eStop = new Estop(&nh, ESTOP_PIN, 1);
   pinMode(ESTOP_PIN, OUTPUT);
-  e->onStop(eStop);
-  e->offStop(eStart);
-  l = new OAKSoftSwitch(&nh, "/auto", AUTO_LED_PIN);
+  // e->onStop(eStopTractor);
+  // e->offStop(eStartTractor);
+  autoLight = new OAKSoftSwitch(&nh, "/auto_light", AUTO_LIGHT_PIN);
 
-  //Stop engine for safety
+  // Stop engine for safety
   stopEngine();
 
-  //Open serial communication with roboclaw
-  rc1.begin(38400);
-  rc2.begin(38400);
+  // Open serial communication with roboclaw
+  rc1.begin(RC_BAUD_RATE);
+  rc2.begin(RC_BAUD_RATE);
 
   // Set up ROS node, subscribers, publishers
-  nh.getHardware()->setBaud(115200);
+  nh.getHardware()->setBaud(SERIAL_BAUD_RATE);
   nh.initNode();
-  nh.subscribe(drive_sub);
-  nh.subscribe(hitch_sub);
+  nh.subscribe(driveSub);
+  nh.subscribe(hitchSub);
   nh.subscribe(ping);
-  nh.advertise(pub_drive);
-  nh.advertise(hitch_pose);
+  nh.subscribe(userInput);
+  nh.advertise(pubDrive);
+  nh.advertise(hitchPose);
 
   // Wait for connection
-  while(true){
-    if(nh.connected() && (millis() - watchdog_timer < WATCHDOG_TIMEOUT)) {break;}
+  while(true) {
+    if(nh.connected() && (millis() - watchdogTimer < WATCHDOG_TIMEOUT)) {
+      break;
+    }
     nh.spinOnce();
     delay(1);
   }
+
+  //TODO refactor into startup_sequence function
 
   // Send message of connectivity
   delay(500);
@@ -95,12 +102,12 @@ void setup() {
 
   // TODO: make wait until motors reach default positions
 
-  watchdog_timer = millis();
-} // setup()
+  watchdogTimer = millis();
+}
+
 
 void loop() {
-
-  // Checks for connectivity with mid-brain
+  // Check for connectivity with mid-brain
   checkSerial(&nh);
 
   // Update current published pose
@@ -116,39 +123,98 @@ void loop() {
     stopRoboClaw(&rc1, &rc2);
   }
 
-  // Updates node
+  // Update node
   nh.spinOnce();
   delay(1);
+}
 
-} // loop()
 
-void ackermannCB(const ackermann_msgs::AckermannDrive &drive) {
-  // Callback for ackermann messages; saves data to global vars
-  steerMsg = steerAckToCmd(drive.steering_angle);
-  velMsg = velAckToCmd(drive.speed);
+void ackermannCB(const ackermann_msgs::AckermannDrive &msg) {
+  // Save steer and vel cmds to global vars.
+  steerMsg = steerAckToCmd(msg.steering_angle);
+  velMsg = velAckToCmd(msg.speed);
+}
 
-} // ackermannCB()
 
-void hitchCB(const geometry_msgs::Pose &hitch){
-  desired_hitch_pose.position.z = hitch.position.z; // In meters from flat ground
+void hitchCB(const geometry_msgs::Pose &msg){
+  desiredHitchPose.position.z = msg.position.z; // In meters from flat ground
   // TODO: Copy over all desired attributes
-} //hitchCB()
+}
+
 
 void watchdogCB(const std_msgs::Empty &msg) {
-  watchdog_timer = millis();
-} // watchdogCB()
+  // Update watchdog timer on receipt of msg
+  watchdogTimer = millis();
+}
+
+
+void userInputCB(const std_msgs::String &msg) {
+  // Update input global var with msg if only one char is sent.
+  if (sizeof(msg.data) - 1 == 1) {
+    usrMsg = *msg.data;
+  }
+  nh.loginfo(&usrMsg);
+}
+
+
+int steerAckToCmd(float ack){
+  // Return RoboClaw command given ackermann steering msg.
+  float cmd;
+
+  // Convert from input message to output command
+  if (ack > STEER_MSG_CENTER) {
+    cmd = map(ack, STEER_MSG_CENTER, STEER_MSG_LEFT, STEER_CMD_CENTER, STEER_CMD_LEFT);
+  } else if (ack < STEER_MSG_CENTER) {
+    cmd = map(ack, STEER_MSG_RIGHT, STEER_MSG_CENTER, STEER_CMD_RIGHT, STEER_CMD_CENTER);
+  } else {
+    cmd = STEER_CMD_CENTER;
+  }
+
+  // Safety limits for signal
+  if (cmd < STEER_CMD_LEFT) {
+    cmd = STEER_CMD_LEFT;
+    nh.logwarn("ERR: oversteering left");
+  }
+  else if (cmd > STEER_CMD_RIGHT) {
+    cmd = STEER_CMD_RIGHT;
+    nh.logwarn("ERR: oversteering right");
+  }
+
+  return cmd;
+}
+
+
+int velAckToCmd(float ack){
+  // Return RoboClaw command given ackermann velocity msg.
+  float cmd;
+
+  // Convert from range of input signal to range of output signal
+  cmd = map(ack, VEL_MSG_MIN, VEL_MSG_MAX, VEL_CMD_MIN, VEL_CMD_MAX);
+
+  // Safety limits for signal; feels switched bc high vals = low speed
+  if (cmd < VEL_CMD_MAX) {
+    cmd = VEL_CMD_MAX;
+  }
+  else if(cmd > VEL_CMD_MIN) {
+    cmd = VEL_CMD_MIN;
+  }
+
+  return cmd;
+}
+
 
 void checkSerial(ros::NodeHandle *nh) {
   // Given node, estops if watchdog has timed out
   // https://answers.ros.org/question/124481/rosserial-arduino-how-to-check-on-device-if-in-sync-with-host/
 
-  if(millis() - watchdog_timer >= WATCHDOG_TIMEOUT) {
+  if(millis() - watchdogTimer >= WATCHDOG_TIMEOUT) {
     if(!isEStopped) {
       nh->logerror("Lost connectivity . . .");
-      eStop();
+      eStopTractor();
     }
   }
-} // checkSerial()
+}
+
 
 void updateRoboClaw(int velMsg, int steerMsg, int hitchMsg) {
   // Given velocity, steering, and hitch message, sends vals to RoboClaw
@@ -158,8 +224,11 @@ void updateRoboClaw(int velMsg, int steerMsg, int hitchMsg) {
 
   // Write steering to RoboClaw if tractor is moving, else returns debug msg
   // TODO: add sensor for motor on or not; this is what actually matters.
-  if (velMsg < VEL_CMD_MIN - 100) {rc1.SpeedAccelDeccelPositionM2(RC1_ADDRESS, 0, 1000, 0, steerMsg, 1);}
-  else {nh.logwarn("Tractor not moving, steering message rejected");}
+  if (velMsg < VEL_CMD_MIN - 100) {
+    rc1.SpeedAccelDeccelPositionM2(RC1_ADDRESS, 0, 1000, 0, steerMsg, 1);
+  } else {
+    nh.logwarn("Tractor not moving, steering message rejected");
+  }
 
   // Write hitch to RoboClaw
   rc2.SpeedAccelDeccelPositionM2(RC2_ADDRESS, 100000, 1000, 0, hitchMsg, 1);
@@ -169,9 +238,9 @@ void updateRoboClaw(int velMsg, int steerMsg, int hitchMsg) {
     char j[56];
     snprintf(j, sizeof(j), "DBG: steerMsg = %d, velMsg = %d, hitchMsg = %d", steerMsg, velMsg, hitchMsg);
     nh.loginfo(j);
-  #endif //DEBUG
+  #endif
+}
 
-} // updateRoboClaw()
 
 void stopRoboClaw(RoboClaw *rc1, RoboClaw *rc2) {
   // Given roboclaw to stop, publishes messages such that Roboclaw is safe
@@ -184,7 +253,8 @@ void stopRoboClaw(RoboClaw *rc1, RoboClaw *rc2) {
 
   // Send hitch actuator to stop position
   rc2->SpeedAccelDeccelPositionM2(RC2_ADDRESS, 100000, 1000, 0, H_ACTUATOR_CENTER, 0);
-} // stopRoboClaw
+}
+
 
 void updateCurrDrive() {
   // Read encoder values, convert to ackermann drive, publish
@@ -192,115 +262,81 @@ void updateCurrDrive() {
 
   uint32_t encoder1, encoder2;
   rc1.ReadEncoders(RC1_ADDRESS, encoder1, encoder2);
-  curr_drive_pose.speed = mapPrecise(encoder1, VEL_CMD_MIN, VEL_CMD_MAX, VEL_MSG_MIN, VEL_MSG_MAX);
-  curr_drive_pose.steering_angle = mapPrecise(encoder2, STEER_CMD_RIGHT, STEER_CMD_LEFT, STEER_MSG_RIGHT, STEER_MSG_LEFT);
-  pub_drive.publish(&curr_drive_pose);
+  currDrivePose.speed = mapPrecise(encoder1, VEL_CMD_MIN, VEL_CMD_MAX, VEL_MSG_MIN, VEL_MSG_MAX);
+  currDrivePose.steering_angle = mapPrecise(encoder2, STEER_CMD_RIGHT, STEER_CMD_LEFT, STEER_MSG_RIGHT, STEER_MSG_LEFT);
+  pubDrive.publish(&currDrivePose);
+}
 
-} // updateCurrDrive()
 
 void updateCurrHitchPose(){
   // Read encoder value, convert to hitch height in meters, publish
   // TODO: What is the hitch height measured from? Where is 0?
-  long hitchEncoderValue;
-  float hitchHeight;
   float encoderValInch;
+  float hitchHeight;
+  long hitchEncoderValue;
+
   hitchEncoderValue = hitchEncoder.read();
   encoderValInch = hitchEncoderValue / 1000.0; // Inches
   hitchHeight = encoderValInch * -1.1429 * 0.0254; // Meters TODO: What is the -1.1429?
-  curr_hitch_pose.position.z = hitchHeight;
-  hitch_pose.publish(&curr_hitch_pose);
-} // updateCurrHitchPose()
-
-int computeHitchMsg(){
-  // Take current and desired hitch position to compute actuator position
-  float desired = desired_hitch_pose.position.z;
-  float current = curr_hitch_pose.position.z;
-
-  float error = desired - current;
-
-  int hitch_msg;
-
-  // If hitch height is "good enough," then move actuator to neutral position
-  if (abs(error) < ENC_STOP_THRESHOLD){
-    hitch_msg = H_ACTUATOR_CENTER;
-  }
-  else{
-    if (error > 0){ // Hitch is too high
-      hitch_msg = H_ACTUATOR_MIN; // Move lever forwards + hitch down
-    }
-    else { // Hitch is too low
-      hitch_msg = H_ACTUATOR_MAX; // Move lever backwards + hitch up
-    }
-  }
-  return hitch_msg;
+  currHitchPose.position.z = hitchHeight;
+  hitchPose.publish(&currHitchPose);
 }
 
-int steerAckToCmd(float ack_steer){
-  //  Given ackermann steering message, returns corresponding RoboClaw command
 
-  // Convert from input message to output command
-  if (ack_steer > STEER_MSG_CENTER) {ack_steer = map(ack_steer, STEER_MSG_CENTER, STEER_MSG_LEFT, STEER_CMD_CENTER, STEER_CMD_LEFT);}
-  else if (ack_steer < STEER_MSG_CENTER) {ack_steer = map(ack_steer, STEER_MSG_RIGHT, STEER_MSG_CENTER, STEER_CMD_RIGHT, STEER_CMD_CENTER);}
-  else { ack_steer = STEER_CMD_CENTER;}
+int computeHitchMsg() {
+  // Take current and desired hitch position to compute actuator position
+  int msg;
+  auto desired = desiredHitchPose.position.z;
+  auto current = currHitchPose.position.z;
+  auto error = desired - current;
 
-  // Safety limits for signal
-  if (ack_steer < STEER_CMD_LEFT) {
-    ack_steer = STEER_CMD_LEFT;
-    nh.logwarn("ERR: oversteering left");
+  // If hitch height is "good enough," move lever to center
+  if (abs(error) < ENC_STOP_THRESHOLD) {
+    msg = H_ACTUATOR_CENTER;
+  } else {
+    if (error > 0) {
+      // If hitch is too high, move lever forwards
+      msg = H_ACTUATOR_MIN;
+    } else {
+      // If hitch is too low, move lever backwards
+      msg = H_ACTUATOR_MAX;
+    }
   }
-  else if (ack_steer > STEER_CMD_RIGHT) {
-    ack_steer = STEER_CMD_RIGHT;
-    nh.logwarn("ERR: oversteering right");
-  }
+  return msg;
+}
 
-  return ack_steer;
-} //steerMsgToCmd
-
-int velAckToCmd(float ack_vel){
-  // given ackermann velocity, returns corresponding RoboClaw command
-
-  // Convert from range of input signal to range of output signal
-  ack_vel = map(ack_vel, VEL_MSG_MIN, VEL_MSG_MAX, VEL_CMD_MIN, VEL_CMD_MAX);
-
-  // Safety limits for signal; feels switched bc high vals = low speed
-  if (ack_vel < VEL_CMD_MAX) {ack_vel = VEL_CMD_MAX;}
-  else if(ack_vel > VEL_CMD_MIN) {ack_vel = VEL_CMD_MIN;}
-
-  return ack_vel;
-} //velMsgToCmd()
 
 void stopEngine() {
-  // Toggles engine stop relay
+  // Toggle engine stop relay
 
   digitalWrite(ESTOP_PIN, HIGH);
   delay(2000);
   digitalWrite(ESTOP_PIN, LOW);
+}
 
-} // stopEngine()
 
-void eStop() {
-  // Estops tractor
-
+void eStopTractor() {
+  // Estop tractor
   isEStopped = true;
+
   nh.logerror("Tractor has E-Stopped");
   stopRoboClaw(&rc1, &rc2);
   stopEngine();
-} // eStop()
+}
 
-void eStart() {
-  // Disactivates isEStopped state
 
+void eStartTractor() {
+  // Disactivate isEStopped state
   isEStopped = false;
 
   // Logs verification msg
-  char i[32];
+  char i[24];
   snprintf(i, sizeof(i), "MSG: EStop Disactivated");
   nh.loginfo(i);
+}
 
-} // eStart()
 
 float mapPrecise(float x, float inMin, float inMax, float outMin, float outMax) {
-  // Emulates Arduino map() function, but uses floats for precision
+  // Emulate Arduino map() function, uses floats for precision.
   return (x - inMin) * (outMax - outMin) / (inMax - inMin) + outMin;
-
-} // mapPrecise()
+}

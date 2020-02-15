@@ -40,7 +40,8 @@
 *.json
 /src/tractor/.poienvs
 
-*.swp
+# Vim swap files
+*.sw*
 
 # CMake bullshit
 scripts/CMakeCache.txt
@@ -51,3 +52,6 @@ scripts/CMakeFiles/
 # Ros Bag files and folder
 *.bag
 bags/
+
+# Local configurable changes
+src/hind_brain/lib
