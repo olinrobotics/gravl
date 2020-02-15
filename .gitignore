@@ -40,7 +40,8 @@
 *.json
 /src/tractor/.poienvs
 
-*.swp
+# Vim swap files
+*.sw*
 
 # CMake bullshit
 scripts/CMakeCache.txt

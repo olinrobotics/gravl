@@ -1,6 +1,7 @@
 <launch>
+  <arg name="port" default="/dev/teensy" doc="teensy 3.5 serial port"/>
   <node pkg="rosserial_python" type="serial_node.py" name="hindbrain" output="screen">
-    <param name="port" value="/dev/teensy"/>
+    <param name="port" value="$(arg port)"/>
     <param name="baud" value="115200"/>
   </node>
   <node pkg="gravl" type="Watchdog" name="watchdog"/>
