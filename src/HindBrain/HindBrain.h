@@ -1,3 +1,8 @@
+/*
+  @file HindBrain.h
+  Purpose: Config file for HindBrain.ino
+*/
+
 #ifndef HIND_BRAIN_H
 #define HIND_BRAIN_H
 
@@ -12,8 +17,8 @@
 #include <std_msgs/String.h>                // rosserial String msg
 #include <geometry_msgs/Pose.h>             // rosserial Hitch msg
 
-#include "estop.h"                          // OAK Estop
-#include "soft_switch.h"                    // OAK SoftSwitch
+#include "Estop.h"                          // OAK Estop
+#include "SoftSwitch.h"                     // OAK SoftSwitch
 #include "RoboClaw.h"                       // Motor controller API
 #include "ackermann_msgs/AckermannDrive.h"  // rosserial Steering msg
 
@@ -25,7 +30,7 @@ const byte HITCH_ENC_A_PIN = 18;
 const byte HITCH_ENC_B_PIN = 19;
 
 // General Constants
-const bool DEBUG = true;
+const bool DEBUG = false;
 const int WATCHDOG_TIMEOUT = 250; // ms
 #define SERIAL_BAUD_RATE 115200   // hz
 

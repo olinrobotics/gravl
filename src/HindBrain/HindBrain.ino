@@ -1,15 +1,17 @@
 /*
-  hind_brain.ino
+  @file         HindBrain.ino
   Purpose: Provides firmware interface from software to hardware, runs
   realtime control/safety loop
 
-  @author Connor Novak
-  @email connor.novak@students.olin.edu
-  @version 0.1.0 18/10/24
+  @author       Connor Novak
+  @maintainer   Olin GRAVL
+  @email        olingravl@gmail.com
+  @version      0.2.0
+  @date         2020-02-15
 */
 
 // Header file
-#include "hind_brain.h"
+#include "HindBrain.h"
 
 // RoboClaws
 auto rc1_serial = &Serial1;

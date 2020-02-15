@@ -1,4 +1,4 @@
-#include "soft_switch.h"
+#include "SoftSwitch.h"
 
 /*
   @file         soft_switch.cpp
