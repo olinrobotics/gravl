@@ -75,8 +75,10 @@ void watchdogCB(const std_msgs::Empty&);
 
 // Function prototypes
 void checkSerial(ros::NodeHandle *nh);
+void checkUserInput();
 void eStartTractor();
 void eStopTractor();
+void runStartupSequence();
 void stopEngine();
 void stopRoboClaw(RoboClaw *rc1, RoboClaw *rc2);
 void updateCurrDrive();
