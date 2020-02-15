@@ -53,11 +53,12 @@ ros::Publisher chatter("chatter", &str_msg);
 
 
 void setup() {
+
   // Initialize estop and auto-light switch
   eStop = new Estop(&nh, ESTOP_SENSE_PIN, 1);
+  eStop->onStop(eStopTractor);
+  eStop->offStop(eStartTractor);
   pinMode(ESTOP_RELAY_PIN, OUTPUT);
-  // e->onStop(eStopTractor);
-  // e->offStop(eStartTractor);
   autoLight = new OAKSoftSwitch(&nh, "/auto_light", AUTO_LIGHT_PIN);
 
   // Stop engine for safety
@@ -86,22 +87,9 @@ void setup() {
     delay(1);
   }
 
-  //TODO refactor into startup_sequence function
-
-  // Send message of connectivity
+  nh.loginfo("Hindbrain connected, running startup calibration sequence");
   delay(500);
-  nh.loginfo("Hindbrain connected; Setting motor positions to neutral.");
-  delay(500);
-
-  // TODO Operator verify that all pins are removed
-
-  // Set actuators to default positions
-  rc1.SpeedAccelDeccelPositionM1(RC1_ADDRESS, 0, 300, 0, velMsg, 1);
-  rc1.SpeedAccelDeccelPositionM2(RC1_ADDRESS, 0, 500, 0, steerMsg, 1);
-  rc2.SpeedAccelDeccelPositionM2(RC2_ADDRESS, 0, 300, 0, hitchMsg, 1);
-
-  // TODO: make wait until motors reach default positions
-
+  runStartupSequence();
   watchdogTimer = millis();
 }
 
@@ -149,11 +137,48 @@ void watchdogCB(const std_msgs::Empty &msg) {
 
 
 void userInputCB(const std_msgs::String &msg) {
-  // Update input global var with msg if only one char is sent.
-  if (sizeof(msg.data) - 1 == 1) {
+  // Update input global var with msg only if msg is 1 char.
+  if (strlen(msg.data) == 1) {
     usrMsg = *msg.data;
+    #ifdef DEBUG
+    char j[20];
+    snprintf(j, sizeof(j), "Received %s", msg.data);
+    nh.loginfo(j);
+    #endif
   }
-  nh.loginfo(&usrMsg);
+}
+
+
+void waitForUserVerification() {
+  // Block main code until 'y' is received on /user_input.
+  while (true) {
+    auto cmd = checkUserInput();
+    if (cmd == 'y') {
+      break;
+    }
+    nh.spinOnce();
+    delay(1);
+  }
+}
+
+
+void runStartupSequence() {
+  // Run startup & calibration sequence with appropriate user input.
+  //TODO create prompt publishing topic
+
+  nh.loginfo("Remove pins on steering and velocity, then publish 'y' to /user_input topic");
+  waitForUserVerification();
+
+  nh.loginfo("Verification received, homing steering and velocity actuators . . .");
+  delay(500);
+  rc1.SpeedAccelDeccelPositionM1(RC1_ADDRESS, 0, 300, 0, velMsg, 1);
+  rc1.SpeedAccelDeccelPositionM2(RC1_ADDRESS, 0, 500, 0, steerMsg, 1);
+  rc2.SpeedAccelDeccelPositionM2(RC2_ADDRESS, 0, 300, 0, hitchMsg, 1);
+  delay(500);
+
+  nh.loginfo("Re-install pins on steering and velocity, then publish 'y' to /user_input topic");
+  waitForUserVerification();
+  nh.loginfo("Verification received, vehicle ready to run.");
 }
 
 
@@ -213,6 +238,14 @@ void checkSerial(ros::NodeHandle *nh) {
       eStopTractor();
     }
   }
+}
+
+
+char checkUserInput() {
+  // Get most recent user-sent input (if any), reset global var if necessary.
+  auto outMsg = usrMsg;
+  usrMsg = '\0';
+  return outMsg;
 }
 
 
@@ -309,9 +342,9 @@ int computeHitchMsg() {
 void stopEngine() {
   // Toggle engine stop relay
 
-  digitalWrite(ESTOP_PIN, HIGH);
+  digitalWrite(ESTOP_RELAY_PIN, HIGH);
   delay(2000);
-  digitalWrite(ESTOP_PIN, LOW);
+  digitalWrite(ESTOP_RELAY_PIN, LOW);
 }
 
 
