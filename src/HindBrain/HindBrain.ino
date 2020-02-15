@@ -30,11 +30,11 @@ boolean isAuto = false;
 
 // Global variables
 unsigned long watchdogTimer;
-char usrMsg;
+char usrMsg = '\0';
 
-signed int steerMsg;
-unsigned int velMsg;
-unsigned int hitchMsg;
+signed int steerMsg = STEER_MSG_CENTER;
+unsigned int velMsg = VEL_MSG_STOP;
+unsigned int hitchMsg = H_ACTUATOR_CENTER ;
 
 // ROS nodes, publishers, subscribers
 ros::NodeHandle nh;

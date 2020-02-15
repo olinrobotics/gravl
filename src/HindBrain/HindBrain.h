@@ -6,6 +6,7 @@
 #ifndef HIND_BRAIN_H
 #define HIND_BRAIN_H
 
+// https://wiki.ros.org/rosserial_arduino/Tutorials/Hello%20World
 #define USE_USBCON
 
 // Libraries
@@ -50,6 +51,7 @@ const int VEL_CMD_MIN = 1200;   // Roboclaw cmd for min speed
 const int VEL_CMD_STOP = 1029;  // Roboclaw cmd for stopped
 const int VEL_CMD_MAX = 850;    // Roboclaw cmd for max speed
 const int VEL_MSG_MIN = -2;     // Ackermann msg min speed
+const int VEL_MSG_STOP = 0;     // Ackermann msg for stopped
 const int VEL_MSG_MAX = 2;      // Ackermann msg max speed
 
 // Steering Motor Ranges

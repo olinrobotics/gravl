@@ -52,6 +52,3 @@ scripts/CMakeFiles/
 # Ros Bag files and folder
 *.bag
 bags/
-
-# Local configurable changes
-src/hind_brain/lib
