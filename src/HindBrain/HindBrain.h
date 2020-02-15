@@ -23,9 +23,11 @@
 #include "ackermann_msgs/AckermannDrive.h"  // rosserial Steering msg
 
 // Arduino Pins
-const byte ESTOP_SENSE_PIN = 1;
+const byte SERIAL_PIN_0 = 0;      // Using either pin for input causes errors
+const byte SERIAL_PIN_1 = 1;
 const byte ESTOP_RELAY_PIN = 2;
 const byte AUTO_LIGHT_PIN = 3;
+const byte ESTOP_SENSE_PIN = 4;   // Not implemented
 const byte HITCH_ENC_A_PIN = 18;
 const byte HITCH_ENC_B_PIN = 19;
 
