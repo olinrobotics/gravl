@@ -12,11 +12,13 @@
 
 // Libraries
 #include "RoboClaw.h"                       // Used for motor controller interface
-#include <Arduino.h>                        // Used for Arduino functions
+#include <Arduino.h>                      // Used for Arduino functions
 #include "ros.h"                            // Used for rosserial communication
 #include "ackermann_msgs/AckermannDrive.h"  // Used for rosserial steering message
 #include "geometry_msgs/Pose.h"             // Used for rosserial hitch message
 #include "std_msgs/Empty.h"                 // Used for watchdog hf connection monitor
+#include "std_msgs/Bool.h"                  // Used for absolute encoder
+#include "std_msgs/Float64.h"                  // Used for absolute encoder
 #include "estop.h"                          // Used to implement estop class
 #include "soft_switch.h"                    // Used to implement auto switch
 #include <Encoder.h>                        // Used for hitch height feedback
@@ -27,6 +29,9 @@ const byte AUTO_LED_PIN = 3;
 const byte ESTOP_PIN = 2;
 const byte HITCH_ENC_A_PIN = 18;
 const byte HITCH_ENC_B_PIN = 19;
+const byte WHEEL_ENC_R_PINS[6] = {26,27,28,29,30,31};
+const byte WHEEL_ENC_L_PINS[6] = {34,35,36,37,38,39};
+
 
 
 // Roboclaw Constants
@@ -66,6 +71,10 @@ const float ENC_STOP_THRESHOLD = 0.0381; // Threshold of blade accuracy to stop 
 void ackermannCB(const ackermann_msgs::AckermannDrive&);
 void hitchCB(const geometry_msgs::Pose&);
 void watchdogCB(const std_msgs::Empty&);
+void wheelRRCB(const std_msgs::Float64&);
+void wheelRLCB(const std_msgs::Float64&);
+
+
 void stopEngine();
 void eStop();
 void eStart();
