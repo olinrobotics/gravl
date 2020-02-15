@@ -48,14 +48,11 @@ ros::Subscriber<std_msgs::String> userInput("/user_input", &userInputCB);
 ros::Publisher pubDrive("/curr_drive", &currDrivePose);
 ros::Publisher hitchPose("/hitch_pose", &currHitchPose);
 
-std_msgs::String str_msg;
-ros::Publisher chatter("chatter", &str_msg);
-
 
 void setup() {
 
   // Initialize estop and auto-light switch
-  eStop = new Estop(&nh, ESTOP_SENSE_PIN, 1);
+  eStop = new Estop(&nh, ESTOP_SENSE_PIN, ESTOP_DEBOUNCE_TIME);
   eStop->onStop(eStopTractor);
   eStop->offStop(eStartTractor);
   pinMode(ESTOP_RELAY_PIN, OUTPUT);

@@ -36,7 +36,7 @@ const int WATCHDOG_TIMEOUT = 250; // ms
 #define RC_BAUD_RATE 38400  // hz
 
 const unsigned int RC_TIMEOUT = 10000;  // us
-const byte ESTOP_DEBOUNCE_TIME = 1; // ms
+const byte ESTOP_DEBOUNCE_TIME = 50; // ms
 
 // Velocity Motor Ranges
 const int VEL_CMD_MIN = 1200;   // Roboclaw cmd for min speed
