@@ -54,8 +54,8 @@ ros::Publisher chatter("chatter", &str_msg);
 
 void setup() {
   // Initialize estop and auto-light switch
-  eStop = new Estop(&nh, ESTOP_PIN, 1);
-  pinMode(ESTOP_PIN, OUTPUT);
+  eStop = new Estop(&nh, ESTOP_SENSE_PIN, 1);
+  pinMode(ESTOP_RELAY_PIN, OUTPUT);
   // e->onStop(eStopTractor);
   // e->offStop(eStartTractor);
   autoLight = new OAKSoftSwitch(&nh, "/auto_light", AUTO_LIGHT_PIN);
