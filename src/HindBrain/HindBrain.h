@@ -98,7 +98,6 @@ void checkSerial(ros::NodeHandle *nh);
 void eStartTractor();
 void eStopTractor();
 void runStartupSequence();
-void stopEngine();
 void stopRoboClaw(RoboClaw *rc1, RoboClaw *rc2);
 void updateCurrDrive();
 void updateCurrHitchPose();

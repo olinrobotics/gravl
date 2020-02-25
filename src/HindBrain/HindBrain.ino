@@ -57,16 +57,12 @@ ros::Publisher hitchPose("/hitch_pose", &currHitchPose);
 
 
 void setup() {
-
   // Initialize estop and auto-light switch
   eStop = new Estop(&nh, ESTOP_SENSE_PIN, ESTOP_DEBOUNCE_TIME);
   eStop->onStop(eStopTractor);
   eStop->offStop(eStartTractor);
   pinMode(ESTOP_RELAY_PIN, OUTPUT);
   autoLight = new OAKSoftSwitch(&nh, "/auto_light", AUTO_LIGHT_PIN);
-
-  // Stop engine for safety
-  stopEngine();
 
   // Open serial communication with roboclaw
   rc1.begin(RC_BAUD_RATE);
@@ -170,18 +166,24 @@ void runStartupSequence() {
   // Run startup & calibration sequence with appropriate user input.
   //TODO create prompt publishing topic
 
-  nh.loginfo("Remove pins, then publish 'y' to /user_input topic");
+  digitalWrite(ESTOP_RELAY_PIN, HIGH);
+  nh.loginfo("START: Remove pins, then publish 'y' to /user_input topic");
   waitForUserVerification();
 
-  nh.loginfo("Verification received, homing actuators . . .");
-  delay(250);
+  nh.loginfo("START: Verification received, homing actuators . . .");
+  digitalWrite(ESTOP_RELAY_PIN, LOW);
+
   rc1.SpeedAccelDeccelPositionM1(RC1_ADDRESS, 0, 300, 0, velMsg, 1);
   rc1.SpeedAccelDeccelPositionM2(RC1_ADDRESS, 0, 500, 0, steerMsg, 1);
   rc2.SpeedAccelDeccelPositionM2(RC2_ADDRESS, 0, 300, 0, hitchMsg, 1);
   delay(250);
-  nh.loginfo("Re-install pins, then publish 'y' to /user_input topic");
+  digitalWrite(ESTOP_RELAY_PIN, HIGH);
+
+  nh.loginfo("START: Re-install pins, then publish 'y' to /user_input topic");
   waitForUserVerification();
-  nh.loginfo("Verification received, vehicle ready to run.");
+  digitalWrite(ESTOP_RELAY_PIN, LOW);
+  delay(250);
+  nh.loginfo("START: Verification received, vehicle ready to run.");
 }
 
 
@@ -351,33 +353,20 @@ int computeHitchMsg() {
 }
 
 
-void stopEngine() {
-  // Toggle engine stop relay
-
-  digitalWrite(ESTOP_RELAY_PIN, HIGH);
-  delay(2000);
-  digitalWrite(ESTOP_RELAY_PIN, LOW);
-}
-
-
 void eStopTractor() {
   // Estop tractor
   isEStopped = true;
-
-  nh.logerror("Tractor has E-Stopped");
+  digitalWrite(ESTOP_RELAY_PIN, HIGH);
   stopRoboClaw(&rc1, &rc2);
-  stopEngine();
+  nh.logerror("Tractor has E-Stopped");
 }
 
 
 void eStartTractor() {
   // Disactivate isEStopped state
+  digitalWrite(ESTOP_RELAY_PIN, LOW);
   isEStopped = false;
-
-  // Logs verification msg
-  char i[24];
-  snprintf(i, sizeof(i), "MSG: EStop Disactivated");
-  nh.loginfo(i);
+  nh.loginfo("MSG: EStop Disactivated");
 }
 
 
