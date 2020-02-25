@@ -176,8 +176,11 @@ void runStartupSequence() {
   nh.loginfo("Verification received, homing steering and velocity actuators . . .");
   delay(500);
   rc1.SpeedAccelDeccelPositionM1(RC1_ADDRESS, 0, 300, 0, velMsg, 1);
+  nh.loginfo("Flag 1");
   rc1.SpeedAccelDeccelPositionM2(RC1_ADDRESS, 0, 500, 0, steerMsg, 1);
+  nh.loginfo("Flag 2");
   rc2.SpeedAccelDeccelPositionM2(RC2_ADDRESS, 0, 300, 0, hitchMsg, 1);
+  nh.loginfo("Flag 3");
   delay(500);
 
   nh.loginfo("Re-install pins on steering and velocity, then publish 'y' to /user_input topic");
