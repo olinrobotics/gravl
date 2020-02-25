@@ -65,9 +65,9 @@ const int VEL_MSG_FWD = 2;      // . . .             max forward speed
 const int STEER_CMD_LEFT = 650;     // Roboclaw cmd for max left turn
 const int STEER_CMD_CENTER = 1160;  // . . .            straight
 const int STEER_CMD_RIGHT = 1600;   // . . .            max right turn
-const int STEER_MSG_LEFT = 45;      // Ackermann msg min steering angle
+const int STEER_MSG_LEFT = 45;      // Ackermann msg leftmost steering angle
 const int STEER_MSG_CENTER = 0;     // . . .         center . . .
-const int STEER_MSG_RIGHT = -30;    // . . .         max . . .
+const int STEER_MSG_RIGHT = -45;    // . . .         rightmost . . .
 
 // Initialize Roboclaw STEER_CMD thresholds w/ preprocessor macros
 #if STEER_CMD_LEFT>STEER_CMD_RIGHT

@@ -174,12 +174,11 @@ void runStartupSequence() {
   waitForUserVerification();
 
   nh.loginfo("Verification received, homing actuators . . .");
-  delay(500);
+  delay(250);
   rc1.SpeedAccelDeccelPositionM1(RC1_ADDRESS, 0, 300, 0, velMsg, 1);
   rc1.SpeedAccelDeccelPositionM2(RC1_ADDRESS, 0, 500, 0, steerMsg, 1);
   rc2.SpeedAccelDeccelPositionM2(RC2_ADDRESS, 0, 300, 0, hitchMsg, 1);
-  delay(500);
-
+  delay(250);
   nh.loginfo("Re-install pins, then publish 'y' to /user_input topic");
   waitForUserVerification();
   nh.loginfo("Verification received, vehicle ready to run.");
@@ -200,13 +199,17 @@ int steerAckToCmd(float ack){
   }
 
   // Threshold cmd for safety
+  char msg[60];
   if (cmd > STEER_CMD_MAX) {
-    cmd = STEER_CMD_MAX;
     nh.logwarn("ERR: commanded steering angle > STEER_CMD_MAX");
+    snprintf(msg, sizeof(msg), "ERR: cmd_steer=%d > steer_max=%i", int(cmd), STEER_CMD_MAX);
+    nh.logwarn(msg);
+    cmd = STEER_CMD_MAX;
   }
   else if (cmd < STEER_CMD_MIN) {
+    snprintf(msg, sizeof(msg), "ERR: cmd_steer=%d < steer_min=%i", int(cmd), STEER_CMD_MIN);
+    nh.logwarn(msg);
     cmd = STEER_CMD_MIN;
-    nh.logwarn("ERR: commanded steering angle < STEER_CMD_MIN");
   }
 
   return cmd;
@@ -227,13 +230,16 @@ int velAckToCmd(float ack) {
   }
 
   // Threshold cmd for safety
+  char msg[50];
   if (cmd > VEL_CMD_MAX) {
+    snprintf(msg, sizeof(msg), "ERR: cmd_vel=%d > vel_max=%i", int(cmd), VEL_CMD_MAX);
+    nh.logwarn(msg);
     cmd = VEL_CMD_MAX;
-    nh.logwarn("ERR: commanded velocity > VEL_CMD_MAX");
   }
   else if (cmd < VEL_CMD_MIN) {
+    snprintf(msg, sizeof(msg), "ERR: cmd_vel=%d < vel_min=%i", int(cmd), VEL_CMD_MIN);
+    nh.logwarn(msg);
     cmd = VEL_CMD_MIN;
-    nh.logwarn("ERR: commanded velocity < VEL_CMD_MIN");
   }
 
   return cmd;
@@ -265,15 +271,9 @@ void updateRoboClaw(int velMsg, int steerMsg, int hitchMsg) {
   // Given velocity, steering, and hitch message, sends vals to RoboClaw
 
   // Write velocity to RoboClaw
-  rc1.SpeedAccelDeccelPositionM1(RC1_ADDRESS, 100000, 1000, 0, velMsg, 1);
-
-  // Write steering to RoboClaw if tractor is moving, else returns debug msg
   // TODO: add sensor for motor on or not; this is what actually matters.
-  if (velMsg < VEL_CMD_REV - 100) {
-    rc1.SpeedAccelDeccelPositionM2(RC1_ADDRESS, 0, 1000, 0, steerMsg, 1);
-  } else {
-    nh.logwarn("Tractor not moving, steering message rejected");
-  }
+  rc1.SpeedAccelDeccelPositionM1(RC1_ADDRESS, 100000, 1000, 0, velMsg, 1);
+  rc1.SpeedAccelDeccelPositionM2(RC1_ADDRESS, 0, 1000, 0, steerMsg, 1);
 
   // Write hitch to RoboClaw
   rc2.SpeedAccelDeccelPositionM2(RC2_ADDRESS, 100000, 1000, 0, hitchMsg, 1);
