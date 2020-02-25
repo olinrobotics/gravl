@@ -182,7 +182,7 @@ void runStartupSequence() {
 
 
 int steerAckToCmd(float ack){
-  // Return RoboClaw command given ackermann steering msg.
+  // Calculate and threshold Roboclaw cmd given ackermann velocity msg.
   float cmd;
 
   // Convert from input message to output command
@@ -194,33 +194,41 @@ int steerAckToCmd(float ack){
     cmd = STEER_CMD_CENTER;
   }
 
-  // Safety limits for signal
-  if (cmd < STEER_CMD_LEFT) {
-    cmd = STEER_CMD_LEFT;
-    nh.logwarn("ERR: oversteering left");
+  // Threshold cmd for safety
+  if (cmd > STEER_CMD_MAX) {
+    cmd = STEER_CMD_MAX;
+    nh.logwarn("ERR: commanded steering angle > STEER_CMD_MAX");
   }
-  else if (cmd > STEER_CMD_RIGHT) {
-    cmd = STEER_CMD_RIGHT;
-    nh.logwarn("ERR: oversteering right");
+  else if (cmd < STEER_CMD_MIN) {
+    cmd = STEER_CMD_MIN;
+    nh.logwarn("ERR: commanded steering angle < STEER_CMD_MIN");
   }
 
   return cmd;
 }
 
 
-int velAckToCmd(float ack){
-  // Return RoboClaw command given ackermann velocity msg.
+int velAckToCmd(float ack) {
+  // Calculate and threshold Roboclaw cmd given ackermann velocity msg.
   float cmd;
 
   // Convert from range of input signal to range of output signal
-  cmd = map(ack, VEL_MSG_MIN, VEL_MSG_MAX, VEL_CMD_MIN, VEL_CMD_MAX);
-
-  // Safety limits for signal; feels switched bc high vals = low speed
-  if (cmd < VEL_CMD_MAX) {
-    cmd = VEL_CMD_MAX;
+  if (ack > VEL_MSG_STOP) {
+    cmd = map(ack, VEL_MSG_STOP, VEL_MSG_FWD, VEL_CMD_STOP, VEL_CMD_FWD);
+  } else if (ack < VEL_MSG_STOP) {
+    cmd = map(ack, VEL_MSG_REV, VEL_MSG_STOP, VEL_CMD_REV, VEL_CMD_STOP);
+  } else {
+    cmd = VEL_CMD_STOP;
   }
-  else if(cmd > VEL_CMD_MIN) {
+
+  // Threshold cmd for safety
+  if (cmd > VEL_CMD_MAX) {
+    cmd = VEL_CMD_MAX;
+    nh.logwarn("ERR: commanded velocity > VEL_CMD_MAX");
+  }
+  else if (cmd < VEL_CMD_MIN) {
     cmd = VEL_CMD_MIN;
+    nh.logwarn("ERR: commanded velocity < VEL_CMD_MIN");
   }
 
   return cmd;
@@ -256,7 +264,7 @@ void updateRoboClaw(int velMsg, int steerMsg, int hitchMsg) {
 
   // Write steering to RoboClaw if tractor is moving, else returns debug msg
   // TODO: add sensor for motor on or not; this is what actually matters.
-  if (velMsg < VEL_CMD_MIN - 100) {
+  if (velMsg < VEL_CMD_REV - 100) {
     rc1.SpeedAccelDeccelPositionM2(RC1_ADDRESS, 0, 1000, 0, steerMsg, 1);
   } else {
     nh.logwarn("Tractor not moving, steering message rejected");
@@ -294,7 +302,7 @@ void updateCurrDrive() {
 
   uint32_t encoder1, encoder2;
   rc1.ReadEncoders(RC1_ADDRESS, encoder1, encoder2);
-  currDrivePose.speed = mapPrecise(encoder1, VEL_CMD_MIN, VEL_CMD_MAX, VEL_MSG_MIN, VEL_MSG_MAX);
+  currDrivePose.speed = mapPrecise(encoder1, VEL_CMD_REV, VEL_CMD_FWD, VEL_MSG_MIN, VEL_MSG_MAX);
   currDrivePose.steering_angle = mapPrecise(encoder2, STEER_CMD_RIGHT, STEER_CMD_LEFT, STEER_MSG_RIGHT, STEER_MSG_LEFT);
   pubDrive.publish(&currDrivePose);
 }
