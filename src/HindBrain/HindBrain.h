@@ -10,8 +10,6 @@
 #define USE_USBCON
 
 // Libraries
-#include <Arduino.h>                        // Microcontroller standard API
-#include <Encoder.h>                        // Hitch height encoder lib
 
 #include <ros.h>                            // rosserial library
 #include <std_msgs/Empty.h>                 // Watchdog hf connection monitor
@@ -50,39 +48,35 @@ const byte ESTOP_DEBOUNCE_TIME = 50; // ms
 const int VEL_CMD_REV = 1050;   // Roboclaw cmd for max reverse speed
 const int VEL_CMD_STOP = 1115;  // . . .            stopped
 const int VEL_CMD_FWD = 1220;   // . . .            max forward speed
-const int VEL_CMD_MAX;          // Constants for thresholding Roboclaw msgs
-const int VEL_CMD_MIN;          // (initialized below)
-const int VEL_MSG_MIN = -2;     // Ackermann msg for max reverse speed
+const int VEL_MSG_REV = -2;     // Ackermann msg for max reverse speed
 const int VEL_MSG_STOP = 0;     // . . .             stopped
-const int VEL_MSG_MAX = 2;      // . . .             max forward speed
+const int VEL_MSG_FWD = 2;      // . . .             max forward speed
 
-// Initialize VEL_CMD thresholds
-if (VEL_CMD_REV > VEL_CMD_FWD) {
-  VEL_CMD_MAX = VEL_CMD_REV;
-  VEL_CMD_MIN = VEL_CMD_FWD;
-} else {
-  VEL_CMD_MAX = VEL_CMD_FWD;
-  VEL_CMD_MIN = VEL_CMD_REV;
-}
+// Initialize Roboclaw VEL_CMD thresholds w/ preprocessor macros
+#if VEL_CMD_REV>VEL_CMD_FWD
+  #define VEL_CMD_MAX VEL_CMD_REV
+  #define VEL_CMD_MIN VEL_CMD_FWD
+#else
+  #define VEL_CMD_MAX VEL_CMD_FWD
+  #define VEL_CMD_MIN VEL_CMD_REV
+#endif
 
 // Steering Motor Ranges
 const int STEER_CMD_LEFT = 650;     // Roboclaw cmd for max left turn
 const int STEER_CMD_CENTER = 1160;  // . . .            straight
 const int STEER_CMD_RIGHT = 1600;   // . . .            max right turn
-const int STEER_CMD_MAX;            // Constants for thresholding Roboclaw msgs
-const int STEER_CMD_MIN;            // (initialized below)
 const int STEER_MSG_LEFT = 45;      // Ackermann msg min steering angle
 const int STEER_MSG_CENTER = 0;     // . . .         center . . .
 const int STEER_MSG_RIGHT = -30;    // . . .         max . . .
 
-// Initialize STEER_CMD thresholds
-if (STEER_CMD_LEFT > STEER_CMD_RIGHT) {
-  STEER_CMD_MAX = STEER_CMD_LEFT;
-  STEER_CMD_MIN = STEER_CMD_RIGHT;
-} else {
-  STEER_CMD_MAX = STEER_CMD_RIGHT;
-  STEER_CMD_MIN = STEER_CMD_LEFT;
-}
+// Initialize Roboclaw STEER_CMD thresholds w/ preprocessor macros
+#if STEER_CMD_LEFT>STEER_CMD_RIGHT
+  #define STEER_CMD_MAX STEER_CMD_LEFT
+  #define STEER_CMD_MIN STEER_CMD_RIGHT
+#else
+  #define STEER_CMD_MAX STEER_CMD_RIGHT
+  #define STEER_CMD_MIN STEER_CMD_LEFT
+#endif
 
 // Hitch Actuator Ranges
 const int H_ACTUATOR_MAX = 1660;    // Retracted Actuator - Move hitch up

@@ -10,8 +10,13 @@
   @date         2020-02-15
 */
 
-// Header file
+// Library & header includes
 #include "HindBrain.h"
+#include <Arduino.h>     // Microcontroller standard API
+#include <Encoder.h>     // Hitch height encoder library
+#include "Estop.h"       // OAK Estop
+#include "SoftSwitch.h"  // OAK SoftSwitch
+#include "RoboClaw.h"    // Motor controller API
 
 // RoboClaws
 auto rc1_serial = &Serial1;
@@ -302,7 +307,7 @@ void updateCurrDrive() {
 
   uint32_t encoder1, encoder2;
   rc1.ReadEncoders(RC1_ADDRESS, encoder1, encoder2);
-  currDrivePose.speed = mapPrecise(encoder1, VEL_CMD_REV, VEL_CMD_FWD, VEL_MSG_MIN, VEL_MSG_MAX);
+  currDrivePose.speed = mapPrecise(encoder1, VEL_CMD_REV, VEL_CMD_FWD, VEL_MSG_REV, VEL_MSG_FWD);
   currDrivePose.steering_angle = mapPrecise(encoder2, STEER_CMD_RIGHT, STEER_CMD_LEFT, STEER_MSG_RIGHT, STEER_MSG_LEFT);
   pubDrive.publish(&currDrivePose);
 }
