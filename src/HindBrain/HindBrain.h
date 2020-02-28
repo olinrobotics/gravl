@@ -16,10 +16,10 @@
 #include <std_msgs/String.h>                // rosserial String msg
 #include <geometry_msgs/Pose.h>             // rosserial Hitch msg
 
-#include "Estop.h"                          // OAK Estop
-#include "SoftSwitch.h"                     // OAK SoftSwitch
-#include "RoboClaw.h"                       // Motor controller API
-#include "ackermann_msgs/AckermannDrive.h"  // rosserial Steering msg
+#include "Estop.h"                                // OAK Estop
+#include "SoftSwitch.h"                           // OAK SoftSwitch
+#include "RoboClaw.h"                             // Motor controller API
+#include "ackermann_msgs/AckermannDriveStamped.h" // rosserial Steering msg
 
 // Arduino Pins
 const byte SERIAL_PIN_0 = 0;      // Using either pin for input causes errors
@@ -31,9 +31,14 @@ const byte HITCH_ENC_A_PIN = 18;
 const byte HITCH_ENC_B_PIN = 19;
 
 // General Constants
-const bool DEBUG = false;
 const int WATCHDOG_TIMEOUT = 250; // ms
 #define SERIAL_BAUD_RATE 115200   // hz
+
+// Debug Constants
+#define DEBUG_ACKERMANNCB true;
+// #define DEBUG_USERINPUTCB true;
+// #define DEBUG_UPDATEROBOCLAW true;
+// #define DEBUG true;
 
 // Roboclaw Constants
 // Note: addresses must only be unique for 2+ roboclaws on 1 serial port
@@ -88,7 +93,7 @@ const int H_ACTUATOR_RANGE = H_ACTUATOR_MAX - H_ACTUATOR_MIN;
 const float ENC_STOP_THRESHOLD = 0.0381;  // Blade accuracy stop threshold (m)
 
 // Callback prototypes
-void ackermannCB(const ackermann_msgs::AckermannDrive&);
+void ackermannCB(const ackermann_msgs::AckermannDriveStamped&);
 void hitchCB(const geometry_msgs::Pose&);
 void userInputCB(const std_msgs::String&);
 void watchdogCB(const std_msgs::Empty&);

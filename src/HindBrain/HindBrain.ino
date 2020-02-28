@@ -17,6 +17,7 @@
 #include "Estop.h"       // OAK Estop
 #include "SoftSwitch.h"  // OAK SoftSwitch
 #include "RoboClaw.h"    // Motor controller API
+// #include <ros/time.h>    // Timestamp verification
 
 // RoboClaws
 auto rc1_serial = &Serial1;
@@ -37,17 +38,17 @@ boolean isAuto = false;
 unsigned long watchdogTimer;
 char usrMsg = '\0';
 
-signed int steerMsg = STEER_MSG_CENTER;
-unsigned int velMsg = VEL_MSG_STOP;
-unsigned int hitchMsg = H_ACTUATOR_CENTER ;
+signed int steerCmd = STEER_CMD_CENTER;
+unsigned int velCmd = VEL_CMD_STOP;
+unsigned int hitchCmd = H_ACTUATOR_CENTER;
 
 // ROS nodes, publishers, subscribers
 ros::NodeHandle nh;
-ackermann_msgs::AckermannDrive currDrivePose;
+ackermann_msgs::AckermannDriveStamped currDrivePose;
 geometry_msgs::Pose currHitchPose;
 geometry_msgs::Pose desiredHitchPose;
 
-ros::Subscriber<ackermann_msgs::AckermannDrive> driveSub("/cmd_vel", &ackermannCB);
+ros::Subscriber<ackermann_msgs::AckermannDriveStamped> driveSub("/cmd_vel", &ackermannCB);
 ros::Subscriber<geometry_msgs::Pose> hitchSub("/cmd_hitch", &hitchCB);
 ros::Subscriber<std_msgs::Empty> ping("/safety_clock", &watchdogCB);
 ros::Subscriber<std_msgs::String> userInput("/user_input", &userInputCB);
@@ -62,6 +63,7 @@ void setup() {
   eStop->onStop(eStopTractor);
   eStop->offStop(eStartTractor);
   pinMode(ESTOP_RELAY_PIN, OUTPUT);
+  digitalWrite(ESTOP_RELAY_PIN, HIGH); // Stop tractor for safety
   autoLight = new OAKSoftSwitch(&nh, "/auto_light", AUTO_LIGHT_PIN);
 
   // Open serial communication with roboclaw
@@ -102,11 +104,11 @@ void loop() {
   updateCurrDrive();
   updateCurrHitchPose();
 
-  hitchMsg = computeHitchMsg();
+  hitchCmd = computeHitchMsg();
 
   // Send updated motor commands to roboclaws
   if (!isEStopped) {
-    updateRoboClaw(velMsg, steerMsg, hitchMsg);
+    updateRoboClaw(velCmd, steerCmd, hitchCmd);
   } else {
     stopRoboClaw(&rc1, &rc2);
   }
@@ -117,10 +119,22 @@ void loop() {
 }
 
 
-void ackermannCB(const ackermann_msgs::AckermannDrive &msg) {
+void ackermannCB(const ackermann_msgs::AckermannDriveStamped &msg) {
   // Save steer and vel cmds to global vars.
-  steerMsg = steerAckToCmd(msg.steering_angle);
-  velMsg = velAckToCmd(msg.speed);
+  auto t_dur = nh.now().toSec() - msg.header.stamp.toSec();
+  if (t_dur < 0.05) {
+    steerCmd = steerAckToCmd(msg.drive.steering_angle);
+    velCmd = velAckToCmd(msg.drive.speed);
+  } else {
+    nh.logwarn("ackermannCB: old msg ignored");
+  }
+  #ifdef DEBUG_ACKERMANNCB
+    char m[40];
+    snprintf(m, sizeof(m), "ackermannCB: %.2f m/s, %.2f deg, %.2f s",
+      msg.drive.speed, msg.drive.steering_angle, t_dur);
+    nh.loginfo(m);
+  #endif
+    
 }
 
 
@@ -140,10 +154,10 @@ void userInputCB(const std_msgs::String &msg) {
   // Update input global var with msg only if msg is 1 char.
   if (strlen(msg.data) == 1) {
     usrMsg = *msg.data;
-    #ifdef DEBUG
-    char j[20];
-    snprintf(j, sizeof(j), "Received %s", msg.data);
-    nh.loginfo(j);
+    #ifdef DEBUG_USERINPUTCB
+    char m[20];
+    snprintf(m, sizeof(m), "userInputCB: %s", msg.data);
+    nh.loginfo(m);
     #endif
   }
 }
@@ -166,23 +180,31 @@ void runStartupSequence() {
   // Run startup & calibration sequence with appropriate user input.
   //TODO create prompt publishing topic
 
+  // Hold Estop & wait for user
   digitalWrite(ESTOP_RELAY_PIN, HIGH);
   nh.loginfo("START: Remove pins, then publish 'y' to /user_input topic");
   waitForUserVerification();
 
+  // Release Estop & set motor cmds
   nh.loginfo("START: Verification received, homing actuators . . .");
   digitalWrite(ESTOP_RELAY_PIN, LOW);
 
-  rc1.SpeedAccelDeccelPositionM1(RC1_ADDRESS, 0, 300, 0, velMsg, 1);
-  rc1.SpeedAccelDeccelPositionM2(RC1_ADDRESS, 0, 500, 0, steerMsg, 1);
-  rc2.SpeedAccelDeccelPositionM2(RC2_ADDRESS, 0, 300, 0, hitchMsg, 1);
-  delay(250);
-  digitalWrite(ESTOP_RELAY_PIN, HIGH);
+  delay(2000); // Wait for Roboclaw to boot
+  nh.spinOnce(); // Need this update after delay, otherwise no msg pub
+  steerCmd = STEER_CMD_CENTER;
+  velCmd = VEL_CMD_STOP;
+  hitchCmd = H_ACTUATOR_CENTER;
+  updateRoboClaw(velCmd, steerCmd, hitchCmd);
+  delay(2000); // Wait for motor to reach correct positions
+  nh.spinOnce();
 
+  // Hold Estop & wait for user
+  digitalWrite(ESTOP_RELAY_PIN, HIGH);
   nh.loginfo("START: Re-install pins, then publish 'y' to /user_input topic");
   waitForUserVerification();
+
+  // Release Estop and finish
   digitalWrite(ESTOP_RELAY_PIN, LOW);
-  delay(250);
   nh.loginfo("START: Verification received, vehicle ready to run.");
 }
 
@@ -269,22 +291,22 @@ char checkUserInput() {
 }
 
 
-void updateRoboClaw(int velMsg, int steerMsg, int hitchMsg) {
+void updateRoboClaw(int vel_cmd, int steer_cmd, int hitch_cmd) {
   // Given velocity, steering, and hitch message, sends vals to RoboClaw
 
   // Write velocity to RoboClaw
   // TODO: add sensor for motor on or not; this is what actually matters.
-  rc1.SpeedAccelDeccelPositionM1(RC1_ADDRESS, 100000, 1000, 0, velMsg, 1);
-  rc1.SpeedAccelDeccelPositionM2(RC1_ADDRESS, 0, 1000, 0, steerMsg, 1);
+  rc1.SpeedAccelDeccelPositionM1(RC1_ADDRESS, 100000, 1000, 0, vel_cmd, 1);
+  rc1.SpeedAccelDeccelPositionM2(RC1_ADDRESS, 0, 1000, 0, steer_cmd, 1);
 
   // Write hitch to RoboClaw
-  rc2.SpeedAccelDeccelPositionM2(RC2_ADDRESS, 100000, 1000, 0, hitchMsg, 1);
+  rc2.SpeedAccelDeccelPositionM2(RC2_ADDRESS, 100000, 1000, 0, hitch_cmd, 1);
 
   // roslog msgs if debugging
-  #ifdef DEBUG
-    char j[56];
-    snprintf(j, sizeof(j), "DBG: steerMsg = %d, velMsg = %d, hitchMsg = %d", steerMsg, velMsg, hitchMsg);
-    nh.loginfo(j);
+  #ifdef DEBUG_UPDATEROBOCLAW
+    char m[56];
+    snprintf(m, sizeof(m), "DBG: steerCmd = %d, velCmd = %d, hitchCmd = %d", steer_cmd, vel_cmd, hitch_cmd);
+    nh.loginfo(m);
   #endif
 }
 
@@ -309,8 +331,8 @@ void updateCurrDrive() {
 
   uint32_t encoder1, encoder2;
   rc1.ReadEncoders(RC1_ADDRESS, encoder1, encoder2);
-  currDrivePose.speed = mapPrecise(encoder1, VEL_CMD_REV, VEL_CMD_FWD, VEL_MSG_REV, VEL_MSG_FWD);
-  currDrivePose.steering_angle = mapPrecise(encoder2, STEER_CMD_RIGHT, STEER_CMD_LEFT, STEER_MSG_RIGHT, STEER_MSG_LEFT);
+  currDrivePose.drive.speed = encoder1; //mapPrecise(encoder1, VEL_CMD_REV, VEL_CMD_FWD, VEL_MSG_REV, VEL_MSG_FWD);
+  currDrivePose.drive.steering_angle = encoder2; //mapPrecise(encoder2, STEER_CMD_RIGHT, STEER_CMD_LEFT, STEER_MSG_RIGHT, STEER_MSG_LEFT);
   pubDrive.publish(&currDrivePose);
 }
 
@@ -367,6 +389,7 @@ void eStartTractor() {
   digitalWrite(ESTOP_RELAY_PIN, LOW);
   isEStopped = false;
   nh.loginfo("MSG: EStop Disactivated");
+  runStartupSequence();
 }
 
 
