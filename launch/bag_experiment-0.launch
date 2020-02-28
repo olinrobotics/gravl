@@ -1,0 +1,9 @@
+<!--
+Experimental bag ROSlaunch file
+@brief: takes 2:00 bag of lidarx data and transforms.
+@version: 1.0
+-->
+
+<launch>
+<node pkg="rosbag" type="record" args="-a"/>
+</launch>
