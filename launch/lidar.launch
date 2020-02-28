@@ -1,5 +1,14 @@
+<!--
+Tractor lidar Roslaunch file
+@brief: Launches all tractor lidar units with relevant ip addresses.
+Currently launches: lidarx
+@version: 1.1
+-->
+
 <launch>
-  	<node name="hokuyo" pkg="urg_node" type="urg_node">
+<!--<node name="hokuyo" pkg="urg_node" type="urg_node">
   		<param name="ip_address" value="192.168.1.10" />
-  	</node>
+  	</node>-->
+
+    <include file="$(find panasonic_lidar)/launch/panasonic_lidar.launch"/>
 </launch>

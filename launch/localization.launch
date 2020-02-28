@@ -11,6 +11,6 @@
   <!-- <node name="gps2_to_base"        pkg="tf2_ros" type="static_transform_publisher" args="1.940 0.000 1.490 0.000 0.000 0.000 /base_link /hemisphere" /> -->
 
   <node name="laser_to_hood"            pkg="tf2_ros" type="static_transform_publisher" args="-0.125 0.000 -0.137 0.000 0.261 0.000 /hood /laser" />
-  <node name="lidarx_to_hood"           pkg="tf2_ros" type="static_transform_publisher" args="-0.144 0.000 -0.129 3.141 2.880 0.000 /hood /lidarx"/>
+  <node name="lidarx_to_hood"           pkg="tf2_ros" type="static_transform_publisher" args="-0.144 0.000 -0.129 3.141 2.880 0.000 /hood /lidar"/>
   <!-- <node name="camera_to_hood"      pkg="tf2_ros" type="static_transform_publisher" args="0.000 0.000 0.000 0.000 0.000 0.000 /hood /image_raw" /> -->
 </launch>
