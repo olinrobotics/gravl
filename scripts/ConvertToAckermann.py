@@ -12,7 +12,7 @@ Assumes all inputs are normalized between -1 and 1
 
 import rospy
 from geometry_msgs.msg import Twist
-from ackermann_msgs.msg import AckermannDrive
+from ackermann_msgs.msg import *
 
 class ConvertToAckermann():
     def __init__(self):
@@ -22,11 +22,15 @@ class ConvertToAckermann():
         # Define ROS constructs
         rospy.init_node("convert_to_ackermann")
         self.twist_sub = rospy.Subscriber("/cmd_twist", Twist, self.twist_cb)
-        self.ack_pub = rospy.Publisher("/cmd_vel", AckermannDrive, queue_size=1)
+        self.ack_pub = rospy.Publisher("/cmd_vel", AckermannDriveStamped, queue_size=1)
         self.update_rate = rospy.Rate(10)
 
-    def twist_cb(self,msg):
+    def twist_cb(self, msg):
         self.twist_data = msg
+        ack_msg = AckermannDriveStamped()
+        ack_msg.drive = self.twist_to_ackermann(msg.linear.x, msg.angular.z)
+        ack_msg.header.stamp = rospy.Time.now()
+        self.ack_pub.publish(ack_msg)
 
     def twist_to_ackermann(self,linear_vel, angular_vel):
         """
@@ -50,14 +54,10 @@ class ConvertToAckermann():
         # Takes no args, executes timed loop for node
         while not rospy.is_shutdown():
             if self.twist_data == None:
-                rospy.loginfo('MSG: No twist data published')
+                rospy.loginfo('MSG: No twist data published on /cmd_twist')
                 self.update_rate.sleep()
                 continue
-            linear = self.twist_data.linear.x
-            angular = self.twist_data.angular.z
 
-            ack_msg = self.twist_to_ackermann(linear, angular)
-            self.ack_pub.publish(ack_msg)
             self.update_rate.sleep()
 
 def reMap(value, maxInput, minInput, maxOutput, minOutput):
