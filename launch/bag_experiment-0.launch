@@ -5,6 +5,6 @@ Experimental bag ROSlaunch file
 -->
 
 <launch>
-<node pkg="rosbag" name="exp_0" type="record" args="--duration=30 /joy /tf_static -O $(find gravl)/bags/exp_0.bag"/>
+<node pkg="rosbag" name="exp_0" type="record" args="--duration=30 /panasonic_lidar/pcloud2 -O $(find gravl)/bags/exp_0.bag"/>
 
 </launch>
