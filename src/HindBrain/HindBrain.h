@@ -10,18 +10,16 @@
 #define USE_USBCON
 
 // Libraries
-#include <Arduino.h>                        // Microcontroller standard API
-#include <Encoder.h>                        // Hitch height encoder lib
 
 #include <ros.h>                            // rosserial library
 #include <std_msgs/Empty.h>                 // Watchdog hf connection monitor
 #include <std_msgs/String.h>                // rosserial String msg
 #include <geometry_msgs/Pose.h>             // rosserial Hitch msg
 
-#include "Estop.h"                          // OAK Estop
-#include "SoftSwitch.h"                     // OAK SoftSwitch
-#include "RoboClaw.h"                       // Motor controller API
-#include "ackermann_msgs/AckermannDrive.h"  // rosserial Steering msg
+#include "Estop.h"                                // OAK Estop
+#include "SoftSwitch.h"                           // OAK SoftSwitch
+#include "RoboClaw.h"                             // Motor controller API
+#include "ackermann_msgs/AckermannDriveStamped.h" // rosserial Steering msg
 
 // Arduino Pins
 const byte SERIAL_PIN_0 = 0;      // Using either pin for input causes errors
@@ -33,9 +31,14 @@ const byte HITCH_ENC_A_PIN = 18;
 const byte HITCH_ENC_B_PIN = 19;
 
 // General Constants
-const bool DEBUG = false;
 const int WATCHDOG_TIMEOUT = 250; // ms
 #define SERIAL_BAUD_RATE 115200   // hz
+
+// Debug Constants
+#define DEBUG_ACKERMANNCB true;
+// #define DEBUG_USERINPUTCB true;
+// #define DEBUG_UPDATEROBOCLAW true;
+// #define DEBUG true;
 
 // Roboclaw Constants
 // Note: addresses must only be unique for 2+ roboclaws on 1 serial port
@@ -47,20 +50,38 @@ const unsigned int RC_TIMEOUT = 10000;  // us
 const byte ESTOP_DEBOUNCE_TIME = 50; // ms
 
 // Velocity Motor Ranges
-const int VEL_CMD_MIN = 1200;   // Roboclaw cmd for min speed
-const int VEL_CMD_STOP = 1029;  // Roboclaw cmd for stopped
-const int VEL_CMD_MAX = 850;    // Roboclaw cmd for max speed
-const int VEL_MSG_MIN = -2;     // Ackermann msg min speed
-const int VEL_MSG_STOP = 0;     // Ackermann msg for stopped
-const int VEL_MSG_MAX = 2;      // Ackermann msg max speed
+const int VEL_CMD_REV = 1050;   // Roboclaw cmd for max reverse speed
+const int VEL_CMD_STOP = 1115;  // . . .            stopped
+const int VEL_CMD_FWD = 1220;   // . . .            max forward speed
+const int VEL_MSG_REV = -2;     // Ackermann msg for max reverse speed
+const int VEL_MSG_STOP = 0;     // . . .             stopped
+const int VEL_MSG_FWD = 2;      // . . .             max forward speed
+
+// Initialize Roboclaw VEL_CMD thresholds w/ preprocessor macros
+#if VEL_CMD_REV>VEL_CMD_FWD
+  #define VEL_CMD_MAX VEL_CMD_REV
+  #define VEL_CMD_MIN VEL_CMD_FWD
+#else
+  #define VEL_CMD_MAX VEL_CMD_FWD
+  #define VEL_CMD_MIN VEL_CMD_REV
+#endif
 
 // Steering Motor Ranges
-const int STEER_CMD_LEFT = 500;   // Roboclaw cmd for max left turn
-const int STEER_CMD_CENTER = 975; // Roboclaw cmd for straight
-const int STEER_CMD_RIGHT = 1275; // Roboclaw cmd for max right turn
-const int STEER_MSG_LEFT = 45;    // Ackermann msg min steering angle
-const int STEER_MSG_CENTER = 0;   // Ackermann msg center steering angle
-const int STEER_MSG_RIGHT = -30;  // Ackermann msg max steering angle
+const int STEER_CMD_LEFT = 650;     // Roboclaw cmd for max left turn
+const int STEER_CMD_CENTER = 1160;  // . . .            straight
+const int STEER_CMD_RIGHT = 1600;   // . . .            max right turn
+const int STEER_MSG_LEFT = 45;      // Ackermann msg leftmost steering angle
+const int STEER_MSG_CENTER = 0;     // . . .         center . . .
+const int STEER_MSG_RIGHT = -45;    // . . .         rightmost . . .
+
+// Initialize Roboclaw STEER_CMD thresholds w/ preprocessor macros
+#if STEER_CMD_LEFT>STEER_CMD_RIGHT
+  #define STEER_CMD_MAX STEER_CMD_LEFT
+  #define STEER_CMD_MIN STEER_CMD_RIGHT
+#else
+  #define STEER_CMD_MAX STEER_CMD_RIGHT
+  #define STEER_CMD_MIN STEER_CMD_LEFT
+#endif
 
 // Hitch Actuator Ranges
 const int H_ACTUATOR_MAX = 1660;    // Retracted Actuator - Move hitch up
@@ -72,7 +93,7 @@ const int H_ACTUATOR_RANGE = H_ACTUATOR_MAX - H_ACTUATOR_MIN;
 const float ENC_STOP_THRESHOLD = 0.0381;  // Blade accuracy stop threshold (m)
 
 // Callback prototypes
-void ackermannCB(const ackermann_msgs::AckermannDrive&);
+void ackermannCB(const ackermann_msgs::AckermannDriveStamped&);
 void hitchCB(const geometry_msgs::Pose&);
 void userInputCB(const std_msgs::String&);
 void watchdogCB(const std_msgs::Empty&);
@@ -82,7 +103,6 @@ void checkSerial(ros::NodeHandle *nh);
 void eStartTractor();
 void eStopTractor();
 void runStartupSequence();
-void stopEngine();
 void stopRoboClaw(RoboClaw *rc1, RoboClaw *rc2);
 void updateCurrDrive();
 void updateCurrHitchPose();
