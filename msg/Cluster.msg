@@ -1,0 +1,12 @@
+int64 count
+float64 vol
+float64 max_intensity
+float64 density
+float64 e_x
+float64 e_y
+float64 e_z
+float64 var_intensity
+float64 mean_intensity
+float64 x
+float64 y
+float64 z
